@@ -6,7 +6,7 @@ from prefect_azure import AzureCredentials
 from prefect_azure.blob_storage import blob_storage_download
 
 
-def test_blob_storage_download_flow_read_write_roundtrip(monkeypatch):
+async def test_blob_storage_download_flow(monkeypatch):
     mock_container = {"prefect.txt": b"prefect_works"}
     BlobServiceClientMock = MagicMock()
     BlobServiceClientMock.from_connection_string().get_blob_client.side_effect = (
@@ -23,13 +23,14 @@ def test_blob_storage_download_flow_read_write_roundtrip(monkeypatch):
     )
 
     @flow
-    def blob_storage_download_flow():
+    async def blob_storage_download_flow():
         data = blob_storage_download(
             blob="prefect.txt",
             container="prefect",
             azure_credentials=AzureCredentials(""),
         )
-        return data
+        return await data
 
-    data = blob_storage_download_flow().result().result()
+    data = await blob_storage_download_flow()
+    data = data.result().result()
     assert data.decode() == "prefect_works"

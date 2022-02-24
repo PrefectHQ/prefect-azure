@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from azure.storage.blob import BlobServiceClient
+from azure.storage.blob.aio import BlobServiceClient
 
 HELP_URL = (
     "https://docs.microsoft.com/en-us/azure/storage/blobs/"
@@ -20,7 +20,7 @@ class AzureCredentials:
 
     connection_string: str
 
-    def get_blob_service_client(self):
+    async def get_blob_service_client(self):
         """
         Returns an authenticated blob service client that can be used to create clients
         for Azure services
