@@ -7,6 +7,15 @@ from prefect.logging import get_logger
 from prefect_azure.credentials import AzureCredentials
 
 
+def _get_blob_client(azure_credentials, blob, container):
+    """
+    Helper to get the blob client.
+    """
+    blob_service_client = azure_credentials.get_blob_service_client()
+    blob_client = blob_service_client.get_blob_client(blob=blob, container=container)
+    return blob_client
+
+
 @task
 def blob_storage_download(
     blob: str,
@@ -37,11 +46,10 @@ def blob_storage_download(
     logger = get_logger()
     logger.info("Downloading object from bucket %s with key %s", container, blob)
 
-    blob_service_client = azure_credentials.get_blob_service_client()
-    blob_client = blob_service_client.get_blob_client(blob=blob, container=container)
-
+    blob_client = _get_blob_client(azure_credentials, blob, container)
     blob_obj = blob_client.download_blob()
     output = blob_obj.content_as_bytes()
+
     return output
 
 
@@ -80,16 +88,13 @@ def blob_storage_upload(
         >>>         )
     """
     logger = get_logger()
-
     logger.info("Uploading object to bucket %s with key %s", container, blob)
-
-    blob_service_client = azure_credentials.get_blob_service_client()
 
     # create key if not provided
     if blob is None:
         blob = str(uuid.uuid4())
 
-    blob_client = blob_service_client.get_blob_client(blob=blob, container=container)
+    blob_client = _get_blob_client(azure_credentials, blob, container)
     blob_client.upload_blob(data, overwrite=overwrite)
 
     return blob
