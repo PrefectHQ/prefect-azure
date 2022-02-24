@@ -13,6 +13,7 @@ def _get_blob_client(azure_credentials, blob, container):
     """
     blob_service_client = azure_credentials.get_blob_service_client()
     blob_client = blob_service_client.get_blob_client(blob=blob, container=container)
+
     return blob_client
 
 
@@ -23,7 +24,7 @@ def blob_storage_download(
     azure_credentials: AzureCredentials,
 ) -> bytes:
     """
-    Downloads an object with a given key from a given blob container.
+    Downloads an object with a given key from a given Blob Storage container.
     Args:
         blob: Name of the blob within this container to retrieve.
         container: Name of the Blob Storage container to retrieve from.
@@ -31,7 +32,7 @@ def blob_storage_download(
     Returns:
         A `bytes` representation of the downloaded object.
     Example:
-        Download a file from an blob container
+        Download a file from a blob container
         >>> @flow
         >>> def example_blob_storage_download_flow():
         >>>     azure_credentials = AzureCredentials(
@@ -44,7 +45,7 @@ def blob_storage_download(
         >>>     )
     """
     logger = get_logger()
-    logger.info("Downloading object from bucket %s with key %s", container, blob)
+    logger.info("Downloading object from container %s with key %s", container, blob)
 
     blob_client = _get_blob_client(azure_credentials, blob, container)
     blob_obj = blob_client.download_blob()
@@ -75,7 +76,7 @@ def blob_storage_upload(
     Example:
         Read and upload a file to a Blob Storage container
         >>> @flow
-        >>> def example_blob_storage_download_flow():
+        >>> def example_blob_storage_upload_flow():
         >>>     azure_credentials = AzureCredentials(
         >>>         connection_string="connection_string",
         >>>     )
@@ -88,7 +89,7 @@ def blob_storage_upload(
         >>>         )
     """
     logger = get_logger()
-    logger.info("Uploading object to bucket %s with key %s", container, blob)
+    logger.info("Uploading object to container %s with key %s", container, blob)
 
     # create key if not provided
     if blob is None:
@@ -98,3 +99,38 @@ def blob_storage_upload(
     blob_client.upload_blob(data, overwrite=overwrite)
 
     return blob
+
+
+@task
+def blob_storage_list(
+    container: str,
+    azure_credentials: AzureCredentials,
+) -> bytes:
+    """
+    List objects from a given Blob Storage container.
+    Args:
+        container: Name of the Blob Storage container to retrieve from.
+        azure_credentials: Credentials to use for authentication with Azure.
+    Returns:
+        A `list` of `dict`s containing metadata about the blob.
+    Example:
+        List files from a blob container
+        >>> @flow
+        >>> def example_blob_storage_list_flow():
+        >>>     azure_credentials = AzureCredentials(
+        >>>         connection_string="connection_string",
+        >>>     )
+        >>>     data = blob_storage_list(
+        >>>         container="container",
+        >>>         azure_credentials=azure_credentials,
+        >>>     )
+    """
+    logger = get_logger()
+    logger.info("Listing blobs from container %s", container)
+
+    blob_service_client = azure_credentials.get_blob_service_client()
+    container_client = blob_service_client.create_container(container)
+
+    blobs = container_client.list_blobs()
+
+    return list(blobs)
