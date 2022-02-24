@@ -1,7 +1,5 @@
 """Tasks for interacting with Azure Blob Storage"""
-import io
 import uuid
-from typing import Any, Dict, List, Optional
 
 from prefect import task
 from prefect.logging import get_logger
@@ -41,7 +39,7 @@ def blob_storage_download(
 
     blob_service_client = azure_credentials.get_blob_service_client()
     blob_client = blob_service_client.get_blob_client(blob=blob, container=container)
-    
+
     blob_obj = blob_client.download_blob()
     output = blob_obj.content_as_bytes()
     return output
@@ -52,8 +50,8 @@ def blob_storage_upload(
     data: bytes,
     blob: str,
     container: str,
-    overwrite: bool = False,
     azure_credentials: AzureCredentials,
+    overwrite: bool = False,
 ) -> str:
     """
     Uploads data to an Blob Storage container.
@@ -61,9 +59,9 @@ def blob_storage_upload(
         data: Bytes representation of data to upload to Blob Storage.
         blob: Name of the blob within this container to retrieve.
         container: Name of the Blob Storage container to upload to.
+        azure_credentials: Credentials to use for authentication with Azure.
         overwrite: If `True`, an existing blob with the same name will be overwritten.
             Defaults to `False` and an error will be thrown if the blob already exists.
-        azure_credentials: Credentials to use for authentication with Azure.
     Returns:
         The blob name of the uploaded object
     Example:

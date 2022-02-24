@@ -4,7 +4,6 @@ from typing import Optional
 
 from azure.storage.blob import BlobServiceClient
 
-
 HELP_URL = (
     "https://docs.microsoft.com/en-us/azure/storage/blobs/"
     "storage-quickstart-blobs-python#copy-your-credentials-from-the-azure-portal"
@@ -35,7 +34,9 @@ class AzureCredentials:
             >>> )
             >>> blob_service_client = azure_credentials.get_blob_service_client()
         """
-        connection_string = self.azure_connection_string or os.getenv('AZURE_STORAGE_CONNECTION_STRING')
+        connection_string = self.azure_connection_string or os.getenv(
+            "AZURE_STORAGE_CONNECTION_STRING"
+        )
         if connection_string is None:
             raise ValueError(
                 f"Either the azure_connection_string must be specified or the "
