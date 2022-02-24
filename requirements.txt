@@ -1,1 +1,2 @@
+azure-storage-blob
 prefect>=2.0a9
