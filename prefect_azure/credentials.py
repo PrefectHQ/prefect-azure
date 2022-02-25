@@ -20,17 +20,19 @@ class AzureCredentials:
 
     connection_string: str
 
-    def get_blob_service_client(self):
+    def get_blob_service_client(self) -> BlobServiceClient:
         """
         Returns an authenticated blob service client that can be used to create clients
         for Azure services
         Example:
             Create an authorized blob service session
-            >>> connection_string = Secret("azure").get()
-            >>> azure_credentials = AzureCredentials(
-            >>>     connection_string=connection_string,
-            >>> )
-            >>> blob_service_client = azure_credentials.get_blob_service_client()
+            ```python
+            connection_string = Secret("azure").get()
+            azure_credentials = AzureCredentials(
+                connection_string=connection_string,
+            )
+            blob_service_client = azure_credentials.get_blob_service_client()
+            ```
         """
         connection_string = self.connection_string
         try:
