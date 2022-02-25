@@ -20,7 +20,7 @@ class AzureCredentials:
 
     connection_string: str
 
-    async def get_blob_service_client(self):
+    def get_blob_service_client(self):
         """
         Returns an authenticated blob service client that can be used to create clients
         for Azure services

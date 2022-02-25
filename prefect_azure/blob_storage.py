@@ -2,18 +2,17 @@
 import uuid
 
 from prefect import task
-from prefect.logging import get_logger
+from prefect.logging import get_run_logger
 
 from prefect_azure.credentials import AzureCredentials
 
 
-async def _get_blob_client(azure_credentials, blob, container):
+def _get_blob_client(azure_credentials, blob, container):
     """
     Helper to get the blob client.
     """
-    blob_service_client = await azure_credentials.get_blob_service_client()
+    blob_service_client = azure_credentials.get_blob_service_client()
     blob_client = blob_service_client.get_blob_client(blob=blob, container=container)
-
     return blob_client
 
 
@@ -44,12 +43,12 @@ async def blob_storage_download(
         >>>         azure_credentials=azure_credentials,
         >>>     )
     """
-    logger = get_logger()
+    logger = get_run_logger()
     logger.info("Downloading object from container %s with key %s", container, blob)
 
-    blob_client = await _get_blob_client(azure_credentials, blob, container)
+    blob_client = _get_blob_client(azure_credentials, blob, container)
     blob_obj = await blob_client.download_blob()
-    output = await blob_obj.content_as_bytes()
+    output = blob_obj.content_as_bytes()
 
     return output
 
@@ -88,14 +87,14 @@ async def blob_storage_upload(
         >>>             azure_credentials=azure_credentials,
         >>>         )
     """
-    logger = get_logger()
+    logger = get_run_logger()
     logger.info("Uploading object to container %s with key %s", container, blob)
 
     # create key if not provided
     if blob is None:
         blob = str(uuid.uuid4())
 
-    blob_client = await _get_blob_client(azure_credentials, blob, container)
+    blob_client = _get_blob_client(azure_credentials, blob, container)
     await blob_client.upload_blob(data, overwrite=overwrite)
 
     return blob
@@ -105,7 +104,7 @@ async def blob_storage_upload(
 async def blob_storage_list(
     container: str,
     azure_credentials: AzureCredentials,
-) -> bytes:
+) -> list:
     """
     List objects from a given Blob Storage container.
     Args:
@@ -125,10 +124,10 @@ async def blob_storage_list(
         >>>         azure_credentials=azure_credentials,
         >>>     )
     """
-    logger = get_logger()
+    logger = get_run_logger()
     logger.info("Listing blobs from container %s", container)
 
-    blob_service_client = await azure_credentials.get_blob_service_client()
+    blob_service_client = azure_credentials.get_blob_service_client()
     container_client = blob_service_client.get_container_client(container)
 
     blobs = await container_client.list_blobs()
