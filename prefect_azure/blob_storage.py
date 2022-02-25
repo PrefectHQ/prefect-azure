@@ -14,7 +14,7 @@ async def _get_blob_client(azure_credentials, blob, container):
     blob_service_client = await azure_credentials.get_blob_service_client()
     blob_client = blob_service_client.get_blob_client(blob=blob, container=container)
 
-    return await blob_client
+    return blob_client
 
 
 @task
@@ -48,10 +48,10 @@ async def blob_storage_download(
     logger.info("Downloading object from container %s with key %s", container, blob)
 
     blob_client = await _get_blob_client(azure_credentials, blob, container)
-    blob_obj = blob_client.download_blob()
-    output = blob_obj.content_as_bytes()
+    blob_obj = await blob_client.download_blob()
+    output = await blob_obj.content_as_bytes()
 
-    return await output
+    return output
 
 
 @task
@@ -96,9 +96,9 @@ async def blob_storage_upload(
         blob = str(uuid.uuid4())
 
     blob_client = await _get_blob_client(azure_credentials, blob, container)
-    blob_client.upload_blob(data, overwrite=overwrite)
+    await blob_client.upload_blob(data, overwrite=overwrite)
 
-    return await blob
+    return blob
 
 
 @task
@@ -129,8 +129,8 @@ async def blob_storage_list(
     logger.info("Listing blobs from container %s", container)
 
     blob_service_client = await azure_credentials.get_blob_service_client()
-    container_client = blob_service_client.create_container(container)
+    container_client = blob_service_client.get_container_client(container)
 
-    blobs = container_client.list_blobs()
+    blobs = await container_client.list_blobs()
 
-    return await list(blobs)
+    return list(blobs)
