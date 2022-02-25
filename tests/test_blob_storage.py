@@ -12,7 +12,7 @@ from prefect_azure.blob_storage import (
 
 class ClientMock(MagicMock):
     download_blob = AsyncMock()
-    download_blob.return_value.content_as_bytes = MagicMock(
+    download_blob.return_value.content_as_bytes = AsyncMock(
         return_value=b"prefect_works"
     )
 
