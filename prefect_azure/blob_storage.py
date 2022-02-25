@@ -95,11 +95,11 @@ async def blob_storage_upload(
             azure_credentials = AzureCredentials(
                 connection_string="connection_string",
             )
-            with open("data.csv", "rb") as file:
+            with open("data.csv", "rb") as f:
                 blob = await blob_storage_upload(
-                    data=file.read(),
+                    data=f.read(),
                     blob="data.csv",
-                    container="prefect",
+                    container="container",
                     azure_credentials=azure_credentials,
                     overwrite=False,
                 )
@@ -144,7 +144,7 @@ async def blob_storage_list(
                 connection_string=connection_string,
             )
             data = await blob_storage_list(
-                container="prefect",
+                container="container",
                 azure_credentials=azure_credentials,
             )
             return data
@@ -156,8 +156,5 @@ async def blob_storage_list(
     blob_service_client = azure_credentials.get_blob_service_client()
     container_client = blob_service_client.get_container_client(container)
 
-    blobs = []
-    async for blob in container_client.list_blobs():
-        blobs.append(blob)
-
+    blobs = [blob async for blob in container_client.list_blobs()]
     return blobs

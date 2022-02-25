@@ -10,6 +10,15 @@ from prefect_azure.blob_storage import (
 )
 
 
+class AsyncIter:
+    def __init__(self, items):
+        self.items = items
+
+    async def __aiter__(self):
+        for item in self.items:
+            yield item
+
+
 class ClientMock(MagicMock):
     download_blob = AsyncMock()
     download_blob.return_value.content_as_bytes = AsyncMock(
@@ -19,8 +28,8 @@ class ClientMock(MagicMock):
     upload_blob = AsyncMock()
     upload_blob.return_value = "prefect.txt"
 
-    list_blobs = AsyncMock()
-    list_blobs.return_value = ["prefect.txt"]
+    list_blobs = MagicMock()
+    list_blobs.return_value = AsyncIter(range(5))
 
 
 async def test_blob_storage_download_flow(monkeypatch, azure_credentials):
@@ -86,4 +95,4 @@ async def test_blob_storage_list_flow(monkeypatch, azure_credentials):
         )
 
     blobs = (await blob_storage_list_flow()).result().result()
-    assert blobs == ["prefect.txt"]
+    assert blobs == list(range(5))
