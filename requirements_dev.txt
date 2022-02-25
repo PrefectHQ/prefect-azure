@@ -8,3 +8,4 @@ mkdocstrings
 isort
 pre-commit
 aiohttp
+mock; python_version < '3.8'
