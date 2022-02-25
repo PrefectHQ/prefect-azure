@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from azure.storage.blob import BlobServiceClient
+from azure.storage.blob.aio import BlobServiceClient
 
 HELP_URL = (
     "https://docs.microsoft.com/en-us/azure/storage/blobs/"
