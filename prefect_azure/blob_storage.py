@@ -56,7 +56,7 @@ async def blob_storage_download(
         ```
     """
     logger = get_run_logger()
-    logger.info("Downloading object from container %s with key %s", container, blob)
+    logger.info("Downloading blob from container %s with key %s", container, blob)
 
     blob_client = _get_blob_client(azure_credentials, blob, container)
     blob_obj = await blob_client.download_blob()
