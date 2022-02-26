@@ -1,7 +1,6 @@
-from unittest.mock import MagicMock
+import uuid
 
 from prefect import flow
-from prefect.utilities.testing import AsyncMock
 
 from prefect_azure.blob_storage import (
     blob_storage_download,
@@ -10,38 +9,7 @@ from prefect_azure.blob_storage import (
 )
 
 
-class AsyncIter:
-    def __init__(self, items):
-        self.items = items
-
-    async def __aiter__(self):
-        for item in self.items:
-            yield item
-
-
-class ClientMock(MagicMock):
-    download_blob = AsyncMock()
-    download_blob.return_value.content_as_bytes = AsyncMock(
-        return_value=b"prefect_works"
-    )
-
-    upload_blob = AsyncMock()
-    upload_blob.return_value = "prefect.txt"
-
-    list_blobs = MagicMock()
-    list_blobs.return_value = AsyncIter(range(5))
-
-
-async def test_blob_storage_download_flow(monkeypatch, azure_credentials):
-    BlobServiceClientMock = MagicMock()
-    BlobServiceClientMock.from_connection_string().get_blob_client.return_value = (
-        ClientMock()
-    )
-
-    monkeypatch.setattr(
-        "prefect_azure.credentials.BlobServiceClient", BlobServiceClientMock
-    )
-
+async def test_blob_storage_download_flow(blob_service_client_mock, azure_credentials):
     @flow
     async def blob_storage_download_flow():
         return await blob_storage_download(
@@ -54,39 +22,44 @@ async def test_blob_storage_download_flow(monkeypatch, azure_credentials):
     assert data.decode() == "prefect_works"
 
 
-async def test_blob_storage_upload_flow(monkeypatch, azure_credentials):
-    BlobServiceClientMock = MagicMock()
-    BlobServiceClientMock.from_connection_string().get_blob_client.return_value = (
-        ClientMock()
-    )
-
-    monkeypatch.setattr(
-        "prefect_azure.credentials.BlobServiceClient", BlobServiceClientMock
-    )
-
+async def test_blob_storage_upload_flow(blob_service_client_mock, azure_credentials):
     @flow
     async def blob_storage_upload_flow():
         return await blob_storage_upload(
-            "prefect_works",
+            b"prefect_works",
             blob="prefect.txt",
             container="prefect",
             azure_credentials=azure_credentials,
         )
 
     blob = (await blob_storage_upload_flow()).result().result()
-    assert blob == "prefect.txt"
+    assert blob == b"prefect.txt"
 
 
-async def test_blob_storage_list_flow(monkeypatch, azure_credentials):
-    BlobServiceClientMock = MagicMock()
-    BlobServiceClientMock.from_connection_string().get_container_client.return_value = (
-        ClientMock()
-    )
+def is_valid_uuid(val):
+    try:
+        uuid.UUID(str(val))
+        return True
+    except ValueError:
+        return False
 
-    monkeypatch.setattr(
-        "prefect_azure.credentials.BlobServiceClient", BlobServiceClientMock
-    )
 
+async def test_blob_storage_upload_flow_no_blob(
+    blob_service_client_mock, azure_credentials
+):
+    @flow
+    async def blob_storage_upload_flow():
+        return await blob_storage_upload(
+            b"prefect_works",
+            container="prefect",
+            azure_credentials=azure_credentials,
+        )
+
+    blob = (await blob_storage_upload_flow()).result().result()
+    assert is_valid_uuid(blob)
+
+
+async def test_blob_storage_list_flow(blob_service_client_mock, azure_credentials):
     @flow
     async def blob_storage_list_flow():
         return await blob_storage_list(

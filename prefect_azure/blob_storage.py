@@ -1,6 +1,8 @@
 """Tasks for interacting with Azure Blob Storage"""
 import uuid
+from typing import List
 
+from azure.storage.blob import BlobProperties
 from prefect import task
 from prefect.logging import get_run_logger
 
@@ -23,13 +25,13 @@ async def blob_storage_download(
     azure_credentials: AzureCredentials,
 ) -> bytes:
     """
-    Downloads an object with a given key from a given Blob Storage container.
+    Downloads a blob with a given key from a given Blob Storage container.
     Args:
         blob: Name of the blob within this container to retrieve.
         container: Name of the Blob Storage container to retrieve from.
         azure_credentials: Credentials to use for authentication with Azure.
     Returns:
-        A `bytes` representation of the downloaded object.
+        A `bytes` representation of the downloaded blob.
     Example:
         Download a file from a blob container
         ```python
@@ -66,18 +68,18 @@ async def blob_storage_download(
 @task
 async def blob_storage_upload(
     data: bytes,
-    blob: str,
     container: str,
     azure_credentials: AzureCredentials,
+    blob: str = None,
     overwrite: bool = False,
 ) -> str:
     """
     Uploads data to an Blob Storage container.
     Args:
         data: Bytes representation of data to upload to Blob Storage.
-        blob: Name of the blob within this container to retrieve.
         container: Name of the Blob Storage container to upload to.
         azure_credentials: Credentials to use for authentication with Azure.
+        blob: Name of the blob within this container to retrieve.
         overwrite: If `True`, an existing blob with the same name will be overwritten.
             Defaults to `False` and an error will be thrown if the blob already exists.
     Returns:
@@ -123,7 +125,7 @@ async def blob_storage_upload(
 async def blob_storage_list(
     container: str,
     azure_credentials: AzureCredentials,
-) -> list:
+) -> List[BlobProperties]:
     """
     List objects from a given Blob Storage container.
     Args:
