@@ -9,6 +9,16 @@ from prefect.logging import get_run_logger
 from prefect_azure.credentials import AzureCredentials
 
 
+def _get_container_client(azure_credentials, container, database):
+    """
+    Helper to get the container client.
+    """
+    cosmos_client = azure_credentials.get_cosmos_client()
+    database_client = cosmos_client.get_database_client(database)
+    container_client = database_client.get_container_client(container)
+    return container_client
+
+
 @task
 def query_items(
     query: str,
@@ -16,6 +26,7 @@ def query_items(
     database: Union[str, DatabaseProxy, Dict[str, Any]],
     azure_credentials: AzureCredentials,
     parameters: Optional[List[Dict[str, object]]] = None,
+    partition_key: Optional[Any] = None,
     **kwargs: Any
 ) -> List[Union[str, dict]]:
     """
@@ -28,26 +39,32 @@ def query_items(
 
     Args:
         query: The Azure Cosmos DB SQL query to execute.
-        container: Name of the Cosmos DB container to query from.
+        container: The ID (name) of the container, a ContainerProxy instance,
+            or a dict representing the properties of the container to be retrieved.
+        database: The ID (name), dict representing the properties
+            or DatabaseProxy instance of the database to read.
         azure_credentials: Credentials to use for authentication with Azure.
         parameters: Optional array of parameters to the query.
             Each parameter is a dict() with 'name' and 'value' keys.
-        **kwargs: Additional keyword arguments to pass to `query_items`.
+        partition_key: Partition key for the item to retrieve.
+        **kwargs: Additional keyword arguments to pass.
 
     Returns:
         An `list` of results.
 
     Example:
         Query SampleDB Persons container where age >= 44
-        ```
+        ```python
         from prefect import flow
 
         from prefect_azure import AzureCredentials
         from prefect_azure.cosmos_db import query_items
 
-
         @flow
         def example_cosmos_db_query_items_flow():
+            connection_string = "connection_string"
+            azure_credentials = AzureCredentials(connection_string)
+
             query = "SELECT * FROM c where c.age >= @age"
             container = "Persons"
             database = "SampleDB"
@@ -67,8 +84,134 @@ def query_items(
     logger = get_run_logger()
     logger.info("Running query from container %s in %s database", container, database)
 
-    cosmos_client = azure_credentials.get_cosmos_client()
-    database_client = cosmos_client.get_database_client(database)
-    container_client = database_client.get_container_client(container)
+    container_client = _get_container_client(azure_credentials, container, database)
     results = list(container_client.query_items(query, parameters=parameters, **kwargs))
     return results
+
+
+@task
+def read_item(
+    item: Union[str, Dict[str, Any]],
+    partition_key: Any,
+    container: Union[str, ContainerProxy, Dict[str, Any]],
+    database: Union[str, DatabaseProxy, Dict[str, Any]],
+    azure_credentials: AzureCredentials,
+    **kwargs: Any
+) -> List[Union[str, dict]]:
+    """
+    Get the item identified by item.
+
+    Args:
+        item: The ID (name) or dict representing item to retrieve.
+        partition_key: Partition key for the item to retrieve.
+        container: The ID (name) of the container, a ContainerProxy instance,
+            or a dict representing the properties of the container to be retrieved.
+        database: The ID (name), dict representing the properties
+            or DatabaseProxy instance of the database to read.
+        **kwargs: Additional keyword arguments to pass.
+
+    Returns:
+        Dict representing the item to be retrieved.
+
+    Example:
+        Read an item using a partition key from Cosmos DB.
+        ```python
+        from prefect import flow
+
+        from prefect_azure import AzureCredentials
+        from prefect_azure.cosmos_db import read_item
+
+        @flow
+        def example_cosmos_db_read_item_flow():
+            connection_string = "connection_string"
+            azure_credentials = AzureCredentials(connection_string)
+
+            item = "item"
+            partition_key = "partition_key"
+            container = "container"
+            database = "database"
+
+            result = read_item(
+                item,
+                partition_key,
+                container,
+                database,
+                azure_credentials
+            )
+            return result
+        ```
+    """
+    logger = get_run_logger()
+    logger.info(
+        "Reading item %s with partition_key %s from container %s in %s database",
+        item,
+        partition_key,
+        container,
+        database,
+    )
+
+    container_client = _get_container_client(azure_credentials, container, database)
+    result = container_client.read_item(item, partition_key, **kwargs)
+    return result
+
+
+@task
+def create_item(
+    body: Dict[str, Any],
+    container: Union[str, ContainerProxy, Dict[str, Any]],
+    database: Union[str, DatabaseProxy, Dict[str, Any]],
+    azure_credentials: AzureCredentials,
+    **kwargs: Any
+) -> dict[[str, Any]]:
+    """
+    Create an item in the container.
+
+    To update or replace an existing item, use the upsert_item method.
+
+    Args:
+        body: A dict-like object representing the item to create.
+        **kwargs: Additional keyword arguments to pass.
+
+    Returns:
+        A dict representing the new item.
+
+    Example:
+        Create an item in the container.
+
+        To update or replace an existing item, use the upsert_item method.
+        ```python
+        import uuid
+
+        from prefect import flow
+
+        from prefect_azure import AzureCredentials
+        from prefect_azure.cosmos_db import create_item
+
+
+        @flow
+        def example_cosmos_db_create_item_flow():
+            azure_credentials = AzureCredentials(connection_string)
+
+            body = {
+                "firstname": "Olivia",
+                "age": 3,
+                "id": str(uuid.uuid4())
+            }
+            container = "Persons"
+            database = "SampleDB"
+
+            result = create_item(body, container, database, azure_credentials)
+            return result
+
+        ```
+    """
+    logger = get_run_logger()
+    logger.info(
+        "Creating the item within container %s under %s database",
+        container,
+        database,
+    )
+
+    container_client = _get_container_client(azure_credentials, container, database)
+    result = container_client.create_item(body, **kwargs)
+    return result
