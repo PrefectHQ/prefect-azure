@@ -33,7 +33,7 @@ async def blob_storage_download(
     Returns:
         A `bytes` representation of the downloaded blob.
     Example:
-        Download a file from a blob container
+        Download a file from a Blob Storage container
         ```python
         from prefect import flow
 
