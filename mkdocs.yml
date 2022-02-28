@@ -29,6 +29,6 @@ plugins:
         - prefect_azure/
 nav:
     - Home: index.md
-    - Tasks: tasks.md
-    - Flows: flows.md
+    - Credentials: credentials.md
+    - Blob Storage: blob_storage.md
 
