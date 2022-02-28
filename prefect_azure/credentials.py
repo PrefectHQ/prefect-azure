@@ -2,13 +2,15 @@ from dataclasses import dataclass
 
 from azure.cosmos import CosmosClient
 from azure.storage.blob.aio import BlobServiceClient
+from prefect.logging import get_run_logger
 
 HELP_URLS = {
-    "blob_service": "https://docs.microsoft.com/en-us/azure/storage/blobs/"
+    "blob_storage": "https://docs.microsoft.com/en-us/azure/storage/blobs/"
     "storage-quickstart-blobs-python#copy-your-credentials-from-the-azure-portal",
-    "cosmos": "https://docs.microsoft.com/en-us/azure/cosmos-db/sql/"
+    "cosmos_db": "https://docs.microsoft.com/en-us/azure/cosmos-db/sql/"
     "create-sql-api-python#update-your-connection-string",
 }
+HELP_FMT = "Please visit {help_url} for retrieving the proper connection string."
 
 
 @dataclass
@@ -23,50 +25,65 @@ class AzureCredentials:
 
     connection_string: str
 
-    def get_blob_service_client(self) -> BlobServiceClient:
+    def get_client(self) -> None:
+        raise NotImplementedError(
+            "This is an abstract class and has no implementation of get_client"
+        )
+
+
+class BlobStorageAzureCredentials(AzureCredentials):
+    def get_client(self) -> BlobServiceClient:
         """
-        Returns an authenticated blob service client that can be used to create clients
+        Returns an authenticated Blob Service client that can be used to create clients
         for Azure services.
 
         Example:
-            Create an authorized blob service session
+            Create an authorized Blob Service session
             ```python
-            connection_string = Secret("azure_blob_service").get()
-            azure_credentials = AzureCredentials(
+            import os
+            from prefect_azure import BlobStorageAzureCredentials
+
+            connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+            azure_credentials = BlobStorageAzureCredentials(
                 connection_string=connection_string,
             )
-            blob_service_client = azure_credentials.get_blob_service_client()
+            blob_service_client = azure_credentials.get_client()
             ```
         """
-        connection_string = self.connection_string
-        try:
-            return BlobServiceClient.from_connection_string(connection_string)
-        except ValueError:
-            raise ValueError(
-                f"Please visit {HELP_URLS['blob_service']} for retrieving "
-                f"the proper connection string."
-            )
+        logger = get_run_logger()
+        logger.info("Creating a Blob Storage service client")
 
-    def get_cosmos_client(self) -> CosmosClient:
+        try:
+            return BlobServiceClient.from_connection_string(self.connection_string)
+        except ValueError:
+            logger.exception(HELP_FMT.format(help_url=HELP_URLS["blob_storage"]))
+            raise
+
+
+class CosmosDbAzureCredentials(AzureCredentials):
+    def get_client(self) -> CosmosClient:
         """
-        Returns an authenticated Cosmos client that can be used to query databases
+        Returns an authenticated Cosmos DB client that can be used to query databases
         for Azure services.
 
         Example:
             Create an authorized Cosmos session
             ```python
-            connection_string = Secret("azure_cosmos").get()
-            azure_credentials = AzureCredentials(
+            import os
+            from prefect_azure import BlobStorageAzureCredentials
+
+            connection_string = os.getenv("AZURE_COSMOS_CONNECTION_STRING")
+            azure_credentials = CosmosDbAzureCredentials(
                 connection_string=connection_string,
             )
-            cosmos_client = azure_credentials.get_cosmos_client()
+            cosmos_db_client = azure_credentials.get_client()
             ```
         """
-        connection_string = self.connection_string
+        logger = get_run_logger()
+        logger.info("Creating a Cosmos DB service client")
+
         try:
-            return CosmosClient.from_connection_string(connection_string)
+            return CosmosClient.from_connection_string(self.connection_string)
         except ValueError:
-            raise ValueError(
-                f"Please visit {HELP_URLS['cosmos']} for retrieving "
-                f"the proper connection string."
-            )
+            logger.exception(HELP_FMT.format(help_url=HELP_URLS["cosmos_db"]))
+            raise

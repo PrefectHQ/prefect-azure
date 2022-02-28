@@ -6,25 +6,25 @@ from azure.cosmos.database import ContainerProxy, DatabaseProxy
 from prefect import task
 from prefect.logging import get_run_logger
 
-from prefect_azure.credentials import AzureCredentials
+from prefect_azure.credentials import CosmosDbAzureCredentials
 
 
 def _get_container_client(azure_credentials, container, database):
     """
     Helper to get the container client.
     """
-    cosmos_client = azure_credentials.get_cosmos_client()
-    database_client = cosmos_client.get_database_client(database)
+    cosmos_db_client = azure_credentials.get_client()
+    database_client = cosmos_db_client.get_database_client(database)
     container_client = database_client.get_container_client(container)
     return container_client
 
 
 @task
-def query_items(
+def cosmos_db_query_items(
     query: str,
     container: Union[str, ContainerProxy, Dict[str, Any]],
     database: Union[str, DatabaseProxy, Dict[str, Any]],
-    azure_credentials: AzureCredentials,
+    azure_credentials: CosmosDbAzureCredentials,
     parameters: Optional[List[Dict[str, object]]] = None,
     partition_key: Optional[Any] = None,
     **kwargs: Any
@@ -57,20 +57,20 @@ def query_items(
         ```python
         from prefect import flow
 
-        from prefect_azure import AzureCredentials
-        from prefect_azure.cosmos_db import query_items
+        from prefect_azure import CosmosDbAzureCredentials
+        from prefect_azure.cosmos_db import cosmos_db_query_items
 
         @flow
         def example_cosmos_db_query_items_flow():
             connection_string = "connection_string"
-            azure_credentials = AzureCredentials(connection_string)
+            azure_credentials = CosmosDbAzureCredentials(connection_string)
 
             query = "SELECT * FROM c where c.age >= @age"
             container = "Persons"
             database = "SampleDB"
             parameters = [dict(name="@age", value=44)]
 
-            results = query_items(
+            results = cosmos_db_query_items(
                 query,
                 container,
                 database,
@@ -90,12 +90,12 @@ def query_items(
 
 
 @task
-def read_item(
+def cosmos_db_read_item(
     item: Union[str, Dict[str, Any]],
     partition_key: Any,
     container: Union[str, ContainerProxy, Dict[str, Any]],
     database: Union[str, DatabaseProxy, Dict[str, Any]],
-    azure_credentials: AzureCredentials,
+    azure_credentials: CosmosDbAzureCredentials,
     **kwargs: Any
 ) -> List[Union[str, dict]]:
     """
@@ -108,6 +108,7 @@ def read_item(
             or a dict representing the properties of the container to be retrieved.
         database: The ID (name), dict representing the properties
             or DatabaseProxy instance of the database to read.
+        azure_credentials: Credentials to use for authentication with Azure.
         **kwargs: Additional keyword arguments to pass.
 
     Returns:
@@ -118,20 +119,20 @@ def read_item(
         ```python
         from prefect import flow
 
-        from prefect_azure import AzureCredentials
-        from prefect_azure.cosmos_db import read_item
+        from prefect_azure import CosmosDbAzureCredentials
+        from prefect_azure.cosmos_db import cosmos_db_read_item
 
         @flow
         def example_cosmos_db_read_item_flow():
             connection_string = "connection_string"
-            azure_credentials = AzureCredentials(connection_string)
+            azure_credentials = CosmosDbAzureCredentials(connection_string)
 
             item = "item"
             partition_key = "partition_key"
             container = "container"
             database = "database"
 
-            result = read_item(
+            result = cosmos_db_read_item(
                 item,
                 partition_key,
                 container,
@@ -156,11 +157,11 @@ def read_item(
 
 
 @task
-def create_item(
+def cosmos_db_create_item(
     body: Dict[str, Any],
     container: Union[str, ContainerProxy, Dict[str, Any]],
     database: Union[str, DatabaseProxy, Dict[str, Any]],
-    azure_credentials: AzureCredentials,
+    azure_credentials: CosmosDbAzureCredentials,
     **kwargs: Any
 ) -> dict[[str, Any]]:
     """
@@ -170,6 +171,11 @@ def create_item(
 
     Args:
         body: A dict-like object representing the item to create.
+        container: The ID (name) of the container, a ContainerProxy instance,
+            or a dict representing the properties of the container to be retrieved.
+        database: The ID (name), dict representing the properties
+            or DatabaseProxy instance of the database to read.
+        azure_credentials: Credentials to use for authentication with Azure.
         **kwargs: Additional keyword arguments to pass.
 
     Returns:
@@ -184,13 +190,13 @@ def create_item(
 
         from prefect import flow
 
-        from prefect_azure import AzureCredentials
-        from prefect_azure.cosmos_db import create_item
+        from prefect_azure import CosmosDbAzureCredentials
+        from prefect_azure.cosmos_db import cosmos_db_create_item
 
 
         @flow
         def example_cosmos_db_create_item_flow():
-            azure_credentials = AzureCredentials(connection_string)
+            azure_credentials = CosmosDbAzureCredentials(connection_string)
 
             body = {
                 "firstname": "Olivia",
@@ -200,7 +206,7 @@ def create_item(
             container = "Persons"
             database = "SampleDB"
 
-            result = create_item(body, container, database, azure_credentials)
+            result = cosmos_db_create_item(body, container, database, azure_credentials)
             return result
 
         ```

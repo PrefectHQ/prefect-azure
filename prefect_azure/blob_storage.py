@@ -6,14 +6,14 @@ from azure.storage.blob import BlobProperties
 from prefect import task
 from prefect.logging import get_run_logger
 
-from prefect_azure.credentials import AzureCredentials
+from prefect_azure.credentials import BlobStorageAzureCredentials
 
 
 def _get_blob_client(azure_credentials, blob, container):
     """
     Helper to get the blob client.
     """
-    blob_service_client = azure_credentials.get_blob_service_client()
+    blob_service_client = azure_credentials.get_client()
     blob_client = blob_service_client.get_blob_client(blob=blob, container=container)
     return blob_client
 
@@ -22,7 +22,7 @@ def _get_blob_client(azure_credentials, blob, container):
 async def blob_storage_download(
     blob: str,
     container: str,
-    azure_credentials: AzureCredentials,
+    azure_credentials: BlobStorageAzureCredentials,
 ) -> bytes:
     """
     Downloads a blob with a given key from a given Blob Storage container.
@@ -37,13 +37,14 @@ async def blob_storage_download(
         ```python
         from prefect import flow
 
-        from prefect_azure import AzureCredentials
+        from prefect_azure import BlobStorageAzureCredentials
         from prefect_azure.blob_storage import blob_storage_download
 
         @flow
         async def example_blob_storage_download_flow():
-            azure_credentials = AzureCredentials(
-                connection_string="connection_string",
+            connection_string = "connection_string"
+            azure_credentials = BlobStorageAzureCredentials(
+                connection_string=connection_string,
             )
             data = await blob_storage_download(
                 blob="prefect.txt",
@@ -69,7 +70,7 @@ async def blob_storage_download(
 async def blob_storage_upload(
     data: bytes,
     container: str,
-    azure_credentials: AzureCredentials,
+    azure_credentials: BlobStorageAzureCredentials,
     blob: str = None,
     overwrite: bool = False,
 ) -> str:
@@ -89,13 +90,14 @@ async def blob_storage_upload(
         ```python
         from prefect import flow
 
-        from prefect_azure import AzureCredentials
+        from prefect_azure import BlobStorageAzureCredentials
         from prefect_azure.blob_storage import blob_storage_upload
 
         @flow
         async def example_blob_storage_upload_flow():
-            azure_credentials = AzureCredentials(
-                connection_string="connection_string",
+            connection_string = "connection_string"
+            azure_credentials = BlobStorageAzureCredentials(
+                connection_string=connection_string,
             )
             with open("data.csv", "rb") as f:
                 blob = await blob_storage_upload(
@@ -106,6 +108,8 @@ async def blob_storage_upload(
                     overwrite=False,
                 )
             return blob
+
+        await example_blob_storage_upload_flow()
         ```
     """
     logger = get_run_logger()
@@ -124,7 +128,7 @@ async def blob_storage_upload(
 @task
 async def blob_storage_list(
     container: str,
-    azure_credentials: AzureCredentials,
+    azure_credentials: BlobStorageAzureCredentials,
 ) -> List[BlobProperties]:
     """
     List objects from a given Blob Storage container.
@@ -137,25 +141,28 @@ async def blob_storage_list(
         ```python
         from prefect import flow
 
-        from prefect_azure import AzureCredentials
+        from prefect_azure import BlobStorageAzureCredentials
         from prefect_azure.blob_storage import blob_storage_list
 
         @flow
         async def example_blob_storage_list_flow():
-            azure_credentials = AzureCredentials(
-                connection_string=connection_string,
+            connection_string = "connection_string"
+            azure_credentials = BlobStorageAzureCredentials(
+                connection_string="connection_string",
             )
             data = await blob_storage_list(
                 container="container",
                 azure_credentials=azure_credentials,
             )
             return data
+
+        await example_blob_storage_list_flow()
         ```
     """
     logger = get_run_logger()
     logger.info("Listing blobs from container %s", container)
 
-    blob_service_client = azure_credentials.get_blob_service_client()
+    blob_service_client = azure_credentials.get_client()
     container_client = blob_service_client.get_container_client(container)
 
     blobs = [blob async for blob in container_client.list_blobs()]
