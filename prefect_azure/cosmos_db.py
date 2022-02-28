@@ -167,7 +167,7 @@ async def cosmos_db_read_item(
 
 
 @task
-def cosmos_db_create_item(
+async def cosmos_db_create_item(
     body: Dict[str, Any],
     container: Union[str, ContainerProxy, Dict[str, Any]],
     database: Union[str, DatabaseProxy, Dict[str, Any]],
