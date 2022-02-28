@@ -109,7 +109,7 @@ async def blob_storage_upload(
         ```
     """
     logger = get_run_logger()
-    logger.info("Uploading object to container %s with key %s", container, blob)
+    logger.info("Uploading blob to container %s with key %s", container, blob)
 
     # create key if not provided
     if blob is None:
