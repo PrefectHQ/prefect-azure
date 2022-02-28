@@ -1,7 +1,9 @@
 """Tasks for interacting with Azure Cosmos DB"""
 
+from functools import partial
 from typing import Any, Dict, List, Optional, Union
 
+from anyio import to_thread
 from azure.cosmos.database import ContainerProxy, DatabaseProxy
 from prefect import task
 from prefect.logging import get_run_logger
@@ -20,7 +22,7 @@ def _get_container_client(azure_credentials, container, database):
 
 
 @task
-def cosmos_db_query_items(
+async def cosmos_db_query_items(
     query: str,
     container: Union[str, ContainerProxy, Dict[str, Any]],
     database: Union[str, DatabaseProxy, Dict[str, Any]],
@@ -61,7 +63,7 @@ def cosmos_db_query_items(
         from prefect_azure.cosmos_db import cosmos_db_query_items
 
         @flow
-        def example_cosmos_db_query_items_flow():
+        async def example_cosmos_db_query_items_flow():
             connection_string = "connection_string"
             azure_credentials = CosmosDbAzureCredentials(connection_string)
 
@@ -70,7 +72,7 @@ def cosmos_db_query_items(
             database = "SampleDB"
             parameters = [dict(name="@age", value=44)]
 
-            results = cosmos_db_query_items(
+            results = await cosmos_db_query_items(
                 query,
                 container,
                 database,
@@ -79,18 +81,23 @@ def cosmos_db_query_items(
                 enable_cross_partition_query=True,
             )
             return results
+
+        await example_cosmos_db_query_items_flow()
         ```
     """
     logger = get_run_logger()
     logger.info("Running query from container %s in %s database", container, database)
 
     container_client = _get_container_client(azure_credentials, container, database)
-    results = list(container_client.query_items(query, parameters=parameters, **kwargs))
+    query_items = partial(
+        container_client.query_items, query, parameters=parameters, **kwargs
+    )
+    results = await to_thread.run_sync(query_items)
     return results
 
 
 @task
-def cosmos_db_read_item(
+async def cosmos_db_read_item(
     item: Union[str, Dict[str, Any]],
     partition_key: Any,
     container: Union[str, ContainerProxy, Dict[str, Any]],
@@ -123,7 +130,7 @@ def cosmos_db_read_item(
         from prefect_azure.cosmos_db import cosmos_db_read_item
 
         @flow
-        def example_cosmos_db_read_item_flow():
+        async def example_cosmos_db_read_item_flow():
             connection_string = "connection_string"
             azure_credentials = CosmosDbAzureCredentials(connection_string)
 
@@ -132,7 +139,7 @@ def cosmos_db_read_item(
             container = "container"
             database = "database"
 
-            result = cosmos_db_read_item(
+            result = await cosmos_db_read_item(
                 item,
                 partition_key,
                 container,
@@ -140,6 +147,8 @@ def cosmos_db_read_item(
                 azure_credentials
             )
             return result
+
+        await example_cosmos_db_read_item_flow()
         ```
     """
     logger = get_run_logger()
@@ -152,7 +161,8 @@ def cosmos_db_read_item(
     )
 
     container_client = _get_container_client(azure_credentials, container, database)
-    result = container_client.read_item(item, partition_key, **kwargs)
+    read_item = partial(container_client.read_item, item, partition_key, **kwargs)
+    result = await to_thread.run_sync(read_item)
     return result
 
 
@@ -195,7 +205,7 @@ def cosmos_db_create_item(
 
 
         @flow
-        def example_cosmos_db_create_item_flow():
+        async def example_cosmos_db_create_item_flow():
             azure_credentials = CosmosDbAzureCredentials(connection_string)
 
             body = {
@@ -206,9 +216,15 @@ def cosmos_db_create_item(
             container = "Persons"
             database = "SampleDB"
 
-            result = cosmos_db_create_item(body, container, database, azure_credentials)
+            result = await cosmos_db_create_item(
+                body,
+                container,
+                database,
+                azure_credentials
+            )
             return result
 
+        await example_cosmos_db_create_item_flow()
         ```
     """
     logger = get_run_logger()
@@ -219,5 +235,6 @@ def cosmos_db_create_item(
     )
 
     container_client = _get_container_client(azure_credentials, container, database)
-    result = container_client.create_item(body, **kwargs)
+    create_item = partial(container_client.create_item, body, **kwargs)
+    result = await to_thread.run_sync(create_item)
     return result
