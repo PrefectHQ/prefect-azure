@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from prefect.utilities.testing import AsyncMock
 
-from prefect_azure.credentials import AzureCredentials
+from prefect_azure.credentials import BlobStorageAzureCredentials
 
 
 class AsyncIter:
@@ -29,8 +29,8 @@ class ClientMock(MagicMock):
 
 
 @pytest.fixture
-def azure_credentials():
-    return AzureCredentials("connection_string")
+def blob_storage_azure_credentials():
+    return BlobStorageAzureCredentials("connection_string")
 
 
 @pytest.fixture

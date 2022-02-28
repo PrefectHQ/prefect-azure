@@ -12,13 +12,13 @@ with open("README.md") as readme_file:
     readme = readme_file.read()
 
 extras_require = {
-    "dev": dev_requires,
     "storage": ["azure-storage-blob"],
     "cosmos": ["azure-cosmos"],
 }
 extras_require["complete"] = sorted(
     {lib for key in extras_require.values() for lib in key if key != "dev"}
 )
+extras_require["dev"] = dev_requires + extras_require["complete"]
 
 setup(
     name="prefect-azure",
