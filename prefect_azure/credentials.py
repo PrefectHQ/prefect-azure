@@ -228,13 +228,19 @@ class CosmosDbAzureCredentials(AzureCredentials):
             Create an authorized Container session
             ```python
             import os
+            from prefect import flow
             from prefect_azure import BlobStorageAzureCredentials
 
-            connection_string = os.getenv("AZURE_COSMOS_CONNECTION_STRING")
-            azure_credentials = CosmosDbAzureCredentials(
-                connection_string=connection_string,
-            )
-            container_client = azure_credentials.get_container_client(container)
+            @flow
+            def example_get_container_client_flow():
+                connection_string = os.getenv("AZURE_COSMOS_CONNECTION_STRING")
+                azure_credentials = CosmosDbAzureCredentials(
+                    connection_string=connection_string,
+                )
+                container_client = azure_credentials.get_container_client(container)
+                return container_client
+
+            example_get_container_client_flow()
             ```
         """
         database_client = self.get_database_client(database)
