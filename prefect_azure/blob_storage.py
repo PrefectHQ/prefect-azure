@@ -1,19 +1,22 @@
 """Tasks for interacting with Azure Blob Storage"""
 import uuid
-from typing import List
+from typing import TYPE_CHECKING, List
 
-from azure.storage.blob import BlobProperties
+if TYPE_CHECKING:
+    from azure.storage.blob import BlobProperties
+
 from prefect import task
 from prefect.logging import get_run_logger
 
-from prefect_azure.credentials import BlobStorageAzureCredentials
+if TYPE_CHECKING:
+    from prefect_azure.credentials import BlobStorageAzureCredentials
 
 
 @task
 async def blob_storage_download(
     blob: str,
     container: str,
-    azure_credentials: BlobStorageAzureCredentials,
+    azure_credentials: "BlobStorageAzureCredentials",
 ) -> bytes:
     """
     Downloads a blob with a given key from a given Blob Storage container.
@@ -61,7 +64,7 @@ async def blob_storage_download(
 async def blob_storage_upload(
     data: bytes,
     container: str,
-    azure_credentials: BlobStorageAzureCredentials,
+    azure_credentials: "BlobStorageAzureCredentials",
     blob: str = None,
     overwrite: bool = False,
 ) -> str:
@@ -119,8 +122,8 @@ async def blob_storage_upload(
 @task
 async def blob_storage_list(
     container: str,
-    azure_credentials: BlobStorageAzureCredentials,
-) -> List[BlobProperties]:
+    azure_credentials: "BlobStorageAzureCredentials",
+) -> List["BlobProperties"]:
     """
     List objects from a given Blob Storage container.
     Args:

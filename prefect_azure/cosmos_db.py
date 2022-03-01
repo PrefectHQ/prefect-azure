@@ -1,10 +1,13 @@
 """Tasks for interacting with Azure Cosmos DB"""
 
 from functools import partial
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from anyio import to_thread
-from azure.cosmos.database import ContainerProxy, DatabaseProxy
+
+if TYPE_CHECKING:
+    from azure.cosmos.database import ContainerProxy, DatabaseProxy
+
 from prefect import task
 from prefect.logging import get_run_logger
 
@@ -14,8 +17,8 @@ from prefect_azure.credentials import CosmosDbAzureCredentials
 @task
 async def cosmos_db_query_items(
     query: str,
-    container: Union[str, ContainerProxy, Dict[str, Any]],
-    database: Union[str, DatabaseProxy, Dict[str, Any]],
+    container: Union[str, "ContainerProxy", Dict[str, Any]],
+    database: Union[str, "DatabaseProxy", Dict[str, Any]],
     azure_credentials: CosmosDbAzureCredentials,
     parameters: Optional[List[Dict[str, object]]] = None,
     partition_key: Optional[Any] = None,
@@ -94,8 +97,8 @@ async def cosmos_db_query_items(
 async def cosmos_db_read_item(
     item: Union[str, Dict[str, Any]],
     partition_key: Any,
-    container: Union[str, ContainerProxy, Dict[str, Any]],
-    database: Union[str, DatabaseProxy, Dict[str, Any]],
+    container: Union[str, "ContainerProxy", Dict[str, Any]],
+    database: Union[str, "DatabaseProxy", Dict[str, Any]],
     azure_credentials: CosmosDbAzureCredentials,
     **kwargs: Any
 ) -> List[Union[str, dict]]:
@@ -163,8 +166,8 @@ async def cosmos_db_read_item(
 @task
 async def cosmos_db_create_item(
     body: Dict[str, Any],
-    container: Union[str, ContainerProxy, Dict[str, Any]],
-    database: Union[str, DatabaseProxy, Dict[str, Any]],
+    container: Union[str, "ContainerProxy", Dict[str, Any]],
+    database: Union[str, "DatabaseProxy", Dict[str, Any]],
     azure_credentials: CosmosDbAzureCredentials,
     **kwargs: Any
 ) -> Dict[str, Any]:
