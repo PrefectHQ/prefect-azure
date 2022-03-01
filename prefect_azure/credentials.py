@@ -33,7 +33,7 @@ class AzureCredentials(abc.ABC):
     handled via the `azure` module, primarily through a connection string.
 
     Args:
-        connection_string
+        connection_string: includes the authorization information required
     """
 
     connection_string: str
