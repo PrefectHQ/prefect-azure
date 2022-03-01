@@ -8,12 +8,12 @@ try:
     if TYPE_CHECKING:
         from azure.cosmos import ContainerClient, ContainerProxy, DatabaseProxy
 except ModuleNotFoundError:
-    pass
+    pass  # a descriptive error will be raised in get_client
 
 try:
     from azure.storage.blob.aio import BlobClient, BlobServiceClient
 except ModuleNotFoundError:
-    pass
+    pass  # a descriptive error will be raised in get_client
 
 from prefect.logging import get_run_logger
 
