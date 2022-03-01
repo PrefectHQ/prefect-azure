@@ -167,7 +167,7 @@ async def cosmos_db_create_item(
     database: Union[str, DatabaseProxy, Dict[str, Any]],
     azure_credentials: CosmosDbAzureCredentials,
     **kwargs: Any
-) -> dict[Union[str, Any]]:
+) -> Dict[str, Any]:
     """
     Create an item in the container.
 
