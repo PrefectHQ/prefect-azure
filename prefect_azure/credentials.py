@@ -46,7 +46,7 @@ class AzureCredentials(abc.ABC):
 
 class BlobStorageAzureCredentials(AbstractAsyncContextManager, AzureCredentials):
 
-    clients: List[str] = []
+    clients: List = []
 
     async def __aexit__(self, *exc):
         await self.close()
@@ -168,7 +168,7 @@ class BlobStorageAzureCredentials(AbstractAsyncContextManager, AzureCredentials)
 
 class CosmosDbAzureCredentials(AbstractContextManager, AzureCredentials):
 
-    clients: List[str] = []
+    clients: List = []
 
     def __exit__(self, *exc):
         self.close()
