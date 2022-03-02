@@ -56,7 +56,7 @@ async def cosmos_db_query_items(
         from prefect_azure.cosmos_db import cosmos_db_query_items
 
         @flow
-        def example_cosmos_db_query_items_flow():
+        async def example_cosmos_db_query_items_flow():
             connection_string = "connection_string"
             azure_credentials = CosmosDbAzureCredentials(connection_string)
 
@@ -65,7 +65,7 @@ async def cosmos_db_query_items(
             database = "SampleDB"
             parameters = [dict(name="@age", value=44)]
 
-            results = cosmos_db_query_items(
+            results = await cosmos_db_query_items(
                 query,
                 container,
                 database,
@@ -75,7 +75,7 @@ async def cosmos_db_query_items(
             )
             return results
 
-        example_cosmos_db_query_items_flow()
+        await example_cosmos_db_query_items_flow()
         ```
     """
     logger = get_run_logger()
@@ -127,7 +127,7 @@ async def cosmos_db_read_item(
         from prefect_azure.cosmos_db import cosmos_db_read_item
 
         @flow
-        def example_cosmos_db_read_item_flow():
+        async def example_cosmos_db_read_item_flow():
             connection_string = "connection_string"
             azure_credentials = CosmosDbAzureCredentials(connection_string)
 
@@ -136,7 +136,7 @@ async def cosmos_db_read_item(
             container = "container"
             database = "database"
 
-            result = cosmos_db_read_item(
+            result = await cosmos_db_read_item(
                 item,
                 partition_key,
                 container,
@@ -145,7 +145,7 @@ async def cosmos_db_read_item(
             )
             return result
 
-        example_cosmos_db_read_item_flow()
+        await example_cosmos_db_read_item_flow()
         ```
     """
     logger = get_run_logger()
@@ -200,9 +200,8 @@ async def cosmos_db_create_item(
         from prefect_azure import CosmosDbAzureCredentials
         from prefect_azure.cosmos_db import cosmos_db_create_item
 
-
         @flow
-        def example_cosmos_db_create_item_flow():
+        async def example_cosmos_db_create_item_flow():
             connection_string = "connection_string"
             azure_credentials = CosmosDbAzureCredentials(connection_string)
 
@@ -214,7 +213,7 @@ async def cosmos_db_create_item(
             container = "Persons"
             database = "SampleDB"
 
-            result = cosmos_db_create_item(
+            result = await cosmos_db_create_item(
                 body,
                 container,
                 database,
@@ -222,7 +221,7 @@ async def cosmos_db_create_item(
             )
             return result
 
-        example_cosmos_db_create_item_flow()
+        await example_cosmos_db_create_item_flow()
         ```
     """
     logger = get_run_logger()

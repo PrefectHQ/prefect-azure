@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 
 @task
 async def blob_storage_download(
-    blob: str,
     container: str,
+    blob: str,
     azure_credentials: "BlobStorageAzureCredentials",
 ) -> bytes:
     """
@@ -41,8 +41,8 @@ async def blob_storage_download(
                 connection_string=connection_string,
             )
             data = blob_storage_download(
-                blob="prefect.txt",
                 container="prefect",
+                blob="prefect.txt",
                 azure_credentials=azure_credentials,
             )
             return data
@@ -53,9 +53,10 @@ async def blob_storage_download(
     logger = get_run_logger()
     logger.info("Downloading blob from container %s with key %s", container, blob)
 
-    blob_client = azure_credentials.get_blob_client(blob, container)
+    blob_client = azure_credentials.get_blob_client(container, blob)
     blob_obj = await blob_client.download_blob()
     output = await blob_obj.content_as_bytes()
+    await blob_client.close()
 
     return output
 
@@ -96,8 +97,8 @@ async def blob_storage_upload(
             with open("data.csv", "rb") as f:
                 blob = blob_storage_upload(
                     data=f.read(),
-                    blob="data.csv",
                     container="container",
+                    blob="data.csv",
                     azure_credentials=azure_credentials,
                     overwrite=False,
                 )
@@ -113,8 +114,9 @@ async def blob_storage_upload(
     if blob is None:
         blob = str(uuid.uuid4())
 
-    blob_client = azure_credentials.get_blob_client(blob, container)
+    blob_client = azure_credentials.get_blob_client(container, blob)
     await blob_client.upload_blob(data, overwrite=overwrite)
+    await blob_client.close()
 
     return blob
 
@@ -157,6 +159,6 @@ async def blob_storage_list(
     logger.info("Listing blobs from container %s", container)
 
     container_client = azure_credentials.get_container_client(container)
-
     blobs = [blob async for blob in container_client.list_blobs()]
+    await container_client.close()
     return blobs
