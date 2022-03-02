@@ -77,6 +77,7 @@ class BlobStorageAzureCredentials(AzureCredentials):
             Create an authorized Blob Service session
             ```python
             import os
+            import asyncio
             from prefect import flow
             from prefect_azure import BlobStorageAzureCredentials
 
@@ -90,7 +91,7 @@ class BlobStorageAzureCredentials(AzureCredentials):
                     # run other code here
                     pass
 
-            example_get_client_flow()
+            asyncio.run(example_get_client_flow())
             ```
         """
         return BlobServiceClient.from_connection_string(self.connection_string)
@@ -109,6 +110,7 @@ class BlobStorageAzureCredentials(AzureCredentials):
             Create an authorized Blob session
             ```python
             import os
+            import asyncio
             from prefect import flow
             from prefect_azure import BlobStorageAzureCredentials
 
@@ -124,7 +126,7 @@ class BlobStorageAzureCredentials(AzureCredentials):
                     # run other code here
                     pass
 
-            example_get_blob_client_flow()
+            asyncio.run(example_get_blob_client_flow())
             ```
         """
         blob_client = BlobClient.from_connection_string(
@@ -145,11 +147,12 @@ class BlobStorageAzureCredentials(AzureCredentials):
             Create an authorized Container session
             ```python
             import os
+            import asyncio
             from prefect import flow
             from prefect_azure import BlobStorageAzureCredentials
 
             @flow
-            def example_get_container_client_flow():
+            async def example_get_container_client_flow():
                 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
                 azure_credentials = BlobStorageAzureCredentials(
                     connection_string=connection_string,
@@ -160,7 +163,7 @@ class BlobStorageAzureCredentials(AzureCredentials):
                     # run other code here
                     pass
 
-            example_get_container_client_flow()
+            asyncio.run(example_get_container_client_flow())
             ```
         """
         container_client = ContainerClient.from_connection_string(
