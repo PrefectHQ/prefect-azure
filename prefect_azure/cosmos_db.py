@@ -73,6 +73,7 @@ async def cosmos_db_query_items(
                 parameters=parameters,
                 enable_cross_partition_query=True,
             )
+            azure_credentials.close()
             return results
 
         await example_cosmos_db_query_items_flow()
@@ -143,6 +144,7 @@ async def cosmos_db_read_item(
                 database,
                 azure_credentials
             )
+            azure_credentials.close()
             return result
 
         await example_cosmos_db_read_item_flow()
@@ -200,7 +202,6 @@ async def cosmos_db_create_item(
         from prefect_azure import CosmosDbAzureCredentials
         from prefect_azure.cosmos_db import cosmos_db_create_item
 
-
         @flow
         async def example_cosmos_db_create_item_flow():
             connection_string = "connection_string"
@@ -220,6 +221,7 @@ async def cosmos_db_create_item(
                 database,
                 azure_credentials
             )
+            azure_credentials.close()
             return result
 
         await example_cosmos_db_create_item_flow()

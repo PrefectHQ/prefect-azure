@@ -1,6 +1,7 @@
 import abc
+from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 try:
     from azure.cosmos import CosmosClient
@@ -43,7 +44,18 @@ class AzureCredentials(abc.ABC):
         pass
 
 
-class BlobStorageAzureCredentials(AzureCredentials):
+class BlobStorageAzureCredentials(AbstractAsyncContextManager, AzureCredentials):
+
+    clients: List[str] = []
+
+    async def __aexit__(self, *exc):
+        await self.close()
+
+    async def close(self):
+        while self.clients:
+            client = self.clients.pop()
+            await client.close()
+
     def get_client(self) -> "BlobServiceClient":
         """
         Returns an authenticated base Blob Service client that can be used to create
@@ -71,7 +83,11 @@ class BlobStorageAzureCredentials(AzureCredentials):
         logger = get_run_logger()
 
         try:
-            return BlobServiceClient.from_connection_string(self.connection_string)
+            blob_service_client = BlobServiceClient.from_connection_string(
+                self.connection_string
+            )
+            self.clients.append(blob_service_client)
+            return blob_service_client
         except NameError:
             logger.exception(
                 "Using `prefect_azure.blob_storage` requires "
@@ -114,6 +130,7 @@ class BlobStorageAzureCredentials(AzureCredentials):
         blob_client = blob_service_client.get_blob_client(
             blob=blob, container=container
         )
+        self.clients.append(blob_client)
         return blob_client
 
     def get_container_client(self, container) -> "ContainerClient":
@@ -145,10 +162,22 @@ class BlobStorageAzureCredentials(AzureCredentials):
         """
         blob_service_client = self.get_client()
         container_client = blob_service_client.get_container_client(container=container)
+        self.clients.append(container_client)
         return container_client
 
 
-class CosmosDbAzureCredentials(AzureCredentials):
+class CosmosDbAzureCredentials(AbstractContextManager, AzureCredentials):
+
+    clients: List[str] = []
+
+    def __exit__(self, *exc):
+        self.close()
+
+    def close(self):
+        while self.clients:
+            client = self.clients.pop()
+            client.close()
+
     def get_client(self) -> "CosmosClient":
         """
         Returns an authenticated Cosmos client that can be used to create
@@ -175,7 +204,9 @@ class CosmosDbAzureCredentials(AzureCredentials):
         """
         logger = get_run_logger()
         try:
-            return CosmosClient.from_connection_string(self.connection_string)
+            cosmos_client = CosmosClient.from_connection_string(self.connection_string)
+            self.clients.append(cosmos_client)
+            return cosmos_client
         except NameError:
             logger.exception(
                 "Using `prefect_azure.cosmos_db` requires "
@@ -214,6 +245,7 @@ class CosmosDbAzureCredentials(AzureCredentials):
         """
         cosmos_client = self.get_client()
         database_client = cosmos_client.get_database_client(database=database)
+        self.clients.append(database_client)
         return database_client
 
     def get_container_client(self, container: str, database: str) -> "ContainerProxy":
@@ -245,4 +277,5 @@ class CosmosDbAzureCredentials(AzureCredentials):
         """
         database_client = self.get_database_client(database)
         container_client = database_client.get_container_client(container=container)
+        self.clients.append(container_client)
         return container_client

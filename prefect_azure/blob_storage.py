@@ -45,6 +45,7 @@ async def blob_storage_download(
                 container="prefect",
                 azure_credentials=azure_credentials,
             )
+            azure_credentials.close()
             return data
 
         await example_blob_storage_download_flow()
@@ -56,7 +57,6 @@ async def blob_storage_download(
     blob_client = azure_credentials.get_blob_client(blob, container)
     blob_obj = await blob_client.download_blob()
     output = await blob_obj.content_as_bytes()
-
     return output
 
 
@@ -101,6 +101,7 @@ async def blob_storage_upload(
                     azure_credentials=azure_credentials,
                     overwrite=False,
                 )
+            azure_credentials.close()
             return blob
 
         await example_blob_storage_upload_flow()
@@ -148,6 +149,7 @@ async def blob_storage_list(
                 container="container",
                 azure_credentials=azure_credentials,
             )
+            azure_credentials.close()
             return data
 
         await example_blob_storage_list_flow()
