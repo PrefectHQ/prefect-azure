@@ -1,5 +1,6 @@
 """Tasks for interacting with Azure Blob Storage"""
 import uuid
+from contextlib import AbstractAsyncContextManager
 from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
@@ -10,6 +11,39 @@ from prefect.logging import get_run_logger
 
 if TYPE_CHECKING:
     from prefect_azure.credentials import BlobStorageAzureCredentials
+
+
+class aclosing(AbstractAsyncContextManager):
+    """
+    Async context manager for safely finalizing an asynchronously cleaned-up
+    resource such as an async generator, calling its ``close()`` method.
+    Copied from Python 3.10, modifying aclose to close.
+
+    Code like this:
+
+        async with aclosing(<module>.fetch(<arguments>)) as agen:
+            <block>
+
+    is equivalent to this:
+
+        agen = <module>.fetch(<arguments>)
+        try:
+            <block>
+        finally:
+            await agen.close()
+
+    Args:
+        thing: object to close
+    """
+
+    def __init__(self, thing):
+        self.thing = thing
+
+    async def __aenter__(self):
+        return self.thing
+
+    async def __aexit__(self, *exc_info):
+        await self.thing.close()
 
 
 @task
@@ -53,10 +87,9 @@ async def blob_storage_download(
     logger = get_run_logger()
     logger.info("Downloading blob from container %s with key %s", container, blob)
 
-    blob_client = azure_credentials.get_blob_client(container, blob)
-    blob_obj = await blob_client.download_blob()
-    output = await blob_obj.content_as_bytes()
-    await blob_client.close()
+    async with azure_credentials.get_blob_client(container, blob) as blob_client:
+        blob_obj = await blob_client.download_blob()
+        output = await blob_obj.content_as_bytes()
 
     return output
 
@@ -114,9 +147,8 @@ async def blob_storage_upload(
     if blob is None:
         blob = str(uuid.uuid4())
 
-    blob_client = azure_credentials.get_blob_client(container, blob)
-    await blob_client.upload_blob(data, overwrite=overwrite)
-    await blob_client.close()
+    async with azure_credentials.get_blob_client(container, blob) as blob_client:
+        await blob_client.upload_blob(data, overwrite=overwrite)
 
     return blob
 
@@ -158,7 +190,9 @@ async def blob_storage_list(
     logger = get_run_logger()
     logger.info("Listing blobs from container %s", container)
 
-    container_client = azure_credentials.get_container_client(container)
-    blobs = [blob async for blob in container_client.list_blobs()]
-    await container_client.close()
+    async with aclosing(
+        azure_credentials.get_container_client(container)
+    ) as container_client:
+        blobs = [blob async for blob in container_client.list_blobs()]
+
     return blobs

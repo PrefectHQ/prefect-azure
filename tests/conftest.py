@@ -21,6 +21,12 @@ class BlobStorageClientMethodsMock:
     def __init__(self, blob="prefect.txt"):
         self.blob = blob
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        return False
+
     async def download_blob(self):
         return AsyncMock(
             content_as_bytes=AsyncMock(return_value=mock_container.get(self.blob))
