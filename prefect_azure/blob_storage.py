@@ -35,19 +35,19 @@ async def blob_storage_download(
         from prefect_azure.blob_storage import blob_storage_download
 
         @flow
-        async def example_blob_storage_download_flow():
+        def example_blob_storage_download_flow():
             connection_string = "connection_string"
             azure_credentials = BlobStorageAzureCredentials(
                 connection_string=connection_string,
             )
-            data = await blob_storage_download(
+            data = blob_storage_download(
                 blob="prefect.txt",
                 container="prefect",
                 azure_credentials=azure_credentials,
             )
             return data
 
-        await example_blob_storage_download_flow()
+        example_blob_storage_download_flow()
         ```
     """
     logger = get_run_logger()
@@ -88,13 +88,13 @@ async def blob_storage_upload(
         from prefect_azure.blob_storage import blob_storage_upload
 
         @flow
-        async def example_blob_storage_upload_flow():
+        def example_blob_storage_upload_flow():
             connection_string = "connection_string"
             azure_credentials = BlobStorageAzureCredentials(
                 connection_string=connection_string,
             )
             with open("data.csv", "rb") as f:
-                blob = await blob_storage_upload(
+                blob = blob_storage_upload(
                     data=f.read(),
                     blob="data.csv",
                     container="container",
@@ -103,7 +103,7 @@ async def blob_storage_upload(
                 )
             return blob
 
-        await example_blob_storage_upload_flow()
+        example_blob_storage_upload_flow()
         ```
     """
     logger = get_run_logger()
@@ -139,18 +139,18 @@ async def blob_storage_list(
         from prefect_azure.blob_storage import blob_storage_list
 
         @flow
-        async def example_blob_storage_list_flow():
+        def example_blob_storage_list_flow():
             connection_string = "connection_string"
             azure_credentials = BlobStorageAzureCredentials(
                 connection_string="connection_string",
             )
-            data = await blob_storage_list(
+            data = blob_storage_list(
                 container="container",
                 azure_credentials=azure_credentials,
             )
             return data
 
-        await example_blob_storage_list_flow()
+        example_blob_storage_list_flow()
         ```
     """
     logger = get_run_logger()
