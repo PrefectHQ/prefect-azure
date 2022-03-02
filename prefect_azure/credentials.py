@@ -44,7 +44,7 @@ class AzureCredentials(abc.ABC):
         pass
 
 
-class BlobStorageAzureCredentials(AbstractAsyncContextManager, AzureCredentials):
+class BlobStorageAzureCredentials(AzureCredentials, AbstractAsyncContextManager):
 
     clients: List = []
 
@@ -166,7 +166,7 @@ class BlobStorageAzureCredentials(AbstractAsyncContextManager, AzureCredentials)
         return container_client
 
 
-class CosmosDbAzureCredentials(AbstractContextManager, AzureCredentials):
+class CosmosDbAzureCredentials(AzureCredentials, AbstractContextManager):
 
     clients: List = []
 
