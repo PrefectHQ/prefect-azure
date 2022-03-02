@@ -81,13 +81,14 @@ class BlobStorageAzureCredentials(AzureCredentials):
             from prefect_azure import BlobStorageAzureCredentials
 
             @flow
-            def example_get_client_flow():
+            async def example_get_client_flow():
                 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
                 azure_credentials = BlobStorageAzureCredentials(
                     connection_string=connection_string,
                 )
                 blob_service_client = azure_credentials.get_client()
-                return blob_service_client
+                # run other code here
+                await blob_service_client.close()
 
             example_get_client_flow()
             ```
@@ -118,7 +119,8 @@ class BlobStorageAzureCredentials(AzureCredentials):
                     connection_string=connection_string,
                 )
                 blob_client = azure_credentials.get_blob_client("container", "blob")
-                return blob_client
+                # run other code here
+                await blob_client.close()
 
             example_get_blob_client_flow()
             ```
@@ -153,7 +155,8 @@ class BlobStorageAzureCredentials(AzureCredentials):
                 blob_container_client = azure_credentials.get_container_client(
                     "container"
                 )
-                return blob_container_client
+                # run other code here
+                await blob_container_client.close()
 
             example_get_container_client_flow()
             ```
