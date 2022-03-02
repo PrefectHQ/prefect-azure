@@ -1,9 +1,8 @@
 from unittest.mock import MagicMock
 
 import pytest
+from azure.core.exceptions import ResourceExistsError
 from prefect.utilities.testing import AsyncMock
-
-from prefect_azure.credentials import AzureCredentials
 
 
 class AsyncIter:
@@ -15,33 +14,55 @@ class AsyncIter:
             yield item
 
 
-class ClientMock(MagicMock):
-    download_blob = AsyncMock()
-    download_blob.return_value.content_as_bytes = AsyncMock(
-        return_value=b"prefect_works"
-    )
+mock_container = {"prefect.txt": b"prefect_works"}
 
-    upload_blob = AsyncMock()
-    upload_blob.return_value = "prefect.txt"
 
-    list_blobs = MagicMock()
-    list_blobs.return_value = AsyncIter(range(5))
+class BlobStorageClientMethodsMock:
+    def __init__(self, blob="prefect.txt"):
+        self.blob = blob
+
+    async def download_blob(self):
+        return AsyncMock(
+            content_as_bytes=AsyncMock(return_value=mock_container.get(self.blob))
+        )
+
+    async def upload_blob(self, data, overwrite):
+        if not overwrite and self.blob in mock_container:
+            raise ResourceExistsError("Cannot overwrite existing blob")
+        mock_container[self.blob] = data
+        return self.blob
+
+    def list_blobs(self):
+        return AsyncIter(range(5))
 
 
 @pytest.fixture
-def azure_credentials():
-    return AzureCredentials("connection_string")
+def blob_storage_azure_credentials():
+    azure_credentials_mock = MagicMock()
+    azure_credentials_mock.get_blob_client.side_effect = (
+        lambda blob, container: BlobStorageClientMethodsMock(blob)
+    )
+    azure_credentials_mock.get_container_client.side_effect = (
+        lambda container: BlobStorageClientMethodsMock()
+    )
+    return azure_credentials_mock
+
+
+class CosmosDbClientMethodsMock:
+    def query_items(self, *args, **kwargs):
+        return [{"name": "Someone", "age": 23}]
+
+    def read_item(self, *args, **kwargs):
+        return {"name": "Someone", "age": 23}
+
+    def create_item(self, *args, **kwargs):
+        return {"name": "Other", "age": 3}
 
 
 @pytest.fixture
-def blob_service_client_mock(monkeypatch):
-    BlobServiceClientMock = MagicMock()
-    BlobServiceClientMock.from_connection_string().get_blob_client.return_value = (
-        ClientMock()
+def cosmos_db_azure_credentials():
+    azure_credentials_mock = MagicMock()
+    azure_credentials_mock.get_container_client.side_effect = (
+        lambda container, database: CosmosDbClientMethodsMock()
     )
-    BlobServiceClientMock.from_connection_string().get_container_client.return_value = (
-        ClientMock()
-    )
-    monkeypatch.setattr(
-        "prefect_azure.credentials.BlobServiceClient", BlobServiceClientMock
-    )
+    return azure_credentials_mock
