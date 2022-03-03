@@ -1,3 +1,5 @@
+"""Credential classes used to perform authenticated interactions with Azure"""
+
 import abc
 import functools
 from dataclasses import dataclass
@@ -32,10 +34,24 @@ HELP_URLS = {
 HELP_FMT = "Please visit {help_url} for retrieving the proper connection string."
 
 
-def _raise_help_msg(key):
+def _raise_help_msg(key: str):
+    """
+    Raises a helpful error message.
+
+    Args:
+        key: the key to access HELP_URLS
+    """
+
     def outer(func):
+        """
+        Used for decorator.
+        """
+
         @functools.wraps(func)
         def inner(*args, **kwargs):
+            """
+            Used for decorator.
+            """
             logger = get_run_logger()
             try:
                 return func(*args, **kwargs)
@@ -63,11 +79,22 @@ class AzureCredentials(abc.ABC):
 
     @abc.abstractmethod
     def get_client(self) -> None:
+        """
+        Abstract method to get an Azure client.
+        """
         pass
 
 
 @dataclass
 class BlobStorageAzureCredentials(AzureCredentials):
+    """
+    Dataclass used to manage Blob Storage authentication with Azure.
+    Azure authentication is handled via the `azure` module through
+    a connection string.
+
+    Args:
+        connection_string: includes the authorization information required
+    """
 
     connection_string: str
 
@@ -178,6 +205,14 @@ class BlobStorageAzureCredentials(AzureCredentials):
 
 @dataclass
 class CosmosDbAzureCredentials(AzureCredentials):
+    """
+    Dataclass used to manage Cosmos DB authentication with Azure.
+    Azure authentication is handled via the `azure` module through
+    a connection string.
+
+    Args:
+        connection_string: includes the authorization information required
+    """
 
     connection_string: str
 
