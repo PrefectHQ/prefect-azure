@@ -200,7 +200,6 @@ async def cosmos_db_create_item(
         from prefect_azure import CosmosDbAzureCredentials
         from prefect_azure.cosmos_db import cosmos_db_create_item
 
-
         @flow
         def example_cosmos_db_create_item_flow():
             connection_string = "connection_string"

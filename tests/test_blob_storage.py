@@ -15,8 +15,8 @@ async def test_blob_storage_download_flow(blob_storage_azure_credentials):
     @flow
     async def blob_storage_download_flow():
         return await blob_storage_download(
-            blob="prefect.txt",
             container="prefect",
+            blob="prefect.txt",
             azure_credentials=blob_storage_azure_credentials,
         )
 
@@ -38,8 +38,8 @@ async def test_blob_storage_upload_flow(blob_expected, blob_storage_azure_creden
     async def blob_storage_upload_flow():
         return await blob_storage_upload(
             b"prefect_works",
-            blob=blob_expected,
             container="prefect",
+            blob=blob_expected,
             overwrite=True,
             azure_credentials=blob_storage_azure_credentials,
         )
@@ -56,8 +56,8 @@ async def test_blob_storage_upload_blob_exists_flow(blob_storage_azure_credentia
     async def blob_storage_upload_flow():
         return await blob_storage_upload(
             b"prefect_works",
-            blob="prefect.txt",
             container="prefect",
+            blob="prefect.txt",
             overwrite=False,
             azure_credentials=blob_storage_azure_credentials,
         )
