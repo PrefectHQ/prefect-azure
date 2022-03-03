@@ -1,3 +1,5 @@
+"""Credential classes used to perform authenticated interactions with Azure"""
+
 import abc
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -40,10 +42,22 @@ class AzureCredentials(abc.ABC):
 
     @abc.abstractmethod
     def get_client(self) -> None:
+        """
+        Abstract method to get an Azure client.
+        """
         pass
 
 
 class BlobStorageAzureCredentials(AzureCredentials):
+    """
+    Dataclass used to manage Blob Storage authentication with Azure.
+    Azure authentication is handled via the `azure` module through
+    a connection string.
+
+    Args:
+        connection_string: includes the authorization information required
+    """
+
     def get_client(self) -> "BlobServiceClient":
         """
         Returns an authenticated base Blob Service client that can be used to create
@@ -149,6 +163,15 @@ class BlobStorageAzureCredentials(AzureCredentials):
 
 
 class CosmosDbAzureCredentials(AzureCredentials):
+    """
+    Dataclass used to manage Cosmos DB authentication with Azure.
+    Azure authentication is handled via the `azure` module through
+    a connection string.
+
+    Args:
+        connection_string: includes the authorization information required
+    """
+
     def get_client(self) -> "CosmosClient":
         """
         Returns an authenticated Cosmos client that can be used to create
