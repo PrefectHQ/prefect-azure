@@ -19,7 +19,7 @@ async def cosmos_db_query_items(
     query: str,
     container: Union[str, "ContainerProxy", Dict[str, Any]],
     database: Union[str, "DatabaseProxy", Dict[str, Any]],
-    azure_credentials: CosmosDbAzureCredentials,
+    cosmos_db_credentials: CosmosDbAzureCredentials,
     parameters: Optional[List[Dict[str, object]]] = None,
     partition_key: Optional[Any] = None,
     **kwargs: Any
@@ -38,7 +38,7 @@ async def cosmos_db_query_items(
             or a dict representing the properties of the container to be retrieved.
         database: The ID (name), dict representing the properties
             or DatabaseProxy instance of the database to read.
-        azure_credentials: Credentials to use for authentication with Azure.
+        cosmos_db_credentials: Credentials to use for authentication with Azure.
         parameters: Optional array of parameters to the query.
             Each parameter is a dict() with 'name' and 'value' keys.
         partition_key: Partition key for the item to retrieve.
@@ -58,7 +58,7 @@ async def cosmos_db_query_items(
         @flow
         def example_cosmos_db_query_items_flow():
             connection_string = "connection_string"
-            azure_credentials = CosmosDbAzureCredentials(connection_string)
+            cosmos_db_credentials = CosmosDbAzureCredentials(connection_string)
 
             query = "SELECT * FROM c where c.age >= @age"
             container = "Persons"
@@ -69,7 +69,7 @@ async def cosmos_db_query_items(
                 query,
                 container,
                 database,
-                azure_credentials,
+                cosmos_db_credentials,
                 parameters=parameters,
                 enable_cross_partition_query=True,
             )
@@ -81,7 +81,7 @@ async def cosmos_db_query_items(
     logger = get_run_logger()
     logger.info("Running query from container %s in %s database", container, database)
 
-    container_client = azure_credentials.get_container_client(container, database)
+    container_client = cosmos_db_credentials.get_container_client(container, database)
     partial_query_items = partial(
         container_client.query_items,
         query,
@@ -99,7 +99,7 @@ async def cosmos_db_read_item(
     partition_key: Any,
     container: Union[str, "ContainerProxy", Dict[str, Any]],
     database: Union[str, "DatabaseProxy", Dict[str, Any]],
-    azure_credentials: CosmosDbAzureCredentials,
+    cosmos_db_credentials: CosmosDbAzureCredentials,
     **kwargs: Any
 ) -> List[Union[str, dict]]:
     """
@@ -112,7 +112,7 @@ async def cosmos_db_read_item(
             or a dict representing the properties of the container to be retrieved.
         database: The ID (name), dict representing the properties
             or DatabaseProxy instance of the database to read.
-        azure_credentials: Credentials to use for authentication with Azure.
+        cosmos_db_credentials: Credentials to use for authentication with Azure.
         **kwargs: Additional keyword arguments to pass.
 
     Returns:
@@ -129,7 +129,7 @@ async def cosmos_db_read_item(
         @flow
         def example_cosmos_db_read_item_flow():
             connection_string = "connection_string"
-            azure_credentials = CosmosDbAzureCredentials(connection_string)
+            cosmos_db_credentials = CosmosDbAzureCredentials(connection_string)
 
             item = "item"
             partition_key = "partition_key"
@@ -141,7 +141,7 @@ async def cosmos_db_read_item(
                 partition_key,
                 container,
                 database,
-                azure_credentials
+                cosmos_db_credentials
             )
             return result
 
@@ -157,7 +157,7 @@ async def cosmos_db_read_item(
         database,
     )
 
-    container_client = azure_credentials.get_container_client(container, database)
+    container_client = cosmos_db_credentials.get_container_client(container, database)
     read_item = partial(container_client.read_item, item, partition_key, **kwargs)
     result = await to_thread.run_sync(read_item)
     return result
@@ -168,7 +168,7 @@ async def cosmos_db_create_item(
     body: Dict[str, Any],
     container: Union[str, "ContainerProxy", Dict[str, Any]],
     database: Union[str, "DatabaseProxy", Dict[str, Any]],
-    azure_credentials: CosmosDbAzureCredentials,
+    cosmos_db_credentials: CosmosDbAzureCredentials,
     **kwargs: Any
 ) -> Dict[str, Any]:
     """
@@ -182,7 +182,7 @@ async def cosmos_db_create_item(
             or a dict representing the properties of the container to be retrieved.
         database: The ID (name), dict representing the properties
             or DatabaseProxy instance of the database to read.
-        azure_credentials: Credentials to use for authentication with Azure.
+        cosmos_db_credentials: Credentials to use for authentication with Azure.
         **kwargs: Additional keyword arguments to pass.
 
     Returns:
@@ -203,7 +203,7 @@ async def cosmos_db_create_item(
         @flow
         def example_cosmos_db_create_item_flow():
             connection_string = "connection_string"
-            azure_credentials = CosmosDbAzureCredentials(connection_string)
+            cosmos_db_credentials = CosmosDbAzureCredentials(connection_string)
 
             body = {
                 "firstname": "Olivia",
@@ -217,7 +217,7 @@ async def cosmos_db_create_item(
                 body,
                 container,
                 database,
-                azure_credentials
+                cosmos_db_credentials
             )
             return result
 
@@ -231,7 +231,7 @@ async def cosmos_db_create_item(
         database,
     )
 
-    container_client = azure_credentials.get_container_client(container, database)
+    container_client = cosmos_db_credentials.get_container_client(container, database)
     create_item = partial(container_client.create_item, body, **kwargs)
     result = await to_thread.run_sync(create_item)
     return result

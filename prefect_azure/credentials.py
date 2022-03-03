@@ -29,7 +29,7 @@ from prefect.logging import get_run_logger
 HELP_URLS = {
     "blob_storage": "https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-python#copy-your-credentials-from-the-azure-portal",  # noqa
     "cosmos_db": "https://docs.microsoft.com/en-us/azure/cosmos-db/sql/create-sql-api-python#update-your-connection-string",  # noqa
-    "ml": "https://github.com/Azure/MachineLearningNotebooks/blob/master/how-to-use-azureml/manage-azureml-service/authentication-in-azureml/authentication-in-azureml.ipynb",  # noqa
+    "ml_dataset": "https://github.com/Azure/MachineLearningNotebooks/blob/master/how-to-use-azureml/manage-azureml-service/authentication-in-azureml/authentication-in-azureml.ipynb",  # noqa
 }
 HELP_FMT = "Please visit {help_url} for retrieving the proper connection string."
 
@@ -329,7 +329,7 @@ class MlAzureCredentials(AzureCredentials):
     workspace_name: str
     connection_string: str = None
 
-    @_raise_help_msg("ml")
+    @_raise_help_msg("ml_dataset")
     def get_client(self) -> "Workspace":
         """
         Returns an authenticated base Workspace that can be used in
