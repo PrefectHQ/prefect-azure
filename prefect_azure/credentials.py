@@ -58,7 +58,7 @@ def _raise_help_msg(key):
 class AzureCredentials(abc.ABC):
     """
     Dataclass used to manage authentication with Azure. Azure authentication is
-    handled via the `azure` module.
+    handled via the `azure` module, primarily through a connection string.
     """
 
     @abc.abstractmethod
@@ -68,6 +68,9 @@ class AzureCredentials(abc.ABC):
 
 @dataclass
 class BlobStorageAzureCredentials(AzureCredentials):
+
+    connection_string: str
+
     @_raise_help_msg("blob_storage")
     def get_client(self) -> "BlobServiceClient":
         """
@@ -175,6 +178,9 @@ class BlobStorageAzureCredentials(AzureCredentials):
 
 @dataclass
 class CosmosDbAzureCredentials(AzureCredentials):
+
+    connection_string: str
+
     @_raise_help_msg("cosmos_db")
     def get_client(self) -> "CosmosClient":
         """
@@ -266,6 +272,19 @@ class CosmosDbAzureCredentials(AzureCredentials):
 
 @dataclass
 class MlAzureCredentials(AzureCredentials):
+    """
+    Dataclass used to manage authentication with Azure. Azure authentication is
+    handled via the `azure` module.
+
+    Args:
+        tenant_id: The active directory tenant that the service identity belongs to.
+        service_principal_id: The service principal ID.
+        service_principal_password: The service principal password/key.
+        subscription_id: The Azure subscription ID containing the workspace.
+        resource_group: The resource group containing the workspace.
+        workspace_name: The existing workspace name.
+        connection_string: Used for registering a blob container to a datastore.
+    """
 
     tenant_id: str
     service_principal_id: str
@@ -273,6 +292,7 @@ class MlAzureCredentials(AzureCredentials):
     subscription_id: str
     resource_group: str
     workspace_name: str
+    connection_string: str = None
 
     @_raise_help_msg("ml")
     def get_client(self) -> "Workspace":
