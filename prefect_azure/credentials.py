@@ -1,4 +1,5 @@
 import abc
+import functools
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -6,12 +7,12 @@ try:
     from azure.cosmos import CosmosClient
 
     if TYPE_CHECKING:
-        from azure.cosmos import ContainerClient, ContainerProxy, DatabaseProxy
+        from azure.cosmos import ContainerProxy, DatabaseProxy
 except ModuleNotFoundError:
     pass  # a descriptive error will be raised in get_client
 
 try:
-    from azure.storage.blob.aio import BlobClient, BlobServiceClient
+    from azure.storage.blob.aio import BlobClient, BlobServiceClient, ContainerClient
 except ModuleNotFoundError:
     pass  # a descriptive error will be raised in get_client
 
@@ -24,6 +25,28 @@ HELP_URLS = {
     "create-sql-api-python#update-your-connection-string",
 }
 HELP_FMT = "Please visit {help_url} for retrieving the proper connection string."
+
+
+def _raise_help_msg(key):
+    def outer(func):
+        @functools.wraps(func)
+        def inner(*args, **kwargs):
+            logger = get_run_logger()
+            try:
+                return func(*args, **kwargs)
+            except NameError:
+                logger.exception(
+                    f"Using `prefect_azure.{key}` requires "
+                    f"`pip install prefect_azure[{key}]`"
+                )
+                raise
+            except ValueError:
+                logger.exception(HELP_FMT.format(help_url=HELP_URLS[key]))
+                raise
+
+        return inner
+
+    return outer
 
 
 @dataclass
@@ -44,6 +67,7 @@ class AzureCredentials(abc.ABC):
 
 
 class BlobStorageAzureCredentials(AzureCredentials):
+    @_raise_help_msg("blob_storage")
     def get_client(self) -> "BlobServiceClient":
         """
         Returns an authenticated base Blob Service client that can be used to create
@@ -53,69 +77,64 @@ class BlobStorageAzureCredentials(AzureCredentials):
             Create an authorized Blob Service session
             ```python
             import os
+            import asyncio
             from prefect import flow
             from prefect_azure import BlobStorageAzureCredentials
 
             @flow
-            def example_get_client_flow():
+            async def example_get_client_flow():
                 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
                 azure_credentials = BlobStorageAzureCredentials(
                     connection_string=connection_string,
                 )
-                blob_service_client = azure_credentials.get_client()
-                return blob_service_client
+                async with azure_credentials.get_client() as blob_service_client:
+                    # run other code here
+                    pass
 
-            example_get_client_flow()
+            asyncio.run(example_get_client_flow())
             ```
         """
-        logger = get_run_logger()
+        return BlobServiceClient.from_connection_string(self.connection_string)
 
-        try:
-            return BlobServiceClient.from_connection_string(self.connection_string)
-        except NameError:
-            logger.exception(
-                "Using `prefect_azure.blob_storage` requires "
-                "`pip install prefect_azure[blob_storage]`"
-            )
-            raise
-        except ValueError:
-            logger.exception(HELP_FMT.format(help_url=HELP_URLS["blob_storage"]))
-            raise
-
-    def get_blob_client(self, blob, container) -> "BlobClient":
+    @_raise_help_msg("blob_storage")
+    def get_blob_client(self, container, blob) -> "BlobClient":
         """
         Returns an authenticated Blob client that can be used to
         download and upload blobs.
 
         Args:
-            blob: Name of the blob within this container to retrieve.
             container: Name of the Blob Storage container to retrieve from.
+            blob: Name of the blob within this container to retrieve.
 
         Example:
             Create an authorized Blob session
             ```python
             import os
+            import asyncio
             from prefect import flow
             from prefect_azure import BlobStorageAzureCredentials
 
             @flow
-            def example_get_blob_client_flow():
+            async def example_get_blob_client_flow():
                 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
                 azure_credentials = BlobStorageAzureCredentials(
                     connection_string=connection_string,
                 )
-                blob_client = azure_credentials.get_blob_client()
-                return blob_client
+                async with azure_credentials.get_blob_client(
+                    "container", "blob"
+                ) as blob_client:
+                    # run other code here
+                    pass
 
-            example_get_blob_client_flow()
+            asyncio.run(example_get_blob_client_flow())
             ```
         """
-        blob_service_client = self.get_client()
-        blob_client = blob_service_client.get_blob_client(
-            blob=blob, container=container
+        blob_client = BlobClient.from_connection_string(
+            self.connection_string, container, blob
         )
         return blob_client
 
+    @_raise_help_msg("blob_storage")
     def get_container_client(self, container) -> "ContainerClient":
         """
         Returns an authenticated Container client that can be used to create clients
@@ -128,27 +147,33 @@ class BlobStorageAzureCredentials(AzureCredentials):
             Create an authorized Container session
             ```python
             import os
+            import asyncio
             from prefect import flow
             from prefect_azure import BlobStorageAzureCredentials
 
             @flow
-            def example_get_container_client_flow():
+            async def example_get_container_client_flow():
                 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
                 azure_credentials = BlobStorageAzureCredentials(
                     connection_string=connection_string,
                 )
-                blob_container_client = azure_credentials.get_container_client()
-                return blob_container_client
+                async with azure_credentials.get_container_client(
+                    "container"
+                ) as container_client:
+                    # run other code here
+                    pass
 
-            example_get_container_client_flow()
+            asyncio.run(example_get_container_client_flow())
             ```
         """
-        blob_service_client = self.get_client()
-        container_client = blob_service_client.get_container_client(container=container)
+        container_client = ContainerClient.from_connection_string(
+            self.connection_string, container
+        )
         return container_client
 
 
 class CosmosDbAzureCredentials(AzureCredentials):
+    @_raise_help_msg("cosmos_db")
     def get_client(self) -> "CosmosClient":
         """
         Returns an authenticated Cosmos client that can be used to create
@@ -173,18 +198,7 @@ class CosmosDbAzureCredentials(AzureCredentials):
             example_get_client_flow()
             ```
         """
-        logger = get_run_logger()
-        try:
-            return CosmosClient.from_connection_string(self.connection_string)
-        except NameError:
-            logger.exception(
-                "Using `prefect_azure.cosmos_db` requires "
-                "`pip install prefect_azure[cosmos_db]`"
-            )
-            raise
-        except ValueError:
-            logger.exception(HELP_FMT.format(help_url=HELP_URLS["cosmos_db"]))
-            raise
+        return CosmosClient.from_connection_string(self.connection_string)
 
     def get_database_client(self, database: str) -> "DatabaseProxy":
         """
