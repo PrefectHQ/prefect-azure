@@ -46,15 +46,17 @@ class BlobStorageClientMethodsMock:
 
 
 @pytest.fixture
-def blob_storage_azure_credentials():
-    azure_credentials_mock = MagicMock()
-    azure_credentials_mock.get_blob_client.side_effect = (
+def blob_storage_credentials():
+    blob_storage_credentials = MagicMock(
+        connection_string="AccountName=Name;AccountKey=Key"
+    )
+    blob_storage_credentials.get_blob_client.side_effect = (
         lambda container, blob: BlobStorageClientMethodsMock(blob)
     )
-    azure_credentials_mock.get_container_client.side_effect = (
+    blob_storage_credentials.get_container_client.side_effect = (
         lambda container: BlobStorageClientMethodsMock()
     )
-    return azure_credentials_mock
+    return blob_storage_credentials
 
 
 class CosmosDbClientMethodsMock:
@@ -69,9 +71,9 @@ class CosmosDbClientMethodsMock:
 
 
 @pytest.fixture
-def cosmos_db_azure_credentials():
-    azure_credentials_mock = MagicMock()
-    azure_credentials_mock.get_container_client.side_effect = (
+def cosmos_db_credentials():
+    cosmos_db_credentials = MagicMock()
+    cosmos_db_credentials.get_container_client.side_effect = (
         lambda container, database: CosmosDbClientMethodsMock()
     )
-    return azure_credentials_mock
+    return cosmos_db_credentials

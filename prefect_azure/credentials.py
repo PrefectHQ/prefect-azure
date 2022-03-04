@@ -1,6 +1,5 @@
 """Credential classes used to perform authenticated interactions with Azure"""
 
-import abc
 import functools
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -21,10 +20,8 @@ except ModuleNotFoundError:
 from prefect.logging import get_run_logger
 
 HELP_URLS = {
-    "blob_storage": "https://docs.microsoft.com/en-us/azure/storage/blobs/"
-    "storage-quickstart-blobs-python#copy-your-credentials-from-the-azure-portal",
-    "cosmos_db": "https://docs.microsoft.com/en-us/azure/cosmos-db/sql/"
-    "create-sql-api-python#update-your-connection-string",
+    "blob_storage": "https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-python#copy-your-credentials-from-the-azure-portal",  # noqa
+    "cosmos_db": "https://docs.microsoft.com/en-us/azure/cosmos-db/sql/create-sql-api-python#update-your-connection-string",  # noqa
 }
 HELP_FMT = "Please visit {help_url} for retrieving the proper connection string."
 
@@ -66,26 +63,7 @@ def _raise_help_msg(key: str):
 
 
 @dataclass
-class AzureCredentials(abc.ABC):
-    """
-    Dataclass used to manage authentication with Azure. Azure authentication is
-    handled via the `azure` module, primarily through a connection string.
-
-    Args:
-        connection_string: includes the authorization information required
-    """
-
-    connection_string: str
-
-    @abc.abstractmethod
-    def get_client(self) -> None:
-        """
-        Abstract method to get an Azure client.
-        """
-        pass
-
-
-class BlobStorageAzureCredentials(AzureCredentials):
+class BlobStorageAzureCredentials:
     """
     Dataclass used to manage Blob Storage authentication with Azure.
     Azure authentication is handled via the `azure` module through
@@ -94,6 +72,8 @@ class BlobStorageAzureCredentials(AzureCredentials):
     Args:
         connection_string: includes the authorization information required
     """
+
+    connection_string: str
 
     @_raise_help_msg("blob_storage")
     def get_client(self) -> "BlobServiceClient":
@@ -200,7 +180,8 @@ class BlobStorageAzureCredentials(AzureCredentials):
         return container_client
 
 
-class CosmosDbAzureCredentials(AzureCredentials):
+@dataclass
+class CosmosDbAzureCredentials:
     """
     Dataclass used to manage Cosmos DB authentication with Azure.
     Azure authentication is handled via the `azure` module through
@@ -209,6 +190,8 @@ class CosmosDbAzureCredentials(AzureCredentials):
     Args:
         connection_string: includes the authorization information required
     """
+
+    connection_string: str
 
     @_raise_help_msg("cosmos_db")
     def get_client(self) -> "CosmosClient":
