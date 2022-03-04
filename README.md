@@ -26,18 +26,24 @@ pip install prefect-azure
 
 ```python
 from prefect import flow
-from prefect_azure.tasks import (
-    goodbye_prefect_azure,
-    hello_prefect_azure,
-)
 
+from prefect_azure import BlobStorageAzureCredentials
+from prefect_azure.blob_storage import blob_storage_download
 
 @flow
-def example_flow():
-    hello_prefect_azure
-    goodbye_prefect_azure
+def example_blob_storage_download_flow():
+    connection_string = "connection_string"
+    blob_storage_credentials = BlobStorageAzureCredentials(
+        connection_string=connection_string,
+    )
+    data = blob_storage_download(
+        blob="prefect.txt",
+        container="prefect",
+        azure_credentials=blob_storage_credentials,
+    )
+    return data
 
-example_flow()
+example_blob_storage_download_flow()
 ```
 
 ## Resources
