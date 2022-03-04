@@ -11,13 +11,13 @@ from prefect_azure.blob_storage import (
 )
 
 
-async def test_blob_storage_download_flow(blob_storage_azure_credentials):
+async def test_blob_storage_download_flow(blob_storage_credentials):
     @flow
     async def blob_storage_download_flow():
         return await blob_storage_download(
-            blob="prefect.txt",
             container="prefect",
-            azure_credentials=blob_storage_azure_credentials,
+            blob="prefect.txt",
+            blob_storage_credentials=blob_storage_credentials,
         )
 
     data = (await blob_storage_download_flow()).result().result()
@@ -33,15 +33,15 @@ def is_valid_uuid(val):
 
 
 @pytest.mark.parametrize("blob_expected", [None, "prefect.txt", "prefect_new.txt"])
-async def test_blob_storage_upload_flow(blob_expected, blob_storage_azure_credentials):
+async def test_blob_storage_upload_flow(blob_expected, blob_storage_credentials):
     @flow
     async def blob_storage_upload_flow():
         return await blob_storage_upload(
             b"prefect_works",
-            blob=blob_expected,
             container="prefect",
+            blob=blob_expected,
             overwrite=True,
-            azure_credentials=blob_storage_azure_credentials,
+            blob_storage_credentials=blob_storage_credentials,
         )
 
     blob_result = (await blob_storage_upload_flow()).result().result()
@@ -51,27 +51,29 @@ async def test_blob_storage_upload_flow(blob_expected, blob_storage_azure_creden
         assert blob_expected == blob_result
 
 
-async def test_blob_storage_upload_blob_exists_flow(blob_storage_azure_credentials):
+async def test_blob_storage_upload_blob_exists_flow(
+    blob_storage_credentials,
+):
     @flow
     async def blob_storage_upload_flow():
         return await blob_storage_upload(
             b"prefect_works",
-            blob="prefect.txt",
             container="prefect",
+            blob="prefect.txt",
             overwrite=False,
-            azure_credentials=blob_storage_azure_credentials,
+            blob_storage_credentials=blob_storage_credentials,
         )
 
     with pytest.raises(ResourceExistsError):
         (await blob_storage_upload_flow()).result().result()
 
 
-async def test_blob_storage_list_flow(blob_storage_azure_credentials):
+async def test_blob_storage_list_flow(blob_storage_credentials):
     @flow
     async def blob_storage_list_flow():
         return await blob_storage_list(
             container="prefect",
-            azure_credentials=blob_storage_azure_credentials,
+            blob_storage_credentials=blob_storage_credentials,
         )
 
     blobs = (await blob_storage_list_flow()).result().result()

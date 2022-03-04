@@ -7,7 +7,7 @@ from prefect_azure.cosmos_db import (
 )
 
 
-async def test_cosmos_db_query_items_flow(cosmos_db_azure_credentials):
+async def test_cosmos_db_query_items_flow(cosmos_db_credentials):
     @flow
     async def cosmos_db_query_items_flow():
         query = "SELECT * FROM c where c.age >= @age"
@@ -19,7 +19,7 @@ async def test_cosmos_db_query_items_flow(cosmos_db_azure_credentials):
             query,
             container,
             database,
-            cosmos_db_azure_credentials,
+            cosmos_db_credentials,
             parameters=parameters,
             enable_cross_partition_query=True,
         )
@@ -29,7 +29,7 @@ async def test_cosmos_db_query_items_flow(cosmos_db_azure_credentials):
     assert results == [{"name": "Someone", "age": 23}]
 
 
-async def test_cosmos_db_read_item_flow(cosmos_db_azure_credentials):
+async def test_cosmos_db_read_item_flow(cosmos_db_credentials):
     @flow
     async def cosmos_db_read_item_flow():
         item = "item"
@@ -38,7 +38,7 @@ async def test_cosmos_db_read_item_flow(cosmos_db_azure_credentials):
         database = "database"
 
         result = await cosmos_db_read_item(
-            item, partition_key, container, database, cosmos_db_azure_credentials
+            item, partition_key, container, database, cosmos_db_credentials
         )
         return result
 
@@ -46,7 +46,7 @@ async def test_cosmos_db_read_item_flow(cosmos_db_azure_credentials):
     assert result == {"name": "Someone", "age": 23}
 
 
-async def test_cosmos_db_create_item_flow(cosmos_db_azure_credentials):
+async def test_cosmos_db_create_item_flow(cosmos_db_credentials):
     body = {
         "name": "Other",
         "age": 3,
@@ -58,7 +58,7 @@ async def test_cosmos_db_create_item_flow(cosmos_db_azure_credentials):
         database = "SampleDB"
 
         result = await cosmos_db_create_item(
-            body, container, database, cosmos_db_azure_credentials
+            body, container, database, cosmos_db_credentials
         )
         return result
 

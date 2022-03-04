@@ -21,6 +21,16 @@ class BlobStorageClientMethodsMock:
     def __init__(self, blob="prefect.txt"):
         self.blob = blob
 
+    @property
+    def credential(self):
+        return MagicMock(account_name="account_name", account_key="account_key")
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        return False
+
     async def download_blob(self):
         return AsyncMock(
             content_as_bytes=AsyncMock(return_value=mock_container.get(self.blob))
@@ -35,20 +45,23 @@ class BlobStorageClientMethodsMock:
     def list_blobs(self):
         return AsyncIter(range(5))
 
+    async def close(self):
+        return None
+
 
 @pytest.fixture
-def blob_storage_azure_credentials():
-    azure_credentials_mock = MagicMock()
-    azure_credentials_mock.get_client.side_effect = (
+def blob_storage_credentials():
+    blob_storage_credentials = MagicMock()
+    blob_storage_credentials.get_client.side_effect = (
         lambda: BlobStorageClientMethodsMock()
     )
-    azure_credentials_mock.get_blob_client.side_effect = (
-        lambda blob, container: BlobStorageClientMethodsMock(blob)
+    blob_storage_credentials.get_blob_client.side_effect = (
+        lambda container, blob: BlobStorageClientMethodsMock(blob)
     )
-    azure_credentials_mock.get_container_client.side_effect = (
+    blob_storage_credentials.get_container_client.side_effect = (
         lambda container: BlobStorageClientMethodsMock()
     )
-    return azure_credentials_mock
+    return blob_storage_credentials
 
 
 class CosmosDbClientMethodsMock:
@@ -63,9 +76,46 @@ class CosmosDbClientMethodsMock:
 
 
 @pytest.fixture
-def cosmos_db_azure_credentials():
-    azure_credentials_mock = MagicMock()
-    azure_credentials_mock.get_container_client.side_effect = (
+def cosmos_db_credentials():
+    cosmos_db_credentials = MagicMock()
+    cosmos_db_credentials.get_container_client.side_effect = (
         lambda container, database: CosmosDbClientMethodsMock()
     )
-    return azure_credentials_mock
+    return cosmos_db_credentials
+
+
+@pytest.fixture
+def ml_credentials():
+    ml_credentials = MagicMock()
+    ml_credentials.get_workspace.side_effect = lambda: MagicMock(datastores=["a", "b"])
+    return ml_credentials
+
+
+class DatastoreMethodsMock:
+    def __init__(self, workspace, datastore_name="default"):
+        self.workspace = workspace
+        self.datastore_name = datastore_name
+
+    def upload(self, *args, **kwargs):
+        return kwargs
+
+    def upload_files(self, *args, **kwargs):
+        return kwargs
+
+
+@pytest.fixture
+def datastore(monkeypatch):
+    DatastoreMock = MagicMock()
+    DatastoreMock.get_default.side_effect = lambda workspace: DatastoreMethodsMock(
+        workspace
+    )
+    DatastoreMock.get.side_effect = (
+        lambda workspace, datastore_name: DatastoreMethodsMock(
+            workspace, datastore_name=datastore_name
+        )
+    )
+    DatastoreMock.register_azure_blob_container.side_effect = (
+        lambda **kwargs: "registered"
+    )
+
+    monkeypatch.setattr("prefect_azure.ml_datastore.Datastore", DatastoreMock)

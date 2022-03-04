@@ -1,4 +1,8 @@
 from . import _version
-from .credentials import BlobStorageAzureCredentials, CosmosDbAzureCredentials  # noqa
+from .credentials import (  # noqa
+    BlobStorageAzureCredentials,
+    CosmosDbAzureCredentials,
+    MlAzureCredentials,
+)
 
 __version__ = _version.get_versions()["version"]
