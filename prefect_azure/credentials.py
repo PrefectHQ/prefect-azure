@@ -301,7 +301,6 @@ class MlAzureCredentials:
         subscription_id: The Azure subscription ID containing the workspace.
         resource_group: The resource group containing the workspace.
         workspace_name: The existing workspace name.
-        connection_string: Used for registering a blob container to a datastore.
     """
 
     tenant_id: str
@@ -310,7 +309,6 @@ class MlAzureCredentials:
     subscription_id: str
     resource_group: str
     workspace_name: str
-    connection_string: str = None
 
     @_raise_help_msg("ml_datastore")
     def get_workspace(self) -> "Workspace":
