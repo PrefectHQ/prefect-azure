@@ -39,6 +39,9 @@ class BlobStorageClientMethodsMock:
 @pytest.fixture
 def blob_storage_azure_credentials():
     azure_credentials_mock = MagicMock()
+    azure_credentials_mock.get_client.side_effect = (
+        lambda: BlobStorageClientMethodsMock()
+    )
     azure_credentials_mock.get_blob_client.side_effect = (
         lambda blob, container: BlobStorageClientMethodsMock(blob)
     )
