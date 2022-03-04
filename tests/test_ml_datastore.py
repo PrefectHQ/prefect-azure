@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from prefect import flow
 
 from prefect_azure.ml_datastore import (
@@ -52,6 +54,23 @@ async def test_ml_upload_datastore_flow(ml_credentials, datastore):
     result = (await ml_upload_datastore_flow()).result().result()
     assert result["src_dir"] == "tests/"
     assert result["target_path"] == "target_path"
+    assert result["overwrite"]
+
+
+async def test_ml_upload_datastore_flow_pathlib(ml_credentials, datastore):
+    @flow
+    async def ml_upload_datastore_flow():
+        result = await ml_upload_datastore(
+            Path("tests/"),
+            ml_credentials,
+            target_path=Path("target/path"),
+            overwrite=True,
+        )
+        return result
+
+    result = (await ml_upload_datastore_flow()).result().result()
+    assert result["src_dir"] == "tests"
+    assert result["target_path"] == "target/path"
     assert result["overwrite"]
 
 

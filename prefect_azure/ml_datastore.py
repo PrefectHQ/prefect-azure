@@ -2,6 +2,7 @@
 
 import os
 from functools import partial
+from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Union
 
 from anyio import to_thread
@@ -114,10 +115,10 @@ async def ml_get_datastore(
 
 @task
 async def ml_upload_datastore(
-    path: Union[str, List[str]],
+    path: Union[str, Path, List[Union[str, Path]]],
     ml_credentials: "MlAzureCredentials",
-    target_path: str = None,
-    relative_root: str = None,
+    target_path: Union[str, Path] = None,
+    relative_root: Union[str, Path] = None,
     datastore_name: str = None,
     overwrite: bool = False,
 ) -> "DataReference":
@@ -167,6 +168,17 @@ async def ml_upload_datastore(
     logger.info("Uploading %s into %s datastore", path, datastore_name)
 
     datastore = await _get_datastore(ml_credentials, datastore_name)
+
+    if isinstance(path, Path):
+        path = str(path)
+    elif isinstance(path, list) and isinstance(path[0], Path):
+        path = [str(p) for p in path]
+
+    if isinstance(target_path, Path):
+        target_path = str(target_path)
+
+    if isinstance(relative_root, Path):
+        relative_root = str(relative_root)
 
     if isinstance(path, str) and os.path.isdir(path):
         partial_upload = partial(
