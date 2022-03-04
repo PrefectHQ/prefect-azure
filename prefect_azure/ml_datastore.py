@@ -265,23 +265,18 @@ async def ml_register_datastore_blob_container(
     )
 
     workspace = ml_credentials.get_workspace()
-
-    connection_string = blob_storage_credentials.connection_string
-    try:
-        account_meta = dict(
-            [line.split("=", 1) for line in connection_string.split(";")]
-        )
-    except Exception:
-        logger.exception("Malformed connection string; please ensure it's valid")
-        raise
+    async with blob_storage_credentials.get_client() as blob_service_client:
+        credential = blob_service_client.credential
+        account_name = credential.account_name
+        account_key = credential.account_key
 
     partial_register = partial(
         Datastore.register_azure_blob_container,
         workspace=workspace,
         datastore_name=datastore_name,
         container_name=container_name,
-        account_name=account_meta["AccountName"],
-        account_key=account_meta["AccountKey"],
+        account_name=account_name,
+        account_key=account_key,
         overwrite=overwrite,
         create_if_not_exists=create_container_if_not_exists,
     )
