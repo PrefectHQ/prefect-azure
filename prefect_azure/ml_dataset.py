@@ -95,7 +95,7 @@ def ml_create_dataset_from_delimited_files(
 
         from prefect import flow
         from prefect_azure import MlAzureCredentials
-        from prefect_azure.ml import *
+        from prefect_azure.ml_datastore import ml_create_dataset_from_delimited_files
 
         @flow
         def example_create_dataset_from_delimited_files_flow():
@@ -107,13 +107,13 @@ def ml_create_dataset_from_delimited_files(
                 resource_group="resource_group",
                 workspace_name="workspace_name",
             )
-            results = ml_create_dataset_from_delimited_files(
+            result = ml_create_dataset_from_delimited_files(
                 "dataset_name",
                 "path",
                 "ml_credentials",
                 datastore_name="datastore_name"
             )
-            return results
+            return result
         ```
 
     Returns:
@@ -198,7 +198,7 @@ def ml_create_dataset_from_parquet_files(
 
         from prefect import flow
         from prefect_azure import MlAzureCredentials
-        from prefect_azure.ml import *
+        from prefect_azure.ml_datastore import ml_create_dataset_from_parquet_files_flow
 
         @flow
         def example_ml_create_dataset_from_parquet_files_flow():
@@ -210,13 +210,13 @@ def ml_create_dataset_from_parquet_files(
                 resource_group="resource_group",
                 workspace_name="workspace_name",
             )
-            results = ml_create_dataset_from_parquet_files(
+            result = ml_create_dataset_from_parquet_files(
                 "dataset_name",
                 "path",
                 "ml_credentials",
                 datastore_name="datastore_name"
             )
-            return results
+            return result
         ```
 
     Returns:
@@ -279,7 +279,7 @@ def ml_create_dataset_from_files(
 
         from prefect import flow
         from prefect_azure import MlAzureCredentials
-        from prefect_azure.ml import *
+        from prefect_azure.ml_datastore import ml_create_dataset_from_files
 
         @flow
         def example_ml_create_dataset_from_files_flow():
@@ -291,13 +291,13 @@ def ml_create_dataset_from_files(
                 resource_group="resource_group",
                 workspace_name="workspace_name",
             )
-            results = ml_create_dataset_from_files(
+            result = ml_create_dataset_from_files(
                 "dataset_name",
                 "path",
                 "ml_credentials",
                 datastore_name="datastore_name"
             )
-            return results
+            return result
         ```
 
     Returns:

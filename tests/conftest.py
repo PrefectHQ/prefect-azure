@@ -47,14 +47,16 @@ class BlobStorageClientMethodsMock:
 
 @pytest.fixture
 def blob_storage_credentials():
-    azure_credentials_mock = MagicMock()
-    azure_credentials_mock.get_blob_client.side_effect = (
+    blob_storage_credentials = MagicMock(
+        connection_string="AccountName=Name;AccountKey=Key"
+    )
+    blob_storage_credentials.get_blob_client.side_effect = (
         lambda container, blob: BlobStorageClientMethodsMock(blob)
     )
-    azure_credentials_mock.get_container_client.side_effect = (
+    blob_storage_credentials.get_container_client.side_effect = (
         lambda container: BlobStorageClientMethodsMock()
     )
-    return azure_credentials_mock
+    return blob_storage_credentials
 
 
 class CosmosDbClientMethodsMock:
@@ -70,8 +72,45 @@ class CosmosDbClientMethodsMock:
 
 @pytest.fixture
 def cosmos_db_credentials():
-    azure_credentials_mock = MagicMock()
-    azure_credentials_mock.get_container_client.side_effect = (
+    cosmos_db_credentials = MagicMock()
+    cosmos_db_credentials.get_container_client.side_effect = (
         lambda container, database: CosmosDbClientMethodsMock()
     )
-    return azure_credentials_mock
+    return cosmos_db_credentials
+
+
+@pytest.fixture
+def ml_credentials():
+    ml_credentials = MagicMock()
+    ml_credentials.get_client.side_effect = lambda: MagicMock(datastores=["a", "b"])
+    return ml_credentials
+
+
+class DatastoreMethodsMock:
+    def __init__(self, workspace, datastore_name="default"):
+        self.workspace = workspace
+        self.datastore_name = datastore_name
+
+    def upload(self, *args, **kwargs):
+        return kwargs
+
+    def upload_files(self, *args, **kwargs):
+        return kwargs
+
+
+@pytest.fixture
+def datastore(monkeypatch):
+    DatastoreMock = MagicMock()
+    DatastoreMock.get_default.side_effect = lambda workspace: DatastoreMethodsMock(
+        workspace
+    )
+    DatastoreMock.get.side_effect = (
+        lambda workspace, datastore_name: DatastoreMethodsMock(
+            workspace, datastore_name=datastore_name
+        )
+    )
+    DatastoreMock.register_azure_blob_container.side_effect = (
+        lambda **kwargs: "registered"
+    )
+
+    monkeypatch.setattr("prefect_azure.ml_datastore.Datastore", DatastoreMock)

@@ -52,6 +52,23 @@ def ml_list_datastores(ml_credentials: "MlAzureCredentials") -> Dict:
     return results
 
 
+async def _get_datastore(
+    ml_credentials: "MlAzureCredentials", datastore_name: str = None
+):
+    """
+    Helper method for get datastore to prevent Task calling another Task.
+    """
+    workspace = ml_credentials.get_client()
+
+    if datastore_name is None:
+        partial_get = partial(Datastore.get_default, workspace)
+    else:
+        partial_get = partial(Datastore.get, workspace, datastore_name=datastore_name)
+
+    result = await to_thread.run_sync(partial_get)
+    return result
+
+
 @task
 async def ml_get_datastore(
     ml_credentials: "MlAzureCredentials", datastore_name: str = None
@@ -88,14 +105,7 @@ async def ml_get_datastore(
     logger = get_run_logger()
     logger.info("Getting datastore %s", datastore_name)
 
-    workspace = ml_credentials.get_client()
-
-    if datastore_name is None:
-        partial_get = partial(Datastore.get_default, workspace)
-    else:
-        partial_get = partial(Datastore.get, workspace, datastore_name=datastore_name)
-
-    result = await to_thread.run_sync(partial_get)
+    result = await _get_datastore(ml_credentials, datastore_name)
     return result
 
 
@@ -142,18 +152,18 @@ async def ml_upload_datastore(
                 resource_group="resource_group",
                 workspace_name="workspace_name",
             )
-            results = ml_upload_datastore(
+            result = ml_upload_datastore(
                 "path/to/dir/or/file",
                 ml_credentials,
                 datastore_name="datastore_name"
             )
-            return results
+            return result
         ```
     """
     logger = get_run_logger()
     logger.info("Uploading %s into %s datastore", path, datastore_name)
 
-    datastore = ml_get_datastore(ml_credentials, datastore_name)
+    datastore = await _get_datastore(ml_credentials, datastore_name)
 
     if isinstance(path, str) and os.path.isdir(path):
         partial_upload = partial(
@@ -221,13 +231,13 @@ async def ml_register_datastore_blob_container(
                 workspace_name="workspace_name",
             )
             blob_storage_credentials = BlobStorageAzureCredentials("connection_string")
-            results = ml_register_datastore_blob_container(
+            result = ml_register_datastore_blob_container(
                 "container",
                 ml_credentials,
                 blob_storage_credentials,
                 datastore_name="datastore_name"
             )
-            return results
+            return result
         ```
     """
     logger = get_run_logger()
