@@ -7,7 +7,8 @@ mkdocs-material
 mkdocstrings
 isort
 pre-commit
-aiohttp
+pytest-asyncio
 mock; python_version < '3.8'
+mkdocs-gen-files
 interrogate
-
+aiohttp
