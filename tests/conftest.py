@@ -50,6 +50,9 @@ def blob_storage_credentials():
     blob_storage_credentials = MagicMock(
         credential=MagicMock(account_name="account_name", account_key="account_key")
     )
+    blob_storage_credentials.get_client.side_effect = (
+        lambda container, blob: BlobStorageClientMethodsMock(blob)
+    )
     blob_storage_credentials.get_blob_client.side_effect = (
         lambda container, blob: BlobStorageClientMethodsMock(blob)
     )
