@@ -218,7 +218,9 @@ async def ml_register_datastore_blob_container(
 
     Args:
         container_name: The name of the container.
-        ml_credentials: Credentials to use for authentication with Azure.
+        ml_credentials: Credentials to use for authentication with Azure ML.
+        blob_storage_credentials: Credentials to use for authentication
+            with Azure Blob Storage.
         datastore_name: The name of the datastore. If not defined, the
             container name will be used.
         create_container_if_not_exists: Create a container, if one does not
