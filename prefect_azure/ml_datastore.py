@@ -1,8 +1,10 @@
 """Tasks for interacting with Azure ML Datastore"""
 
 import os
+from functools import partial
 from typing import TYPE_CHECKING, Dict, List, Union
 
+from anyio import to_thread
 from azureml.core.datastore import Datastore
 from prefect import get_run_logger, task
 
@@ -26,7 +28,7 @@ def ml_list_datastores(ml_credentials: "MlAzureCredentials") -> Dict:
         ```python
         from prefect import flow
         from prefect_azure import MlAzureCredentials
-        from prefect_azure.ml import ml_list_datastores
+        from prefect_azure.ml_datastore import ml_list_datastores
 
         @flow
         def example_ml_list_datastores_flow():
@@ -50,7 +52,8 @@ def ml_list_datastores(ml_credentials: "MlAzureCredentials") -> Dict:
     return results
 
 
-def ml_get_datastore(
+@task
+async def ml_get_datastore(
     ml_credentials: "MlAzureCredentials", datastore_name: str = None
 ) -> Datastore:
     """
@@ -66,7 +69,7 @@ def ml_get_datastore(
         ```python
         from prefect import flow
         from prefect_azure import MlAzureCredentials
-        from prefect_azure.ml import ml_get_datastore
+        from prefect_azure.ml_datastore import ml_get_datastore
 
         @flow
         def example_ml_get_datastore_flow():
@@ -86,22 +89,25 @@ def ml_get_datastore(
     logger.info("Getting datastore %s", datastore_name)
 
     workspace = ml_credentials.get_client()
+
     if datastore_name is None:
-        result = Datastore.get_default(workspace)
+        partial_get = partial(Datastore.get_default, workspace)
     else:
-        result = Datastore.get(workspace, datastore_name=datastore_name)
+        partial_get = partial(Datastore.get, workspace, datastore_name=datastore_name)
+
+    result = await to_thread.run_sync(partial_get)
     return result
 
 
 @task
-def ml_upload_datastore(
+async def ml_upload_datastore(
     path: Union[str, List[str]],
     ml_credentials: "MlAzureCredentials",
     target_path: str = None,
     relative_root: str = None,
     datastore_name: str = None,
     overwrite: bool = False,
-) -> DataReference:
+) -> "DataReference":
     """
     Uploads local files to a Datastore.
 
@@ -124,7 +130,7 @@ def ml_upload_datastore(
         ```python
         from prefect import flow
         from prefect_azure import MlAzureCredentials
-        from prefect_azure.ml import ml_upload_datastore
+        from prefect_azure.ml_datastore import ml_upload_datastore
 
         @flow
         def example_ml_upload_datastore_flow():
@@ -150,14 +156,16 @@ def ml_upload_datastore(
     datastore = ml_get_datastore(ml_credentials, datastore_name)
 
     if isinstance(path, str) and os.path.isdir(path):
-        data_reference = datastore.upload(
+        partial_upload = partial(
+            datastore.upload,
             src_dir=path,
             target_path=target_path,
             overwrite=overwrite,
             show_progress=False,
         )
     else:
-        data_reference = datastore.upload_files(
+        partial_upload = partial(
+            datastore.upload_files,
             files=path if isinstance(path, list) else [path],
             relative_root=relative_root,
             target_path=target_path,
@@ -165,11 +173,12 @@ def ml_upload_datastore(
             show_progress=False,
         )
 
-    return data_reference
+    result = await to_thread.run_sync(partial_upload)
+    return result
 
 
 @task
-def ml_register_datastore_blob_container(
+async def ml_register_datastore_blob_container(
     container_name: str,
     ml_credentials: "MlAzureCredentials",
     blob_storage_credentials: "BlobStorageCredentials",
@@ -177,7 +186,7 @@ def ml_register_datastore_blob_container(
     create_container_if_not_exists: bool = False,
     overwrite: bool = False,
     set_as_default: bool = False,
-) -> AzureBlobDatastore:
+) -> "AzureBlobDatastore":
     """
     Registers a Azure Blob Storage container as a
     Datastore in a Azure ML service Workspace.
@@ -199,7 +208,7 @@ def ml_register_datastore_blob_container(
         ```python
         from prefect import flow
         from prefect_azure import MlAzureCredentials
-        from prefect_azure.ml import ml_register_datastore_blob_container
+        from prefect_azure.ml_datastore import ml_register_datastore_blob_container
 
         @flow
         def example_ml_register_datastore_blob_container_flow():
@@ -241,7 +250,8 @@ def ml_register_datastore_blob_container(
         logger.exception("Malformed connection string; please ensure it's valid")
         raise
 
-    datastore = Datastore.register_azure_blob_container(
+    partial_register = partial(
+        Datastore.register_azure_blob_container,
         workspace=workspace,
         datastore_name=datastore_name,
         container_name=container_name,
@@ -250,8 +260,9 @@ def ml_register_datastore_blob_container(
         overwrite=overwrite,
         create_if_not_exists=create_container_if_not_exists,
     )
+    result = await to_thread.run_sync(partial_register)
 
     if set_as_default:
-        datastore.set_as_default()
+        result.set_as_default()
 
-    return datastore
+    return result
