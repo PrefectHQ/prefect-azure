@@ -21,6 +21,10 @@ class BlobStorageClientMethodsMock:
     def __init__(self, blob="prefect.txt"):
         self.blob = blob
 
+    @property
+    def credential(self):
+        return MagicMock(account_name="account_name", account_key="account_key")
+
     async def __aenter__(self):
         return self
 
@@ -47,9 +51,7 @@ class BlobStorageClientMethodsMock:
 
 @pytest.fixture
 def blob_storage_credentials():
-    blob_storage_credentials = MagicMock(
-        credential=MagicMock(account_name="account_name", account_key="account_key")
-    )
+    blob_storage_credentials = MagicMock()
     blob_storage_credentials.get_client.side_effect = (
         lambda: BlobStorageClientMethodsMock()
     )
