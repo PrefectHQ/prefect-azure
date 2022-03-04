@@ -33,4 +33,6 @@ jobs:
           PREFECT_ORION_DATABASE_CONNECTION_URL: "sqlite+aiosqlite:///./orion-tests.db"
         run: |
           prefect orion database reset -y
-          pytest tests -vv
+          coverage run --branch -m pytest tests -vv
+          coverage report
+
