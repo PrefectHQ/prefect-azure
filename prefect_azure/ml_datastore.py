@@ -12,7 +12,10 @@ if TYPE_CHECKING:
     from azureml.data.azure_storage_datastore import AzureBlobDatastore
     from azureml.data.data_reference import DataReference
 
-    from prefect_azure.credentials import BlobStorageCredentials, MlAzureCredentials
+    from prefect_azure.credentials import (
+        BlobStorageAzureCredentials,
+        MlAzureCredentials,
+    )
 
 
 @task
@@ -191,7 +194,7 @@ async def ml_upload_datastore(
 async def ml_register_datastore_blob_container(
     container_name: str,
     ml_credentials: "MlAzureCredentials",
-    blob_storage_credentials: "BlobStorageCredentials",
+    blob_storage_credentials: "BlobStorageAzureCredentials",
     datastore_name: str = None,
     create_container_if_not_exists: bool = False,
     overwrite: bool = False,
