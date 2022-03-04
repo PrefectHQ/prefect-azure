@@ -1,6 +1,5 @@
 """Credential classes used to perform authenticated interactions with Azure"""
 
-import abc
 import functools
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -18,18 +17,11 @@ try:
 except ModuleNotFoundError:
     pass  # a descriptive error will be raised in get_client
 
-try:
-    from azureml.core.authentication import ServicePrincipalAuthentication
-    from azureml.core.workspace import Workspace
-except ModuleNotFoundError:
-    pass  # a descriptive error will be raised in get_client
-
 from prefect.logging import get_run_logger
 
 HELP_URLS = {
     "blob_storage": "https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-python#copy-your-credentials-from-the-azure-portal",  # noqa
     "cosmos_db": "https://docs.microsoft.com/en-us/azure/cosmos-db/sql/create-sql-api-python#update-your-connection-string",  # noqa
-    "ml_dataset": "https://github.com/Azure/MachineLearningNotebooks/blob/master/how-to-use-azureml/manage-azureml-service/authentication-in-azureml/authentication-in-azureml.ipynb",  # noqa
 }
 HELP_FMT = "Please visit {help_url} for retrieving the proper connection string."
 
@@ -71,22 +63,7 @@ def _raise_help_msg(key: str):
 
 
 @dataclass
-class AzureCredentials(abc.ABC):
-    """
-    Dataclass used to manage authentication with Azure. Azure authentication is
-    handled via the `azure` module, primarily through a connection string.
-    """
-
-    @abc.abstractmethod
-    def get_client(self) -> None:
-        """
-        Abstract method to get an Azure client.
-        """
-        pass
-
-
-@dataclass
-class BlobStorageAzureCredentials(AzureCredentials):
+class BlobStorageAzureCredentials:
     """
     Dataclass used to manage Blob Storage authentication with Azure.
     Azure authentication is handled via the `azure` module through
@@ -204,7 +181,7 @@ class BlobStorageAzureCredentials(AzureCredentials):
 
 
 @dataclass
-class CosmosDbAzureCredentials(AzureCredentials):
+class CosmosDbAzureCredentials:
     """
     Dataclass used to manage Cosmos DB authentication with Azure.
     Azure authentication is handled via the `azure` module through
@@ -303,72 +280,3 @@ class CosmosDbAzureCredentials(AzureCredentials):
         database_client = self.get_database_client(database)
         container_client = database_client.get_container_client(container=container)
         return container_client
-
-
-@dataclass
-class MlAzureCredentials(AzureCredentials):
-    """
-    Dataclass used to manage authentication with Azure. Azure authentication is
-    handled via the `azure` module.
-
-    Args:
-        tenant_id: The active directory tenant that the service identity belongs to.
-        service_principal_id: The service principal ID.
-        service_principal_password: The service principal password/key.
-        subscription_id: The Azure subscription ID containing the workspace.
-        resource_group: The resource group containing the workspace.
-        workspace_name: The existing workspace name.
-        connection_string: Used for registering a blob container to a datastore.
-    """
-
-    tenant_id: str
-    service_principal_id: str
-    service_principal_password: str
-    subscription_id: str
-    resource_group: str
-    workspace_name: str
-    connection_string: str = None
-
-    @_raise_help_msg("ml_dataset")
-    def get_client(self) -> "Workspace":
-        """
-        Returns an authenticated base Workspace that can be used in
-        Azure's Datasets and Datastores.
-
-        Example:
-            Create an authorized Blob Service session
-            ```python
-            import os
-            from prefect import flow
-            from prefect_azure import MlAzureCredentials
-
-            @flow
-            def example_get_client_flow():
-                azure_credentials = MlAzureCredentials(
-                    "tenant_id",
-                    "service_principal_id",
-                    "service_principal_password",
-                    "subscription_id",
-                    "resource_group",
-                    "workspace_name"
-                )
-                workspace_client = azure_credentials.get_client()
-                return workspace_client
-
-            example_get_client_flow()
-            ```
-        """
-        service_principal_authentication = ServicePrincipalAuthentication(
-            tenant_id=self.tenant_id,
-            service_principal_id=self.service_principal_id,
-            service_principal_password=self.service_principal_password,
-        )
-
-        workspace = Workspace(
-            subscription_id=self.subscription_id,
-            resource_group=self.resource_group,
-            workspace_name=self.workspace_name,
-            auth=service_principal_authentication,
-        )
-
-        return workspace

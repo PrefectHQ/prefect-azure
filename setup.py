@@ -14,8 +14,6 @@ with open("README.md") as readme_file:
 extras_require = {
     "blob_storage": ["azure-storage-blob"],
     "cosmos_db": ["azure-cosmos"],
-    "ml_datastore": ["azureml-core"],
-    "ml_dataset": ["azureml-core", "azureml-dataset-runtime"],
 }
 extras_require["all_extras"] = sorted(
     {lib for key in extras_require.values() for lib in key if key != "dev"}
