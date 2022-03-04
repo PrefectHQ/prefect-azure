@@ -50,7 +50,7 @@ def ml_list_datastores(ml_credentials: "MlAzureCredentials") -> Dict:
     logger = get_run_logger()
     logger.info("Listing datastores")
 
-    workspace = ml_credentials.get_client()
+    workspace = ml_credentials.get_workspace()
     results = workspace.datastores
     return results
 
@@ -61,7 +61,7 @@ async def _get_datastore(
     """
     Helper method for get datastore to prevent Task calling another Task.
     """
-    workspace = ml_credentials.get_client()
+    workspace = ml_credentials.get_workspace()
 
     if datastore_name is None:
         partial_get = partial(Datastore.get_default, workspace)
@@ -252,7 +252,7 @@ async def ml_register_datastore_blob_container(
         "Registering %s container into %s datastore", container_name, datastore_name
     )
 
-    workspace = ml_credentials.get_client()
+    workspace = ml_credentials.get_workspace()
 
     connection_string = blob_storage_credentials.connection_string
     try:

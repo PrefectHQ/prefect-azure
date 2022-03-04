@@ -21,7 +21,7 @@ try:
     from azureml.core.authentication import ServicePrincipalAuthentication
     from azureml.core.workspace import Workspace
 except ModuleNotFoundError:
-    pass  # a descriptive error will be raised in get_client
+    pass  # a descriptive error will be raised in get_workspace
 
 from prefect.logging import get_run_logger
 
@@ -313,7 +313,7 @@ class MlAzureCredentials:
     connection_string: str = None
 
     @_raise_help_msg("ml_datastore")
-    def get_client(self) -> "Workspace":
+    def get_workspace(self) -> "Workspace":
         """
         Returns an authenticated base Workspace that can be used in
         Azure's Datasets and Datastores.
@@ -324,7 +324,7 @@ class MlAzureCredentials:
             from prefect import flow
             from prefect_azure import MlAzureCredentials
             @flow
-            def example_get_client_flow():
+            def example_get_workspace_flow():
                 azure_credentials = MlAzureCredentials(
                     "tenant_id",
                     "service_principal_id",
@@ -333,9 +333,9 @@ class MlAzureCredentials:
                     "resource_group",
                     "workspace_name"
                 )
-                workspace_client = azure_credentials.get_client()
+                workspace_client = azure_credentials.get_workspace()
                 return workspace_client
-            example_get_client_flow()
+            example_get_workspace_flow()
             ```
         """
         service_principal_authentication = ServicePrincipalAuthentication(

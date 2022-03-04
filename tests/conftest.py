@@ -82,7 +82,7 @@ def cosmos_db_credentials():
 @pytest.fixture
 def ml_credentials():
     ml_credentials = MagicMock()
-    ml_credentials.get_client.side_effect = lambda: MagicMock(datastores=["a", "b"])
+    ml_credentials.get_workspace.side_effect = lambda: MagicMock(datastores=["a", "b"])
     return ml_credentials
 
 
