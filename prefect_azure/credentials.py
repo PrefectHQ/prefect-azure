@@ -294,6 +294,7 @@ class MlAzureCredentials:
     """
     Dataclass used to manage authentication with Azure. Azure authentication is
     handled via the `azure` module.
+
     Args:
         tenant_id: The active directory tenant that the service identity belongs to.
         service_principal_id: The service principal ID.
@@ -315,6 +316,7 @@ class MlAzureCredentials:
         """
         Returns an authenticated base Workspace that can be used in
         Azure's Datasets and Datastores.
+
         Example:
             Create an authorized Blob Service session
             ```python
