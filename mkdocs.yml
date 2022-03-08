@@ -35,4 +35,5 @@ nav:
     - Home: index.md
     - Credentials: credentials.md
     - Blob Storage: blob_storage.md
+    - ML Datastore: ml_datastore.md
 
