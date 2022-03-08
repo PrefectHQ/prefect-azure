@@ -119,3 +119,28 @@ def datastore(monkeypatch):
     )
 
     monkeypatch.setattr("prefect_azure.ml_datastore.Datastore", DatastoreMock)
+
+
+@pytest.fixture
+def blob_connection_string():
+    return "AccountName=account_name;AccountKey=account_key"
+
+
+class CosmosClientMock(MagicMock):
+    def from_connection_string(connection_string):
+        return CosmosClientMock()
+
+    def get_client(self):
+        return CosmosClientMock(client="client")
+
+    def get_database_client(self, database):
+        return CosmosClientMock(database=database)
+
+    def get_container_client(self, container):
+        return CosmosClientMock(container=container)
+
+
+@pytest.fixture
+def cosmos_connection_string(monkeypatch):
+    monkeypatch.setattr("prefect_azure.credentials.CosmosClient", CosmosClientMock)
+    return "AccountEndpoint=url/;AccountKey=AccountKey==;"
