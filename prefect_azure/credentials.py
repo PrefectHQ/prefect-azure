@@ -57,9 +57,7 @@ def _raise_help_msg(key: str):
                     f"`pip install prefect_azure[{key}]`"
                 ) from exc
             except ValueError as exc:
-                raise ValueError(
-                    HELP_FMT.format(help_url=HELP_URLS[key])
-                ) from exc
+                raise ValueError(HELP_FMT.format(help_url=HELP_URLS[key])) from exc
 
         return inner
 
