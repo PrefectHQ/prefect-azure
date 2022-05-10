@@ -23,8 +23,6 @@ try:
 except ModuleNotFoundError:
     pass  # a descriptive error will be raised in get_workspace
 
-from prefect.logging import get_run_logger
-
 HELP_URLS = {
     "blob_storage": "https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-python#copy-your-credentials-from-the-azure-portal",  # noqa
     "cosmos_db": "https://docs.microsoft.com/en-us/azure/cosmos-db/sql/create-sql-api-python#update-your-connection-string",  # noqa
@@ -51,18 +49,17 @@ def _raise_help_msg(key: str):
             """
             Used for decorator.
             """
-            logger = get_run_logger()
             try:
                 return func(*args, **kwargs)
-            except NameError:
-                logger.exception(
+            except NameError as exc:
+                raise ImportError(
                     f"Using `prefect_azure.{key}` requires "
                     f"`pip install prefect_azure[{key}]`"
-                )
-                raise
-            except ValueError:
-                logger.exception(HELP_FMT.format(help_url=HELP_URLS[key]))
-                raise
+                ) from exc
+            except ValueError as exc:
+                raise ValueError(
+                    HELP_FMT.format(help_url=HELP_URLS[key])
+                ) from exc
 
         return inner
 
