@@ -22,6 +22,22 @@ Install `prefect-azure` with `pip`
 pip install prefect-azure
 ```
 
+To use Blob Storage:
+```bash
+pip install "prefect-azure[blob_storage]"
+```
+
+To use Cosmos DB:
+```bash
+pip install "prefect-azure[cosmos_db]"
+```
+
+To use ML Datastore:
+```bash
+pip install "prefect-azure[ml_datastore]"
+```
+
+
 ### Write and run a flow
 
 ```python
