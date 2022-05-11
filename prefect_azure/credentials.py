@@ -53,8 +53,8 @@ def _raise_help_msg(key: str):
                 return func(*args, **kwargs)
             except NameError as exc:
                 raise ImportError(
-                    f"Using `prefect_azure.{key}` requires "
-                    f"`pip install prefect_azure[{key}]`"
+                    f"To use prefect_azure.{key}, install prefect-azure with the "
+                    f"'{key}' extra: `pip install 'prefect_azure[{key}]'`"
                 ) from exc
             except ValueError as exc:
                 raise ValueError(HELP_FMT.format(help_url=HELP_URLS[key])) from exc
