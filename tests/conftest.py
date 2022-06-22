@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from azure.core.exceptions import ResourceExistsError
-from prefect.utilities.testing import AsyncMock
+from prefect.testing.utilities import AsyncMock
 
 
 class AsyncIter:
