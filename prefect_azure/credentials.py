@@ -332,12 +332,12 @@ class MlAzureCredentials(Block):
             @flow
             def example_get_workspace_flow():
                 azure_credentials = MlAzureCredentials(
-                    "tenant_id",
-                    "service_principal_id",
+                    tenant_id="tenant_id",
+                    service_principal_id="service_principal_id",
                     "service_principal_password",
-                    "subscription_id",
-                    "resource_group",
-                    "workspace_name"
+                    subscription_id="subscription_id",
+                    resource_group="resource_group",
+                    workspace_name="workspace_name"
                 )
                 workspace_client = azure_credentials.get_workspace()
                 return workspace_client
