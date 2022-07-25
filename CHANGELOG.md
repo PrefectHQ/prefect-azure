@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated tests to be compatible with core Prefect library (v2.0b9) and bumped required version - [#38](https://github.com/PrefectHQ/prefect-azure/pull/38)
-- Converted GcpCredentials into a Block - [#39](https://github.com/PrefectHQ/prefect-azure/pull/39)
+- Renamed `BlobStorageAzureCredentials` to `AzureBlobStorageCredentials`, `CosmosDbAzureCredentials` to `AzureCosmosDbCredentials`, and `MlAzureCredentials` to `AzureMlCredentials` - [#39](https://github.com/PrefectHQ/prefect-azure/pull/39)
+
 
 ### Deprecated
 

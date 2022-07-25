@@ -67,7 +67,7 @@ def _raise_help_msg(key: str):
     return outer
 
 
-class BlobStorageAzureCredentials(Block):
+class AzureBlobStorageCredentials(Block):
     """
     Block used to manage Blob Storage authentication with Azure.
     Azure authentication is handled via the `azure` module through
@@ -77,8 +77,8 @@ class BlobStorageAzureCredentials(Block):
         connection_string: includes the authorization information required
     """
 
-    _block_type_name = "Blob Storage Azure Credentials"
-    _logo_url = "https://github.com/PrefectHQ/orion/blob/main/docs/img/collections/azure.png?raw=true"  # noqa
+    _block_type_name = "Azure Blob Storage Credentials"
+    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 
     connection_string: SecretStr
 
@@ -94,12 +94,12 @@ class BlobStorageAzureCredentials(Block):
             import os
             import asyncio
             from prefect import flow
-            from prefect_azure import BlobStorageAzureCredentials
+            from prefect_azure import AzureBlobStorageCredentials
 
             @flow
             async def example_get_client_flow():
                 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-                azure_credentials = BlobStorageAzureCredentials(
+                azure_credentials = AzureBlobStorageCredentials(
                     connection_string=connection_string,
                 )
                 async with azure_credentials.get_client() as blob_service_client:
@@ -129,12 +129,12 @@ class BlobStorageAzureCredentials(Block):
             import os
             import asyncio
             from prefect import flow
-            from prefect_azure import BlobStorageAzureCredentials
+            from prefect_azure import AzureBlobStorageCredentials
 
             @flow
             async def example_get_blob_client_flow():
                 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-                azure_credentials = BlobStorageAzureCredentials(
+                azure_credentials = AzureBlobStorageCredentials(
                     connection_string=connection_string,
                 )
                 async with azure_credentials.get_blob_client(
@@ -166,12 +166,12 @@ class BlobStorageAzureCredentials(Block):
             import os
             import asyncio
             from prefect import flow
-            from prefect_azure import BlobStorageAzureCredentials
+            from prefect_azure import AzureBlobStorageCredentials
 
             @flow
             async def example_get_container_client_flow():
                 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-                azure_credentials = BlobStorageAzureCredentials(
+                azure_credentials = AzureBlobStorageCredentials(
                     connection_string=connection_string,
                 )
                 async with azure_credentials.get_container_client(
@@ -189,7 +189,7 @@ class BlobStorageAzureCredentials(Block):
         return container_client
 
 
-class CosmosDbAzureCredentials(Block):
+class AzureCosmosDbCredentials(Block):
     """
     Block used to manage Cosmos DB authentication with Azure.
     Azure authentication is handled via the `azure` module through
@@ -199,8 +199,8 @@ class CosmosDbAzureCredentials(Block):
         connection_string: includes the authorization information required
     """
 
-    _block_type_name = "Cosmos DB Azure Credentials"
-    _logo_url = "https://github.com/PrefectHQ/orion/blob/main/docs/img/collections/azure.png?raw=true"  # noqa
+    _block_type_name = "Azure Cosmos DB Credentials"
+    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 
     connection_string: SecretStr
 
@@ -215,12 +215,12 @@ class CosmosDbAzureCredentials(Block):
             ```python
             import os
             from prefect import flow
-            from prefect_azure import CosmosDbAzureCredentials
+            from prefect_azure import AzureCosmosDbCredentials
 
             @flow
             def example_get_client_flow():
                 connection_string = os.getenv("AZURE_COSMOS_CONNECTION_STRING")
-                azure_credentials = CosmosDbAzureCredentials(
+                azure_credentials = AzureCosmosDbCredentials(
                     connection_string=connection_string,
                 )
                 cosmos_client = azure_credentials.get_client()
@@ -229,7 +229,9 @@ class CosmosDbAzureCredentials(Block):
             example_get_client_flow()
             ```
         """
-        return CosmosClient.from_connection_string(self.connection_string)
+        return CosmosClient.from_connection_string(
+            self.connection_string.get_secret_value()
+        )
 
     def get_database_client(self, database: str) -> "DatabaseProxy":
         """
@@ -243,12 +245,12 @@ class CosmosDbAzureCredentials(Block):
             ```python
             import os
             from prefect import flow
-            from prefect_azure import CosmosDbAzureCredentials
+            from prefect_azure import AzureCosmosDbCredentials
 
             @flow
             def example_get_client_flow():
                 connection_string = os.getenv("AZURE_COSMOS_CONNECTION_STRING")
-                azure_credentials = CosmosDbAzureCredentials(
+                azure_credentials = AzureCosmosDbCredentials(
                     connection_string=connection_string,
                 )
                 cosmos_client = azure_credentials.get_database_client()
@@ -274,12 +276,12 @@ class CosmosDbAzureCredentials(Block):
             ```python
             import os
             from prefect import flow
-            from prefect_azure import BlobStorageAzureCredentials
+            from prefect_azure import AzureBlobStorageCredentials
 
             @flow
             def example_get_container_client_flow():
                 connection_string = os.getenv("AZURE_COSMOS_CONNECTION_STRING")
-                azure_credentials = CosmosDbAzureCredentials(
+                azure_credentials = AzureCosmosDbCredentials(
                     connection_string=connection_string,
                 )
                 container_client = azure_credentials.get_container_client(container)
@@ -293,7 +295,7 @@ class CosmosDbAzureCredentials(Block):
         return container_client
 
 
-class MlAzureCredentials(Block):
+class AzureMlCredentials(Block):
     """
     Block used to manage authentication with AzureML. Azure authentication is
     handled via the `azure` module.
@@ -308,7 +310,7 @@ class MlAzureCredentials(Block):
     """
 
     _block_type_name = "AzureML Credentials"
-    _logo_url = "https://github.com/PrefectHQ/orion/blob/main/docs/img/collections/azure.png?raw=true"  # noqa
+    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 
     tenant_id: str
     service_principal_id: str
@@ -324,17 +326,17 @@ class MlAzureCredentials(Block):
         Azure's Datasets and Datastores.
 
         Example:
-            Create an authorized Blob Service session
+            Create an authorized workspace
             ```python
             import os
             from prefect import flow
-            from prefect_azure import MlAzureCredentials
+            from prefect_azure import AzureMlCredentials
             @flow
             def example_get_workspace_flow():
-                azure_credentials = MlAzureCredentials(
+                azure_credentials = AzureMlCredentials(
                     tenant_id="tenant_id",
                     service_principal_id="service_principal_id",
-                    "service_principal_password",
+                    service_principal_password="service_principal_password",
                     subscription_id="subscription_id",
                     resource_group="resource_group",
                     workspace_name="workspace_name"

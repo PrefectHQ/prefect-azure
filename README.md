@@ -43,13 +43,13 @@ pip install "prefect-azure[ml_datastore]"
 ```python
 from prefect import flow
 
-from prefect_azure import BlobStorageAzureCredentials
+from prefect_azure import AzureBlobStorageCredentials
 from prefect_azure.blob_storage import blob_storage_download
 
 @flow
 def example_blob_storage_download_flow():
     connection_string = "connection_string"
-    blob_storage_credentials = BlobStorageAzureCredentials(
+    blob_storage_credentials = AzureBlobStorageCredentials(
         connection_string=connection_string,
     )
     data = blob_storage_download(

@@ -14,13 +14,13 @@ if TYPE_CHECKING:
     from azureml.data.data_reference import DataReference
 
     from prefect_azure.credentials import (
-        BlobStorageAzureCredentials,
-        MlAzureCredentials,
+        AzureBlobStorageCredentials,
+        AzureMlCredentials,
     )
 
 
 @task
-def ml_list_datastores(ml_credentials: "MlAzureCredentials") -> Dict:
+def ml_list_datastores(ml_credentials: "AzureMlCredentials") -> Dict:
     """
     Lists the Datastores in the Workspace.
 
@@ -31,12 +31,12 @@ def ml_list_datastores(ml_credentials: "MlAzureCredentials") -> Dict:
         List Datastore objects
         ```python
         from prefect import flow
-        from prefect_azure import MlAzureCredentials
+        from prefect_azure import AzureMlCredentials
         from prefect_azure.ml_datastore import ml_list_datastores
 
         @flow
         def example_ml_list_datastores_flow():
-            ml_credentials = MlAzureCredentials(
+            ml_credentials = AzureMlCredentials(
                 tenant_id="tenant_id",
                 service_principal_id="service_principal_id",
                 service_principal_password="service_principal_password",
@@ -57,7 +57,7 @@ def ml_list_datastores(ml_credentials: "MlAzureCredentials") -> Dict:
 
 
 async def _get_datastore(
-    ml_credentials: "MlAzureCredentials", datastore_name: str = None
+    ml_credentials: "AzureMlCredentials", datastore_name: str = None
 ):
     """
     Helper method for get datastore to prevent Task calling another Task.
@@ -75,7 +75,7 @@ async def _get_datastore(
 
 @task
 async def ml_get_datastore(
-    ml_credentials: "MlAzureCredentials", datastore_name: str = None
+    ml_credentials: "AzureMlCredentials", datastore_name: str = None
 ) -> Datastore:
     """
     Gets the Datastore within the Workspace.
@@ -89,12 +89,12 @@ async def ml_get_datastore(
         Get Datastore object
         ```python
         from prefect import flow
-        from prefect_azure import MlAzureCredentials
+        from prefect_azure import AzureMlCredentials
         from prefect_azure.ml_datastore import ml_get_datastore
 
         @flow
         def example_ml_get_datastore_flow():
-            ml_credentials = MlAzureCredentials(
+            ml_credentials = AzureMlCredentials(
                 tenant_id="tenant_id",
                 service_principal_id="service_principal_id",
                 service_principal_password="service_principal_password",
@@ -116,7 +116,7 @@ async def ml_get_datastore(
 @task
 async def ml_upload_datastore(
     path: Union[str, Path, List[Union[str, Path]]],
-    ml_credentials: "MlAzureCredentials",
+    ml_credentials: "AzureMlCredentials",
     target_path: Union[str, Path] = None,
     relative_root: Union[str, Path] = None,
     datastore_name: str = None,
@@ -143,12 +143,12 @@ async def ml_upload_datastore(
         Upload Datastore object
         ```python
         from prefect import flow
-        from prefect_azure import MlAzureCredentials
+        from prefect_azure import AzureMlCredentials
         from prefect_azure.ml_datastore import ml_upload_datastore
 
         @flow
         def example_ml_upload_datastore_flow():
-            ml_credentials = MlAzureCredentials(
+            ml_credentials = AzureMlCredentials(
                 tenant_id="tenant_id",
                 service_principal_id="service_principal_id",
                 service_principal_password="service_principal_password",
@@ -205,8 +205,8 @@ async def ml_upload_datastore(
 @task
 async def ml_register_datastore_blob_container(
     container_name: str,
-    ml_credentials: "MlAzureCredentials",
-    blob_storage_credentials: "BlobStorageAzureCredentials",
+    ml_credentials: "AzureMlCredentials",
+    blob_storage_credentials: "AzureBlobStorageCredentials",
     datastore_name: str = None,
     create_container_if_not_exists: bool = False,
     overwrite: bool = False,
@@ -234,12 +234,12 @@ async def ml_register_datastore_blob_container(
         Upload Datastore object
         ```python
         from prefect import flow
-        from prefect_azure import MlAzureCredentials
+        from prefect_azure import AzureMlCredentials
         from prefect_azure.ml_datastore import ml_register_datastore_blob_container
 
         @flow
         def example_ml_register_datastore_blob_container_flow():
-            ml_credentials = MlAzureCredentials(
+            ml_credentials = AzureMlCredentials(
                 tenant_id="tenant_id",
                 service_principal_id="service_principal_id",
                 service_principal_password="service_principal_password",
@@ -247,7 +247,7 @@ async def ml_register_datastore_blob_container(
                 resource_group="resource_group",
                 workspace_name="workspace_name",
             )
-            blob_storage_credentials = BlobStorageAzureCredentials("connection_string")
+            blob_storage_credentials = AzureBlobStorageCredentials("connection_string")
             result = ml_register_datastore_blob_container(
                 "container",
                 ml_credentials,
