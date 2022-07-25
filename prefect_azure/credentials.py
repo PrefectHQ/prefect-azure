@@ -74,7 +74,14 @@ class AzureBlobStorageCredentials(Block):
     a connection string.
 
     Args:
-        connection_string: includes the authorization information required
+        connection_string: Includes the authorization information required.
+
+    Example:
+        Load stored Azure Blob Storage credentials:
+        ```python
+        from prefect_azure import AzureBlobStorageCredentials
+        azure_credentials_block = AzureBlobStorageCredentials.load("MY_BLOCK_NAME")
+        ```
     """
 
     _block_type_name = "Azure Blob Storage Credentials"
@@ -196,7 +203,14 @@ class AzureCosmosDbCredentials(Block):
     a connection string.
 
     Args:
-        connection_string: includes the authorization information required
+        connection_string: Includes the authorization information required.
+
+    Example:
+        Load stored Azure Cosmos DB credentials:
+        ```python
+        from prefect_azure import AzureCosmosDbCredentials
+        azure_credentials_block = AzureCosmosDbCredentials.load("MY_BLOCK_NAME")
+        ```
     """
 
     _block_type_name = "Azure Cosmos DB Credentials"
@@ -307,6 +321,13 @@ class AzureMlCredentials(Block):
         subscription_id: The Azure subscription ID containing the workspace.
         resource_group: The resource group containing the workspace.
         workspace_name: The existing workspace name.
+
+    Example:
+        Load stored AzureML credentials:
+        ```python
+        from prefect_azure import AzureMlCredentials
+        azure_ml_credentials_block = AzureMlCredentials.load("MY_BLOCK_NAME")
+        ```
     """
 
     _block_type_name = "AzureML Credentials"
