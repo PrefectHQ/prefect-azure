@@ -17,7 +17,7 @@ def test_get_service_client(blob_connection_string):
         client = BlobStorageAzureCredentials(blob_connection_string).get_client()
         return client
 
-    client = test_flow().result()
+    client = test_flow()
     assert isinstance(client, BlobServiceClient)
 
 
@@ -29,7 +29,7 @@ def test_get_blob_container_client(blob_connection_string):
         ).get_container_client("container")
         return client
 
-    client = test_flow().result()
+    client = test_flow()
     assert isinstance(client, ContainerClient)
     client.container_name == "container"
 
@@ -42,7 +42,7 @@ def test_get_blob_client(blob_connection_string):
         )
         return client
 
-    client = test_flow().result()
+    client = test_flow()
     assert isinstance(client, BlobClient)
     client.container_name == "container"
     client.blob_name == "blob"
@@ -54,7 +54,7 @@ def test_get_cosmos_client(cosmos_connection_string):
         client = CosmosDbAzureCredentials(cosmos_connection_string).get_client()
         return client
 
-    client = test_flow().result()
+    client = test_flow()
     assert isinstance(client, CosmosClientMock)
 
 
@@ -66,7 +66,7 @@ def test_get_database_client(cosmos_connection_string):
         )
         return client
 
-    client = test_flow().result()
+    client = test_flow()
     assert client.database == "database"
 
 
@@ -78,7 +78,7 @@ def test_get_cosmos_container_client(cosmos_connection_string):
         ).get_container_client("container", "database")
         return client
 
-    client = test_flow().result()
+    client = test_flow()
     assert client.container == "container"
 
 
@@ -97,5 +97,5 @@ def test_get_workspace(monkeypatch):
         ).get_workspace()
         return workspace
 
-    workspace = test_flow().result()
+    workspace = test_flow()
     assert isinstance(workspace, MagicMock)

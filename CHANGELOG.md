@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated tests to be compatible with core Prefect library (v2.0b9) and bumped required version - [#38](https://github.com/PrefectHQ/prefect-azure/pull/38)
+
 ### Deprecated
 
 ### Removed
@@ -25,6 +27,6 @@ Released on March 8th, 2022.
 
 ### Added
 
-- `ml_upload_datastore`, `ml_get_datastore`, `ml_list_datastores`, and `ml_register_datastore_blob_container` tasks - [#15](https://github.com/PrefectHQ/prefect-email/pull/15)
-- `cosmos_db_query_items`, `cosmos_db_read_item`, and `cosmos_db_create_item` tasks - [#6](https://github.com/PrefectHQ/prefect-email/pull/6)
-- `blob_storage_download`, `blob_storage_upload`, and `blob_storage_list` tasks - [#4](https://github.com/PrefectHQ/prefect-email/pull/4)
+- `ml_upload_datastore`, `ml_get_datastore`, `ml_list_datastores`, and `ml_register_datastore_blob_container` tasks - [#15](https://github.com/PrefectHQ/prefect-azure/pull/15)
+- `cosmos_db_query_items`, `cosmos_db_read_item`, and `cosmos_db_create_item` tasks - [#6](https://github.com/PrefectHQ/prefect-azure/pull/6)
+- `blob_storage_download`, `blob_storage_upload`, and `blob_storage_list` tasks - [#4](https://github.com/PrefectHQ/prefect-azure/pull/4)
