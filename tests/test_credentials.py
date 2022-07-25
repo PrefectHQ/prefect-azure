@@ -14,7 +14,9 @@ from prefect_azure.credentials import (
 def test_get_service_client(blob_connection_string):
     @flow
     def test_flow():
-        client = BlobStorageAzureCredentials(blob_connection_string).get_client()
+        client = BlobStorageAzureCredentials(
+            connection_string=blob_connection_string
+        ).get_client()
         return client
 
     client = test_flow()
@@ -25,7 +27,7 @@ def test_get_blob_container_client(blob_connection_string):
     @flow
     def test_flow():
         client = BlobStorageAzureCredentials(
-            blob_connection_string
+            connection_string=blob_connection_string
         ).get_container_client("container")
         return client
 
@@ -37,9 +39,9 @@ def test_get_blob_container_client(blob_connection_string):
 def test_get_blob_client(blob_connection_string):
     @flow
     def test_flow():
-        client = BlobStorageAzureCredentials(blob_connection_string).get_blob_client(
-            "container", "blob"
-        )
+        client = BlobStorageAzureCredentials(
+            connection_string=blob_connection_string
+        ).get_blob_client("container", "blob")
         return client
 
     client = test_flow()
@@ -51,7 +53,9 @@ def test_get_blob_client(blob_connection_string):
 def test_get_cosmos_client(cosmos_connection_string):
     @flow
     def test_flow():
-        client = CosmosDbAzureCredentials(cosmos_connection_string).get_client()
+        client = CosmosDbAzureCredentials(
+            connection_string=cosmos_connection_string
+        ).get_client()
         return client
 
     client = test_flow()
@@ -61,9 +65,9 @@ def test_get_cosmos_client(cosmos_connection_string):
 def test_get_database_client(cosmos_connection_string):
     @flow
     def test_flow():
-        client = CosmosDbAzureCredentials(cosmos_connection_string).get_database_client(
-            "database"
-        )
+        client = CosmosDbAzureCredentials(
+            connection_string=cosmos_connection_string
+        ).get_database_client("database")
         return client
 
     client = test_flow()
@@ -74,7 +78,7 @@ def test_get_cosmos_container_client(cosmos_connection_string):
     @flow
     def test_flow():
         client = CosmosDbAzureCredentials(
-            cosmos_connection_string
+            connection_string=cosmos_connection_string
         ).get_container_client("container", "database")
         return client
 
@@ -88,12 +92,12 @@ def test_get_workspace(monkeypatch):
     @flow
     def test_flow():
         workspace = MlAzureCredentials(
-            "tenant_id",
-            "service_principal_id",
-            "service_principal_password",
-            "subscription_id",
-            "resource_group",
-            "workspace_name",
+            tenant_id="tenant_id",
+            service_principal_id="service_principal_id",
+            service_principal_password="service_principal_password",
+            subscription_id="subscription_id",
+            resource_group="resource_group",
+            workspace_name="workspace_name",
         ).get_workspace()
         return workspace
 

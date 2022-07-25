@@ -1,8 +1,9 @@
 """Credential classes used to perform authenticated interactions with Azure"""
 
 import functools
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
+
+from pydantic import SecretStr
 
 try:
     from azure.cosmos import CosmosClient
@@ -22,6 +23,8 @@ try:
     from azureml.core.workspace import Workspace
 except ModuleNotFoundError:
     pass  # a descriptive error will be raised in get_workspace
+
+from prefect.blocks.core import Block
 
 HELP_URLS = {
     "blob_storage": "https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-python#copy-your-credentials-from-the-azure-portal",  # noqa
@@ -64,10 +67,9 @@ def _raise_help_msg(key: str):
     return outer
 
 
-@dataclass
-class BlobStorageAzureCredentials:
+class BlobStorageAzureCredentials(Block):
     """
-    Dataclass used to manage Blob Storage authentication with Azure.
+    Block used to manage Blob Storage authentication with Azure.
     Azure authentication is handled via the `azure` module through
     a connection string.
 
@@ -75,7 +77,10 @@ class BlobStorageAzureCredentials:
         connection_string: includes the authorization information required
     """
 
-    connection_string: str
+    _block_type_name = "Blob Storage Azure Credentials"
+    _logo_url = "https://github.com/PrefectHQ/orion/blob/main/docs/img/collections/azure.png?raw=true"  # noqa
+
+    connection_string: SecretStr
 
     @_raise_help_msg("blob_storage")
     def get_client(self) -> "BlobServiceClient":
@@ -104,7 +109,9 @@ class BlobStorageAzureCredentials:
             asyncio.run(example_get_client_flow())
             ```
         """
-        return BlobServiceClient.from_connection_string(self.connection_string)
+        return BlobServiceClient.from_connection_string(
+            self.connection_string.get_secret_value()
+        )
 
     @_raise_help_msg("blob_storage")
     def get_blob_client(self, container, blob) -> "BlobClient":
@@ -140,7 +147,7 @@ class BlobStorageAzureCredentials:
             ```
         """
         blob_client = BlobClient.from_connection_string(
-            self.connection_string, container, blob
+            self.connection_string.get_secret_value(), container, blob
         )
         return blob_client
 
@@ -177,15 +184,14 @@ class BlobStorageAzureCredentials:
             ```
         """
         container_client = ContainerClient.from_connection_string(
-            self.connection_string, container
+            self.connection_string.get_secret_value(), container
         )
         return container_client
 
 
-@dataclass
-class CosmosDbAzureCredentials:
+class CosmosDbAzureCredentials(Block):
     """
-    Dataclass used to manage Cosmos DB authentication with Azure.
+    Block used to manage Cosmos DB authentication with Azure.
     Azure authentication is handled via the `azure` module through
     a connection string.
 
@@ -193,7 +199,10 @@ class CosmosDbAzureCredentials:
         connection_string: includes the authorization information required
     """
 
-    connection_string: str
+    _block_type_name = "Cosmos DB Azure Credentials"
+    _logo_url = "https://github.com/PrefectHQ/orion/blob/main/docs/img/collections/azure.png?raw=true"  # noqa
+
+    connection_string: SecretStr
 
     @_raise_help_msg("cosmos_db")
     def get_client(self) -> "CosmosClient":
@@ -284,10 +293,9 @@ class CosmosDbAzureCredentials:
         return container_client
 
 
-@dataclass
-class MlAzureCredentials:
+class MlAzureCredentials(Block):
     """
-    Dataclass used to manage authentication with Azure. Azure authentication is
+    Block used to manage authentication with AzureML. Azure authentication is
     handled via the `azure` module.
 
     Args:
@@ -299,9 +307,12 @@ class MlAzureCredentials:
         workspace_name: The existing workspace name.
     """
 
+    _block_type_name = "AzureML Credentials"
+    _logo_url = "https://github.com/PrefectHQ/orion/blob/main/docs/img/collections/azure.png?raw=true"  # noqa
+
     tenant_id: str
     service_principal_id: str
-    service_principal_password: str
+    service_principal_password: SecretStr
     subscription_id: str
     resource_group: str
     workspace_name: str
@@ -333,10 +344,11 @@ class MlAzureCredentials:
             example_get_workspace_flow()
             ```
         """
+        service_principal_password = self.service_principal_password.get_secret_value()
         service_principal_authentication = ServicePrincipalAuthentication(
             tenant_id=self.tenant_id,
             service_principal_id=self.service_principal_id,
-            service_principal_password=self.service_principal_password,
+            service_principal_password=service_principal_password,
         )
 
         workspace = Workspace(
