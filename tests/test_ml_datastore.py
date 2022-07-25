@@ -16,7 +16,7 @@ def test_ml_list_datastores_flow(ml_credentials):
         results = ml_list_datastores(ml_credentials)
         return results
 
-    results = ml_list_datastores_flow().result().result()
+    results = ml_list_datastores_flow()
     assert results == ["a", "b"]
 
 
@@ -26,7 +26,7 @@ async def test_ml_get_datastore_flow(ml_credentials, datastore):
         result = await ml_get_datastore(ml_credentials, datastore_name="datastore_name")
         return result
 
-    result = (await ml_get_datastore_flow()).result().result()
+    result = await ml_get_datastore_flow()
     assert result.datastore_name == "datastore_name"
 
 
@@ -36,7 +36,7 @@ async def test_ml_get_datastore_flow_default(ml_credentials, datastore):
         result = await ml_get_datastore(ml_credentials)
         return result
 
-    result = (await ml_get_datastore_flow()).result().result()
+    result = await ml_get_datastore_flow()
     assert result.datastore_name == "default"
 
 
@@ -51,7 +51,7 @@ async def test_ml_upload_datastore_flow(ml_credentials, datastore):
         )
         return result
 
-    result = (await ml_upload_datastore_flow()).result().result()
+    result = await ml_upload_datastore_flow()
     assert result["src_dir"] == "tests/"
     assert result["target_path"] == "target_path"
     assert result["overwrite"]
@@ -68,7 +68,7 @@ async def test_ml_upload_datastore_flow_pathlib(ml_credentials, datastore):
         )
         return result
 
-    result = (await ml_upload_datastore_flow()).result().result()
+    result = await ml_upload_datastore_flow()
     assert result["src_dir"] == "tests"
     assert result["target_path"] == "target/path"
     assert result["overwrite"]
@@ -86,5 +86,5 @@ async def test_ml_register_datastore_blob_container_flow(
         )
         return result
 
-    result = (await ml_register_datastore_blob_container_flow()).result().result()
+    result = await ml_register_datastore_blob_container_flow()
     assert result == "registered"

@@ -25,7 +25,7 @@ async def test_cosmos_db_query_items_flow(cosmos_db_credentials):
         )
         return results
 
-    results = (await cosmos_db_query_items_flow()).result().result()
+    results = await cosmos_db_query_items_flow()
     assert results == [{"name": "Someone", "age": 23}]
 
 
@@ -42,7 +42,7 @@ async def test_cosmos_db_read_item_flow(cosmos_db_credentials):
         )
         return result
 
-    result = (await cosmos_db_read_item_flow()).result().result()
+    result = await cosmos_db_read_item_flow()
     assert result == {"name": "Someone", "age": 23}
 
 
@@ -62,5 +62,5 @@ async def test_cosmos_db_create_item_flow(cosmos_db_credentials):
         )
         return result
 
-    result = (await cosmos_db_create_item_flow()).result().result()
+    result = await cosmos_db_create_item_flow()
     assert result == body
