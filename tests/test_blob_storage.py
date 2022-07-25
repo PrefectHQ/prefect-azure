@@ -20,7 +20,7 @@ async def test_blob_storage_download_flow(blob_storage_credentials):
             blob_storage_credentials=blob_storage_credentials,
         )
 
-    data = (await blob_storage_download_flow()).result().result()
+    data = await blob_storage_download_flow()
     assert data.decode() == "prefect_works"
 
 
@@ -44,7 +44,7 @@ async def test_blob_storage_upload_flow(blob_expected, blob_storage_credentials)
             blob_storage_credentials=blob_storage_credentials,
         )
 
-    blob_result = (await blob_storage_upload_flow()).result().result()
+    blob_result = await blob_storage_upload_flow()
     if blob_expected is None:
         is_valid_uuid(blob_expected)
     else:
@@ -65,7 +65,7 @@ async def test_blob_storage_upload_blob_exists_flow(
         )
 
     with pytest.raises(ResourceExistsError):
-        (await blob_storage_upload_flow()).result().result()
+        (await blob_storage_upload_flow())
 
 
 async def test_blob_storage_list_flow(blob_storage_credentials):
@@ -76,5 +76,5 @@ async def test_blob_storage_list_flow(blob_storage_credentials):
             blob_storage_credentials=blob_storage_credentials,
         )
 
-    blobs = (await blob_storage_list_flow()).result().result()
+    blobs = await blob_storage_list_flow()
     assert blobs == list(range(5))
