@@ -80,7 +80,7 @@ class AzureBlobStorageCredentials(Block):
         Load stored Azure Blob Storage credentials:
         ```python
         from prefect_azure import AzureBlobStorageCredentials
-        azure_credentials_block = AzureBlobStorageCredentials.load("MY_BLOCK_NAME")
+        azure_credentials_block = AzureBlobStorageCredentials.load("BLOCK_NAME")
         ```
     """
 
