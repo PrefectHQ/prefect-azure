@@ -8,8 +8,10 @@
       
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.2.5">
+        <link rel="canonical" href="https://prefecthq.github.io/prefect-azure/ml_datastore/">
+      
+      <link rel="icon" href="../img/favicon.ico">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.3.9">
     
     
       
@@ -17,15 +19,16 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.2d9f7617.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.1d29e8d0.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.e6a45f82.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.cbb835fc.min.css">
         
           
           
           <meta name="theme-color" content="#2094f3">
         
+      
       
     
     
@@ -34,12 +37,14 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CSource+Code+Pro:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"Source Code Pro"}</style>
       
     
     
       <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
     
     <script>__md_scope=new URL("..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -81,12 +86,11 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href=".." title="prefect-azure" class="md-header__button md-logo" aria-label="prefect-azure" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+  <img src="../img/prefect-logo-white.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -108,7 +112,7 @@
     
     
       <label class="md-header__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
       </label>
       <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
@@ -116,13 +120,13 @@
     <form class="md-search__form" name="search">
       <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
       </label>
       <nav class="md-search__options" aria-label="Search">
         
         <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
       </nav>
       
@@ -140,6 +144,18 @@
   </div>
 </div>
     
+    
+      <div class="md-header__source">
+        <a href="https://github.com/prefecthq/prefect-azure" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
     
   </nav>
   
@@ -167,12 +183,23 @@
   <label class="md-nav__title" for="__drawer">
     <a href=".." title="prefect-azure" class="md-nav__button md-logo" aria-label="prefect-azure" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+  <img src="../img/prefect-logo-white.png" alt="logo">
 
     </a>
     prefect-azure
   </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/prefecthq/prefect-azure" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
   
   <ul class="md-nav__list" data-md-scrollfix>
     
@@ -364,6 +391,10 @@
             <article class="md-content__inner md-typeset">
               
                 
+  <a href="https://github.com/edit/main/docs/ml_datastore.md" title="Edit this page" class="md-content__button md-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
 
 
 <div class="doc doc-object doc-module">
@@ -371,17 +402,16 @@
 
 
 <h1 id="prefect_azure.ml_datastore" class="doc doc-heading">
-        <code>prefect_azure.ml_datastore</code>
-
+          <code>prefect_azure.ml_datastore</code>
 
 
 </h1>
 
-    <div class="doc doc-contents first">
-
+  <div class="doc doc-contents first">
+  
       <p>Tasks for interacting with Azure ML Datastore</p>
 
-
+  
 
   <div class="doc doc-children">
 
@@ -392,58 +422,70 @@
 
 
 
-  <div class="doc doc-object doc-function">
+
+<div class="doc doc-object doc-function">
 
 
 
 <h2 id="prefect_azure.ml_datastore.ml_get_datastore" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">ml_get_datastore</span><span class="p">(</span><span class="n">ml_credentials</span><span class="p">,</span> <span class="n">datastore_name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
-
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-async"><code>async</code></small>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h2>
 
-    <div class="doc doc-contents ">
 
+  <div class="doc doc-contents ">
+  
       <p>Gets the Datastore within the Workspace.</p>
 
-<p><strong>Parameters:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
       <tr>
-        <td><code>ml_credentials</code></td>
-        <td><code>MlAzureCredentials</code></td>
-        <td><p>Credentials to use for authentication with Azure.</p></td>
-        <td><em>required</em></td>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
       </tr>
-      <tr>
-        <td><code>datastore_name</code></td>
-        <td><code>str</code></td>
-        <td><p>The name of the Datastore. If <code>None</code>, then the
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>ml_credentials</code></td>
+          <td>
+                <code>&#39;AzureMlCredentials&#39;</code>
+          </td>
+          <td><p>Credentials to use for authentication with Azure.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>datastore_name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>The name of the Datastore. If <code>None</code>, then the
 default Datastore of the Workspace is returned.</p></td>
-        <td><code>None</code></td>
-      </tr>
-  </tbody>
-</table>
-<p><strong>Examples:</strong></p>
-    <p>Get Datastore object
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<details class="example">
+  <summary>Example</summary>
+  <p>Get Datastore object
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">flow</span>
-<span class="kn">from</span> <span class="nn">prefect_azure</span> <span class="kn">import</span> <span class="n">MlAzureCredentials</span>
+<span class="kn">from</span> <span class="nn">prefect_azure</span> <span class="kn">import</span> <span class="n">AzureMlCredentials</span>
 <span class="kn">from</span> <span class="nn">prefect_azure.ml_datastore</span> <span class="kn">import</span> <span class="n">ml_get_datastore</span>
 
 <span class="nd">@flow</span>
 <span class="k">def</span> <span class="nf">example_ml_get_datastore_flow</span><span class="p">():</span>
-    <span class="n">ml_credentials</span> <span class="o">=</span> <span class="n">MlAzureCredentials</span><span class="p">(</span>
+    <span class="n">ml_credentials</span> <span class="o">=</span> <span class="n">AzureMlCredentials</span><span class="p">(</span>
         <span class="n">tenant_id</span><span class="o">=</span><span class="s2">&quot;tenant_id&quot;</span><span class="p">,</span>
         <span class="n">service_principal_id</span><span class="o">=</span><span class="s2">&quot;service_principal_id&quot;</span><span class="p">,</span>
         <span class="n">service_principal_password</span><span class="o">=</span><span class="s2">&quot;service_principal_password&quot;</span><span class="p">,</span>
@@ -454,12 +496,49 @@ default Datastore of the Workspace is returned.</p></td>
     <span class="n">results</span> <span class="o">=</span> <span class="n">ml_get_datastore</span><span class="p">(</span><span class="n">ml_credentials</span><span class="p">,</span> <span class="n">datastore_name</span><span class="o">=</span><span class="s2">&quot;datastore_name&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">results</span>
 </code></pre></div></p>
-
-        <details class="quote">
-          <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="nd">@task</span>
+</details>
+      <details class="quote">
+        <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@task</span>
 <span class="k">async</span> <span class="k">def</span> <span class="nf">ml_get_datastore</span><span class="p">(</span>
-    <span class="n">ml_credentials</span><span class="p">:</span> <span class="s2">&quot;MlAzureCredentials&quot;</span><span class="p">,</span> <span class="n">datastore_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">ml_credentials</span><span class="p">:</span> <span class="s2">&quot;AzureMlCredentials&quot;</span><span class="p">,</span> <span class="n">datastore_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Datastore</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Gets the Datastore within the Workspace.</span>
@@ -473,12 +552,12 @@ default Datastore of the Workspace is returned.</p></td>
 <span class="sd">        Get Datastore object</span>
 <span class="sd">        ```python</span>
 <span class="sd">        from prefect import flow</span>
-<span class="sd">        from prefect_azure import MlAzureCredentials</span>
+<span class="sd">        from prefect_azure import AzureMlCredentials</span>
 <span class="sd">        from prefect_azure.ml_datastore import ml_get_datastore</span>
 
 <span class="sd">        @flow</span>
 <span class="sd">        def example_ml_get_datastore_flow():</span>
-<span class="sd">            ml_credentials = MlAzureCredentials(</span>
+<span class="sd">            ml_credentials = AzureMlCredentials(</span>
 <span class="sd">                tenant_id=&quot;tenant_id&quot;,</span>
 <span class="sd">                service_principal_id=&quot;service_principal_id&quot;,</span>
 <span class="sd">                service_principal_password=&quot;service_principal_password&quot;,</span>
@@ -495,56 +574,60 @@ default Datastore of the Workspace is returned.</p></td>
 
     <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">_get_datastore</span><span class="p">(</span><span class="n">ml_credentials</span><span class="p">,</span> <span class="n">datastore_name</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span>
-</code></pre></div>
-        </details>
-    </div>
-
+</code></pre></div></td></tr></table></div>
+      </details>
   </div>
 
+</div>
 
-
-  <div class="doc doc-object doc-function">
+<div class="doc doc-object doc-function">
 
 
 
 <h2 id="prefect_azure.ml_datastore.ml_list_datastores" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">ml_list_datastores</span><span class="p">(</span><span class="n">ml_credentials</span><span class="p">)</span></code>
 
-
 </h2>
 
-    <div class="doc doc-contents ">
 
+  <div class="doc doc-contents ">
+  
       <p>Lists the Datastores in the Workspace.</p>
 
-<p><strong>Parameters:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
       <tr>
-        <td><code>ml_credentials</code></td>
-        <td><code>MlAzureCredentials</code></td>
-        <td><p>Credentials to use for authentication with Azure.</p></td>
-        <td><em>required</em></td>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
       </tr>
-  </tbody>
-</table>
-<p><strong>Examples:</strong></p>
-    <p>List Datastore objects
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>ml_credentials</code></td>
+          <td>
+                <code>&#39;AzureMlCredentials&#39;</code>
+          </td>
+          <td><p>Credentials to use for authentication with Azure.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<details class="example">
+  <summary>Example</summary>
+  <p>List Datastore objects
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">flow</span>
-<span class="kn">from</span> <span class="nn">prefect_azure</span> <span class="kn">import</span> <span class="n">MlAzureCredentials</span>
+<span class="kn">from</span> <span class="nn">prefect_azure</span> <span class="kn">import</span> <span class="n">AzureMlCredentials</span>
 <span class="kn">from</span> <span class="nn">prefect_azure.ml_datastore</span> <span class="kn">import</span> <span class="n">ml_list_datastores</span>
 
 <span class="nd">@flow</span>
 <span class="k">def</span> <span class="nf">example_ml_list_datastores_flow</span><span class="p">():</span>
-    <span class="n">ml_credentials</span> <span class="o">=</span> <span class="n">MlAzureCredentials</span><span class="p">(</span>
+    <span class="n">ml_credentials</span> <span class="o">=</span> <span class="n">AzureMlCredentials</span><span class="p">(</span>
         <span class="n">tenant_id</span><span class="o">=</span><span class="s2">&quot;tenant_id&quot;</span><span class="p">,</span>
         <span class="n">service_principal_id</span><span class="o">=</span><span class="s2">&quot;service_principal_id&quot;</span><span class="p">,</span>
         <span class="n">service_principal_password</span><span class="o">=</span><span class="s2">&quot;service_principal_password&quot;</span><span class="p">,</span>
@@ -555,11 +638,45 @@ default Datastore of the Workspace is returned.</p></td>
     <span class="n">results</span> <span class="o">=</span> <span class="n">ml_list_datastores</span><span class="p">(</span><span class="n">ml_credentials</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">results</span>
 </code></pre></div></p>
-
-        <details class="quote">
-          <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="nd">@task</span>
-<span class="k">def</span> <span class="nf">ml_list_datastores</span><span class="p">(</span><span class="n">ml_credentials</span><span class="p">:</span> <span class="s2">&quot;MlAzureCredentials&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+</details>
+      <details class="quote">
+        <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@task</span>
+<span class="k">def</span> <span class="nf">ml_list_datastores</span><span class="p">(</span><span class="n">ml_credentials</span><span class="p">:</span> <span class="s2">&quot;AzureMlCredentials&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Lists the Datastores in the Workspace.</span>
 
@@ -570,12 +687,12 @@ default Datastore of the Workspace is returned.</p></td>
 <span class="sd">        List Datastore objects</span>
 <span class="sd">        ```python</span>
 <span class="sd">        from prefect import flow</span>
-<span class="sd">        from prefect_azure import MlAzureCredentials</span>
+<span class="sd">        from prefect_azure import AzureMlCredentials</span>
 <span class="sd">        from prefect_azure.ml_datastore import ml_list_datastores</span>
 
 <span class="sd">        @flow</span>
 <span class="sd">        def example_ml_list_datastores_flow():</span>
-<span class="sd">            ml_credentials = MlAzureCredentials(</span>
+<span class="sd">            ml_credentials = AzureMlCredentials(</span>
 <span class="sd">                tenant_id=&quot;tenant_id&quot;,</span>
 <span class="sd">                service_principal_id=&quot;service_principal_id&quot;,</span>
 <span class="sd">                service_principal_password=&quot;service_principal_password&quot;,</span>
@@ -593,101 +710,130 @@ default Datastore of the Workspace is returned.</p></td>
     <span class="n">workspace</span> <span class="o">=</span> <span class="n">ml_credentials</span><span class="o">.</span><span class="n">get_workspace</span><span class="p">()</span>
     <span class="n">results</span> <span class="o">=</span> <span class="n">workspace</span><span class="o">.</span><span class="n">datastores</span>
     <span class="k">return</span> <span class="n">results</span>
-</code></pre></div>
-        </details>
-    </div>
-
+</code></pre></div></td></tr></table></div>
+      </details>
   </div>
 
+</div>
 
-
-  <div class="doc doc-object doc-function">
+<div class="doc doc-object doc-function">
 
 
 
 <h2 id="prefect_azure.ml_datastore.ml_register_datastore_blob_container" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">ml_register_datastore_blob_container</span><span class="p">(</span><span class="n">container_name</span><span class="p">,</span> <span class="n">ml_credentials</span><span class="p">,</span> <span class="n">blob_storage_credentials</span><span class="p">,</span> <span class="n">datastore_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">create_container_if_not_exists</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">set_as_default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
-
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-async"><code>async</code></small>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h2>
 
-    <div class="doc doc-contents ">
 
+  <div class="doc doc-contents ">
+  
       <p>Registers a Azure Blob Storage container as a
 Datastore in a Azure ML service Workspace.</p>
 
-<p><strong>Parameters:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
       <tr>
-        <td><code>container_name</code></td>
-        <td><code>str</code></td>
-        <td><p>The name of the container.</p></td>
-        <td><em>required</em></td>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
       </tr>
-      <tr>
-        <td><code>ml_credentials</code></td>
-        <td><code>MlAzureCredentials</code></td>
-        <td><p>Credentials to use for authentication with Azure ML.</p></td>
-        <td><em>required</em></td>
-      </tr>
-      <tr>
-        <td><code>blob_storage_credentials</code></td>
-        <td><code>BlobStorageAzureCredentials</code></td>
-        <td><p>Credentials to use for authentication
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>container_name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>The name of the container.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>ml_credentials</code></td>
+          <td>
+                <code>&#39;AzureMlCredentials&#39;</code>
+          </td>
+          <td><p>Credentials to use for authentication with Azure ML.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>blob_storage_credentials</code></td>
+          <td>
+                <code>&#39;AzureBlobStorageCredentials&#39;</code>
+          </td>
+          <td><p>Credentials to use for authentication
 with Azure Blob Storage.</p></td>
-        <td><em>required</em></td>
-      </tr>
-      <tr>
-        <td><code>datastore_name</code></td>
-        <td><code>str</code></td>
-        <td><p>The name of the datastore. If not defined, the
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>datastore_name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>The name of the datastore. If not defined, the
 container name will be used.</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>create_container_if_not_exists</code></td>
-        <td><code>bool</code></td>
-        <td><p>Create a container, if one does not
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>create_container_if_not_exists</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Create a container, if one does not
 exist with the given name.</p></td>
-        <td><code>False</code></td>
-      </tr>
-      <tr>
-        <td><code>overwrite</code></td>
-        <td><code>bool</code></td>
-        <td><p>Overwrite an existing datastore. If
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>overwrite</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Overwrite an existing datastore. If
 the datastore does not exist, it will be created.</p></td>
-        <td><code>False</code></td>
-      </tr>
-      <tr>
-        <td><code>set_as_default</code></td>
-        <td><code>bool</code></td>
-        <td><p>Set the created Datastore as the default datastore
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>set_as_default</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set the created Datastore as the default datastore
 for the Workspace.</p></td>
-        <td><code>False</code></td>
-      </tr>
-  </tbody>
-</table>
-<p><strong>Examples:</strong></p>
-    <p>Upload Datastore object
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<details class="example">
+  <summary>Example</summary>
+  <p>Upload Datastore object
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">flow</span>
-<span class="kn">from</span> <span class="nn">prefect_azure</span> <span class="kn">import</span> <span class="n">MlAzureCredentials</span>
+<span class="kn">from</span> <span class="nn">prefect_azure</span> <span class="kn">import</span> <span class="n">AzureMlCredentials</span>
 <span class="kn">from</span> <span class="nn">prefect_azure.ml_datastore</span> <span class="kn">import</span> <span class="n">ml_register_datastore_blob_container</span>
 
 <span class="nd">@flow</span>
 <span class="k">def</span> <span class="nf">example_ml_register_datastore_blob_container_flow</span><span class="p">():</span>
-    <span class="n">ml_credentials</span> <span class="o">=</span> <span class="n">MlAzureCredentials</span><span class="p">(</span>
+    <span class="n">ml_credentials</span> <span class="o">=</span> <span class="n">AzureMlCredentials</span><span class="p">(</span>
         <span class="n">tenant_id</span><span class="o">=</span><span class="s2">&quot;tenant_id&quot;</span><span class="p">,</span>
         <span class="n">service_principal_id</span><span class="o">=</span><span class="s2">&quot;service_principal_id&quot;</span><span class="p">,</span>
         <span class="n">service_principal_password</span><span class="o">=</span><span class="s2">&quot;service_principal_password&quot;</span><span class="p">,</span>
@@ -695,7 +841,7 @@ for the Workspace.</p></td>
         <span class="n">resource_group</span><span class="o">=</span><span class="s2">&quot;resource_group&quot;</span><span class="p">,</span>
         <span class="n">workspace_name</span><span class="o">=</span><span class="s2">&quot;workspace_name&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">blob_storage_credentials</span> <span class="o">=</span> <span class="n">BlobStorageAzureCredentials</span><span class="p">(</span><span class="s2">&quot;connection_string&quot;</span><span class="p">)</span>
+    <span class="n">blob_storage_credentials</span> <span class="o">=</span> <span class="n">AzureBlobStorageCredentials</span><span class="p">(</span><span class="s2">&quot;connection_string&quot;</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">ml_register_datastore_blob_container</span><span class="p">(</span>
         <span class="s2">&quot;container&quot;</span><span class="p">,</span>
         <span class="n">ml_credentials</span><span class="p">,</span>
@@ -704,14 +850,99 @@ for the Workspace.</p></td>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div></p>
-
-        <details class="quote">
-          <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="nd">@task</span>
+</details>
+      <details class="quote">
+        <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@task</span>
 <span class="k">async</span> <span class="k">def</span> <span class="nf">ml_register_datastore_blob_container</span><span class="p">(</span>
     <span class="n">container_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">ml_credentials</span><span class="p">:</span> <span class="s2">&quot;MlAzureCredentials&quot;</span><span class="p">,</span>
-    <span class="n">blob_storage_credentials</span><span class="p">:</span> <span class="s2">&quot;BlobStorageAzureCredentials&quot;</span><span class="p">,</span>
+    <span class="n">ml_credentials</span><span class="p">:</span> <span class="s2">&quot;AzureMlCredentials&quot;</span><span class="p">,</span>
+    <span class="n">blob_storage_credentials</span><span class="p">:</span> <span class="s2">&quot;AzureBlobStorageCredentials&quot;</span><span class="p">,</span>
     <span class="n">datastore_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">create_container_if_not_exists</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -739,12 +970,12 @@ for the Workspace.</p></td>
 <span class="sd">        Upload Datastore object</span>
 <span class="sd">        ```python</span>
 <span class="sd">        from prefect import flow</span>
-<span class="sd">        from prefect_azure import MlAzureCredentials</span>
+<span class="sd">        from prefect_azure import AzureMlCredentials</span>
 <span class="sd">        from prefect_azure.ml_datastore import ml_register_datastore_blob_container</span>
 
 <span class="sd">        @flow</span>
 <span class="sd">        def example_ml_register_datastore_blob_container_flow():</span>
-<span class="sd">            ml_credentials = MlAzureCredentials(</span>
+<span class="sd">            ml_credentials = AzureMlCredentials(</span>
 <span class="sd">                tenant_id=&quot;tenant_id&quot;,</span>
 <span class="sd">                service_principal_id=&quot;service_principal_id&quot;,</span>
 <span class="sd">                service_principal_password=&quot;service_principal_password&quot;,</span>
@@ -752,7 +983,7 @@ for the Workspace.</p></td>
 <span class="sd">                resource_group=&quot;resource_group&quot;,</span>
 <span class="sd">                workspace_name=&quot;workspace_name&quot;,</span>
 <span class="sd">            )</span>
-<span class="sd">            blob_storage_credentials = BlobStorageAzureCredentials(&quot;connection_string&quot;)</span>
+<span class="sd">            blob_storage_credentials = AzureBlobStorageCredentials(&quot;connection_string&quot;)</span>
 <span class="sd">            result = ml_register_datastore_blob_container(</span>
 <span class="sd">                &quot;container&quot;,</span>
 <span class="sd">                ml_credentials,</span>
@@ -793,95 +1024,120 @@ for the Workspace.</p></td>
         <span class="n">result</span><span class="o">.</span><span class="n">set_as_default</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="n">result</span>
-</code></pre></div>
-        </details>
-    </div>
-
+</code></pre></div></td></tr></table></div>
+      </details>
   </div>
 
+</div>
 
-
-  <div class="doc doc-object doc-function">
+<div class="doc doc-object doc-function">
 
 
 
 <h2 id="prefect_azure.ml_datastore.ml_upload_datastore" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">ml_upload_datastore</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">ml_credentials</span><span class="p">,</span> <span class="n">target_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">relative_root</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">datastore_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
-
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-async"><code>async</code></small>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h2>
 
-    <div class="doc doc-contents ">
 
+  <div class="doc doc-contents ">
+  
       <p>Uploads local files to a Datastore.</p>
 
-<p><strong>Parameters:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
       <tr>
-        <td><code>path</code></td>
-        <td><code>Union[str, pathlib.Path, List[Union[str, pathlib.Path]]]</code></td>
-        <td><p>The path to a single file, single directory,
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>path</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>, <span title="typing.List">List</span>[<span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]]]</code>
+          </td>
+          <td><p>The path to a single file, single directory,
 or a list of path to files to be uploaded.</p></td>
-        <td><em>required</em></td>
-      </tr>
-      <tr>
-        <td><code>ml_credentials</code></td>
-        <td><code>MlAzureCredentials</code></td>
-        <td><p>Credentials to use for authentication with Azure.</p></td>
-        <td><em>required</em></td>
-      </tr>
-      <tr>
-        <td><code>target_path</code></td>
-        <td><code>Union[str, pathlib.Path]</code></td>
-        <td><p>The location in the blob container to upload to. If
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>ml_credentials</code></td>
+          <td>
+                <code>&#39;AzureMlCredentials&#39;</code>
+          </td>
+          <td><p>Credentials to use for authentication with Azure.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>target_path</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]</code>
+          </td>
+          <td><p>The location in the blob container to upload to. If
 None, then upload to root.</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>relative_root</code></td>
-        <td><code>Union[str, pathlib.Path]</code></td>
-        <td><p>The root from which is used to determine the path of
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>relative_root</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]</code>
+          </td>
+          <td><p>The root from which is used to determine the path of
 the files in the blob. For example, if we upload /path/to/file.txt,
 and we define base path to be /path, when file.txt is uploaded
 to the blob storage, it will have the path of /to/file.txt.</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>datastore_name</code></td>
-        <td><code>str</code></td>
-        <td><p>The name of the Datastore. If <code>None</code>, then the
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>datastore_name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>The name of the Datastore. If <code>None</code>, then the
 default Datastore of the Workspace is returned.</p></td>
-        <td><code>None</code></td>
-      </tr>
-      <tr>
-        <td><code>overwrite</code></td>
-        <td><code>bool</code></td>
-        <td><p>Overwrite existing file(s).</p></td>
-        <td><code>False</code></td>
-      </tr>
-  </tbody>
-</table>
-<p><strong>Examples:</strong></p>
-    <p>Upload Datastore object
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>overwrite</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Overwrite existing file(s).</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<details class="example">
+  <summary>Example</summary>
+  <p>Upload Datastore object
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">flow</span>
-<span class="kn">from</span> <span class="nn">prefect_azure</span> <span class="kn">import</span> <span class="n">MlAzureCredentials</span>
+<span class="kn">from</span> <span class="nn">prefect_azure</span> <span class="kn">import</span> <span class="n">AzureMlCredentials</span>
 <span class="kn">from</span> <span class="nn">prefect_azure.ml_datastore</span> <span class="kn">import</span> <span class="n">ml_upload_datastore</span>
 
 <span class="nd">@flow</span>
 <span class="k">def</span> <span class="nf">example_ml_upload_datastore_flow</span><span class="p">():</span>
-    <span class="n">ml_credentials</span> <span class="o">=</span> <span class="n">MlAzureCredentials</span><span class="p">(</span>
+    <span class="n">ml_credentials</span> <span class="o">=</span> <span class="n">AzureMlCredentials</span><span class="p">(</span>
         <span class="n">tenant_id</span><span class="o">=</span><span class="s2">&quot;tenant_id&quot;</span><span class="p">,</span>
         <span class="n">service_principal_id</span><span class="o">=</span><span class="s2">&quot;service_principal_id&quot;</span><span class="p">,</span>
         <span class="n">service_principal_password</span><span class="o">=</span><span class="s2">&quot;service_principal_password&quot;</span><span class="p">,</span>
@@ -896,13 +1152,99 @@ default Datastore of the Workspace is returned.</p></td>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div></p>
-
-        <details class="quote">
-          <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="nd">@task</span>
+</details>
+      <details class="quote">
+        <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@task</span>
 <span class="k">async</span> <span class="k">def</span> <span class="nf">ml_upload_datastore</span><span class="p">(</span>
     <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]],</span>
-    <span class="n">ml_credentials</span><span class="p">:</span> <span class="s2">&quot;MlAzureCredentials&quot;</span><span class="p">,</span>
+    <span class="n">ml_credentials</span><span class="p">:</span> <span class="s2">&quot;AzureMlCredentials&quot;</span><span class="p">,</span>
     <span class="n">target_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">relative_root</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">datastore_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -929,12 +1271,12 @@ default Datastore of the Workspace is returned.</p></td>
 <span class="sd">        Upload Datastore object</span>
 <span class="sd">        ```python</span>
 <span class="sd">        from prefect import flow</span>
-<span class="sd">        from prefect_azure import MlAzureCredentials</span>
+<span class="sd">        from prefect_azure import AzureMlCredentials</span>
 <span class="sd">        from prefect_azure.ml_datastore import ml_upload_datastore</span>
 
 <span class="sd">        @flow</span>
 <span class="sd">        def example_ml_upload_datastore_flow():</span>
-<span class="sd">            ml_credentials = MlAzureCredentials(</span>
+<span class="sd">            ml_credentials = AzureMlCredentials(</span>
 <span class="sd">                tenant_id=&quot;tenant_id&quot;,</span>
 <span class="sd">                service_principal_id=&quot;service_principal_id&quot;,</span>
 <span class="sd">                service_principal_password=&quot;service_principal_password&quot;,</span>
@@ -986,25 +1328,23 @@ default Datastore of the Workspace is returned.</p></td>
 
     <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">to_thread</span><span class="o">.</span><span class="n">run_sync</span><span class="p">(</span><span class="n">partial_upload</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span>
-</code></pre></div>
-        </details>
-    </div>
-
+</code></pre></div></td></tr></table></div>
+      </details>
   </div>
 
-
-
+</div>
 
 
 
   </div>
 
-    </div>
-
   </div>
+
+</div>
 
               
             </article>
+            
           </div>
         </div>
         
@@ -1012,12 +1352,13 @@ default Datastore of the Workspace is returned.</p></td>
       
         <footer class="md-footer">
   
-    <nav class="md-footer__inner md-grid" aria-label="Footer">
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
       
         
         <a href="../blob_storage/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Blob Storage" rel="prev">
           <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
           </div>
           <div class="md-footer__title">
             <div class="md-ellipsis">
@@ -1052,10 +1393,10 @@ default Datastore of the Workspace is returned.</p></td>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../assets/javascripts/workers/search.bd0b6b67.min.js"}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b97dbffb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.467223ff.min.js"></script>
+      <script src="../assets/javascripts/bundle.6c7ad80a.min.js"></script>
       
     
   </body>
