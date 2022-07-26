@@ -37,6 +37,13 @@ setup(
     python_requires=">=3.7",
     install_requires=install_requires,
     extras_require=extras_require,
+    entry_points={
+        "prefect.collections": [
+            "AzureBlobStorageCredentials = prefect_azure.credentials",
+            "AzureCosmosDbCredentials = prefect_azure.credentials",
+            "AzureMlCredentials = prefect_azure.credentials",
+        ]
+    },
     classifiers=[
         "Natural Language :: English",
         "Intended Audience :: Developers",

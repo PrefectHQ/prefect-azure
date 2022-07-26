@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 from prefect import task
 from prefect.logging import get_run_logger
 
-from prefect_azure.credentials import CosmosDbAzureCredentials
+from prefect_azure.credentials import AzureCosmosDbCredentials
 
 
 @task
@@ -19,7 +19,7 @@ async def cosmos_db_query_items(
     query: str,
     container: Union[str, "ContainerProxy", Dict[str, Any]],
     database: Union[str, "DatabaseProxy", Dict[str, Any]],
-    cosmos_db_credentials: CosmosDbAzureCredentials,
+    cosmos_db_credentials: AzureCosmosDbCredentials,
     parameters: Optional[List[Dict[str, object]]] = None,
     partition_key: Optional[Any] = None,
     **kwargs: Any
@@ -52,13 +52,13 @@ async def cosmos_db_query_items(
         ```python
         from prefect import flow
 
-        from prefect_azure import CosmosDbAzureCredentials
+        from prefect_azure import AzureCosmosDbCredentials
         from prefect_azure.cosmos_db import cosmos_db_query_items
 
         @flow
         def example_cosmos_db_query_items_flow():
             connection_string = "connection_string"
-            cosmos_db_credentials = CosmosDbAzureCredentials(connection_string)
+            cosmos_db_credentials = AzureCosmosDbCredentials(connection_string)
 
             query = "SELECT * FROM c where c.age >= @age"
             container = "Persons"
@@ -99,7 +99,7 @@ async def cosmos_db_read_item(
     partition_key: Any,
     container: Union[str, "ContainerProxy", Dict[str, Any]],
     database: Union[str, "DatabaseProxy", Dict[str, Any]],
-    cosmos_db_credentials: CosmosDbAzureCredentials,
+    cosmos_db_credentials: AzureCosmosDbCredentials,
     **kwargs: Any
 ) -> List[Union[str, dict]]:
     """
@@ -123,13 +123,13 @@ async def cosmos_db_read_item(
         ```python
         from prefect import flow
 
-        from prefect_azure import CosmosDbAzureCredentials
+        from prefect_azure import AzureCosmosDbCredentials
         from prefect_azure.cosmos_db import cosmos_db_read_item
 
         @flow
         def example_cosmos_db_read_item_flow():
             connection_string = "connection_string"
-            cosmos_db_credentials = CosmosDbAzureCredentials(connection_string)
+            cosmos_db_credentials = AzureCosmosDbCredentials(connection_string)
 
             item = "item"
             partition_key = "partition_key"
@@ -168,7 +168,7 @@ async def cosmos_db_create_item(
     body: Dict[str, Any],
     container: Union[str, "ContainerProxy", Dict[str, Any]],
     database: Union[str, "DatabaseProxy", Dict[str, Any]],
-    cosmos_db_credentials: CosmosDbAzureCredentials,
+    cosmos_db_credentials: AzureCosmosDbCredentials,
     **kwargs: Any
 ) -> Dict[str, Any]:
     """
@@ -197,13 +197,13 @@ async def cosmos_db_create_item(
 
         from prefect import flow
 
-        from prefect_azure import CosmosDbAzureCredentials
+        from prefect_azure import AzureCosmosDbCredentials
         from prefect_azure.cosmos_db import cosmos_db_create_item
 
         @flow
         def example_cosmos_db_create_item_flow():
             connection_string = "connection_string"
-            cosmos_db_credentials = CosmosDbAzureCredentials(connection_string)
+            cosmos_db_credentials = AzureCosmosDbCredentials(connection_string)
 
             body = {
                 "firstname": "Olivia",

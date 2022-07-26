@@ -9,14 +9,14 @@ from prefect import task
 from prefect.logging import get_run_logger
 
 if TYPE_CHECKING:
-    from prefect_azure.credentials import BlobStorageAzureCredentials
+    from prefect_azure.credentials import AzureBlobStorageCredentials
 
 
 @task
 async def blob_storage_download(
     container: str,
     blob: str,
-    blob_storage_credentials: "BlobStorageAzureCredentials",
+    blob_storage_credentials: "AzureBlobStorageCredentials",
 ) -> bytes:
     """
     Downloads a blob with a given key from a given Blob Storage container.
@@ -31,13 +31,13 @@ async def blob_storage_download(
         ```python
         from prefect import flow
 
-        from prefect_azure import BlobStorageAzureCredentials
+        from prefect_azure import AzureBlobStorageCredentials
         from prefect_azure.blob_storage import blob_storage_download
 
         @flow
         def example_blob_storage_download_flow():
             connection_string = "connection_string"
-            blob_storage_credentials = BlobStorageAzureCredentials(
+            blob_storage_credentials = AzureBlobStorageCredentials(
                 connection_string=connection_string,
             )
             data = blob_storage_download(
@@ -64,7 +64,7 @@ async def blob_storage_download(
 async def blob_storage_upload(
     data: bytes,
     container: str,
-    blob_storage_credentials: "BlobStorageAzureCredentials",
+    blob_storage_credentials: "AzureBlobStorageCredentials",
     blob: str = None,
     overwrite: bool = False,
 ) -> str:
@@ -84,13 +84,13 @@ async def blob_storage_upload(
         ```python
         from prefect import flow
 
-        from prefect_azure import BlobStorageAzureCredentials
+        from prefect_azure import AzureBlobStorageCredentials
         from prefect_azure.blob_storage import blob_storage_upload
 
         @flow
         def example_blob_storage_upload_flow():
             connection_string = "connection_string"
-            blob_storage_credentials = BlobStorageAzureCredentials(
+            blob_storage_credentials = AzureBlobStorageCredentials(
                 connection_string=connection_string,
             )
             with open("data.csv", "rb") as f:
@@ -122,7 +122,7 @@ async def blob_storage_upload(
 @task
 async def blob_storage_list(
     container: str,
-    blob_storage_credentials: "BlobStorageAzureCredentials",
+    blob_storage_credentials: "AzureBlobStorageCredentials",
 ) -> List["BlobProperties"]:
     """
     List objects from a given Blob Storage container.
@@ -135,13 +135,13 @@ async def blob_storage_list(
         ```python
         from prefect import flow
 
-        from prefect_azure import BlobStorageAzureCredentials
+        from prefect_azure import AzureBlobStorageCredentials
         from prefect_azure.blob_storage import blob_storage_list
 
         @flow
         def example_blob_storage_list_flow():
             connection_string = "connection_string"
-            blob_storage_credentials = BlobStorageAzureCredentials(
+            blob_storage_credentials = AzureBlobStorageCredentials(
                 connection_string="connection_string",
             )
             data = blob_storage_list(
