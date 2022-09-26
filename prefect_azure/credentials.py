@@ -1,6 +1,7 @@
 """Credential classes used to perform authenticated interactions with Azure"""
 
 import functools
+import os
 from typing import TYPE_CHECKING
 
 from pydantic import SecretStr
@@ -382,3 +383,38 @@ class AzureMlCredentials(Block):
         )
 
         return workspace
+
+
+class ACICredentials(Block):
+    """
+    Block used to manage Container Instances authentication. Stores Azure Service Principal
+    authentication data.
+
+    Args:
+        client_id: The service principal client ID.
+        tenant_id: The service principal tenant ID.
+        client_secret: The service principal client secret.
+
+    Example:
+        Load stored Azure Blob Storage credentials:
+        ```python
+        from prefect_azure import ACICredentials
+        azure_credentials_block = ACICredentials.load("BLOCK_NAME")
+        ```
+    """
+
+    _block_type_name = "Azure Container Instances Credentials"
+    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+
+    client_id: SecretStr
+    tenant_id: SecretStr
+    client_secret: SecretStr
+
+    def login(self):
+        """
+        Sets the AZURE_CLIENT_ID, AZURE_TENANT_ID, and AZURE_CLIENT_SECRET environment variables
+        so they will be available for use by DefaultAzureCredential.
+        """
+        os.environ["AZURE_CLIENT_ID"] = self.client_id.get_secret_value()
+        os.environ["AZURE_TENANT_ID"] = self.tenant_id.get_secret_value()
+        os.environ["AZURE_CLIENT_SECRET"] = self.client_secret.get_secret_value()
