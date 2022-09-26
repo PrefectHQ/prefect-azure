@@ -83,12 +83,20 @@ class ACITask(Infrastructure):
             f"If not provided, a default value of {ACI_DEFAULT_CPU} will be used."
         ),
     )
-    gpu: float = Field(
-        title="GPU",
-        default=ACI_DEFAULT_GPU,
+    gpu_count: Optional[float] = Field(
+        title="GPU Count",
+        default=None,
         description=(
             "The number of GPUs to assign to the task container. "
-            f"If not provided, a default value of {ACI_DEFAULT_GPU} will be used."
+            f"If not provided, no GPU will be used."
+        ),
+    )
+    gpu_sku: Optional[str] = Field(
+        title="GPU SKU",
+        default=None,
+        description=(
+            "The Azure GPU SKU to use. See the ACI documentation for a list of "
+            "GPU SKUs available in each Azure region."
         ),
     )
     memory: float = Field(
