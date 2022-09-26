@@ -1,1 +1,4 @@
 prefect>=2.0b9
+azure_mgmt_containerinstance>=10.0
+azure_identity>=1.10
+azure-mgmt-resource>=21.1
