@@ -230,7 +230,7 @@ class ACITask(Infrastructure):
         return ""
 
     def _wait_for_task_container_start(self, container_name: str,
-                                       aci_create_result: LROPoller[ContainerGroup]) -> bool:
+                                       aci_create_result: LROPoller[ContainerGroup]) -> Optional[ContainerGroup]:
         """
         Wait for the result of group and container creation.
         """
@@ -246,11 +246,7 @@ class ACITask(Infrastructure):
                 )
             time.sleep(self.task_watch_poll_interval)
 
-        # If the request didn't time out
-        if isinstance(aci_create_result.result(), ContainerGroup):
-            return True
-        else:
-            return False
+        return aci_create_result.result()
 
     def _watch_task_and_get_exit_code(self, container_group: ContainerGroup):
         # TODO: implement task wait and exit code return
