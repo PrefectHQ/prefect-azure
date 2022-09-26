@@ -1,29 +1,31 @@
-from typing import Dict, List, Optional
-
 import time
 import uuid
+from typing import Dict, List, Optional
+
 from anyio.abc import TaskStatus
 from azure.core.polling import LROPoller
+from azure.identity import ClientSecretCredential
+from azure.mgmt.containerinstance import ContainerInstanceManagementClient
+from azure.mgmt.containerinstance.models import (
+    Container,
+    ContainerGroup,
+    ContainerGroupRestartPolicy,
+    EnvironmentVariable,
+    GpuResource,
+    ImageRegistryCredential,
+    OperatingSystemTypes,
+    ResourceRequests,
+    ResourceRequirements,
+)
+from azure.mgmt.resource import ResourceManagementClient
 from prefect.docker import get_prefect_image_name
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.infrastructure.docker import DockerRegistry
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
-from .credentials import ACICredentials
 from pydantic import Field, SecretStr
 from typing_extensions import Literal
-from azure.identity import ClientSecretCredential
-from azure.mgmt.containerinstance import ContainerInstanceManagementClient
-from azure.mgmt.resource import ResourceManagementClient
-from azure.mgmt.containerinstance.models import (
-    ContainerGroup,
-    Container,
-    ContainerGroupRestartPolicy,
-    EnvironmentVariable,
-    ResourceRequests,
-    ResourceRequirements,
-    OperatingSystemTypes,
-    ImageRegistryCredential,
-)
+
+from .credentials import ACICredentials
 
 ACI_DEFAULT_CPU = 1.0
 ACI_DEFAULT_MEMORY = 1.0
