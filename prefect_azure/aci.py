@@ -231,7 +231,6 @@ class ACITask(Infrastructure):
         )
 
         if not created_container_group:
-            # TODO: handle container start failure
             # TODO: handle container start failure. created_container_group *should* contain
             # contain a value even if starting the container fails
             pass
