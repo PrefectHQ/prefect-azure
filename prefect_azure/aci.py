@@ -173,16 +173,28 @@ class ACITask(Infrastructure):
             for (k, v) in {**self._base_environment(), **self.env}.items()
         ]
 
-        # Configure the container
-        container_resource_requests = ResourceRequests(
-            memory_in_gb=self.memory, cpu=self.cpu, gpu=self.gpu
+        # Configure the container resources
+        gpu_resource = (
+            GpuResource(count=self.gpu_count, sku=self.gpu_sku)
+            if self.gpu_count and self.gpu_sku
+            else None
         )
+
+        container_resource_requests = ResourceRequests(
+            memory_in_gb=self.memory, cpu=self.cpu, gpu=gpu_resource
+        )
+
         container_resource_requirements = ResourceRequirements(
             requests=container_resource_requests
         )
         # all container names in a resource group must be unique
         container_name = str(uuid.uuid4())
-        container_command = self.command or self._base_aci_flow_run_command()
+        # add entrypoint.sh if the user does not supply an image
+        # look for a better way to do this - what if the user has their own image
+        # based off a prefect image?
+        container_command = self._base_aci_flow_run_command()
+
+        # create the container and container group
         container = Container(
             name=container_name,
             image=self.image,
@@ -200,12 +212,14 @@ class ACITask(Infrastructure):
             if self.image_registry
             else None
         )
+
         group = ContainerGroup(
             location=resource_group.location,
             containers=[container],
             os_type=OperatingSystemTypes.linux,
             restart_policy=ContainerGroupRestartPolicy.never,
             image_registry_credential=image_registry_credential,
+            image_registry_credentials=image_registry_credential,
         )
 
         # Create the container group
@@ -219,6 +233,8 @@ class ACITask(Infrastructure):
 
         if not created_container_group:
             # TODO: handle container start failure
+            # TODO: handle container start failure. created_container_group *should* contain
+            # contain a value even if starting the container fails
             pass
 
         if task_status:
