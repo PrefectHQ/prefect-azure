@@ -102,7 +102,7 @@ class ACITask(Infrastructure):
     memory: float = Field(
         default=ACI_DEFAULT_MEMORY,
         description=(
-            "The amount of memory in gigabytesto provide to the ACI task. Valid amounts are "
+            "The amount of memory in gigabytes to provide to the ACI task. Valid amounts are "
             "specified in the Azure documentation. If not provided, a default value of "
             f"{ACI_DEFAULT_MEMORY} will be used unless present on the task definition."
         ),
