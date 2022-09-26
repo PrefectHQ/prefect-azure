@@ -49,16 +49,7 @@ class ACITask(Infrastructure):
     type: Literal["aci-task"] = Field(
         default="aci-task", description="The slug for this task type."
     )
-
-    azure_credentials: ACICredentials = None  # Field(
-    # title="Azure Container Instances Credentials",
-    # default_factory=ACICredentials,
-    # description=(
-    #    "The Azure service principal credentials to use to connect to ACI. "
-    #    "May be omitted if the Prefect agent is running on Azure with a "
-    #    "Managed identity that allows it to create ACI containers."
-    # ),
-    # )
+    azure_credentials: ACICredentials = None  
     azure_resource_group_name: str = Field(
         title="Azure Resource Group Name",
         default=None,
