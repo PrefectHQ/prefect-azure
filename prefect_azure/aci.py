@@ -34,6 +34,9 @@ class ACITaskResult(InfrastructureResult):
     pass
 
 
+# TODO: Consider renaming. This class was modeled after ECSTask, but 'Task' has actual meaning on ECS.
+# Using it here might be confusing since this is a flow runner, not a task runner. Perhaps `ACIFlowRunner`
+# or something similar?
 class ACITask(Infrastructure):
     """
     <span class="badge-api experimental"/>
