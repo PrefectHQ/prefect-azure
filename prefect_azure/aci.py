@@ -48,7 +48,7 @@ class ACITask(Infrastructure):
 
     _block_type_slug = "aci-task"
     _block_type_name = "Azure Container Instances Task"
-    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/1jbV4lceHOjGgunX15lUwT/db88e184d727f721575aeb054a37e277/aws.png?h=250"  # noqa
+    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
     _description = "Run tasks using Azure Container Instances. Note this block is experimental. The interface may change without notice."  # noqa
 
     type: Literal["aci-task"] = Field(
