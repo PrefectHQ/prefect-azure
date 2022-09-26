@@ -218,7 +218,6 @@ class ACITask(Infrastructure):
             containers=[container],
             os_type=OperatingSystemTypes.linux,
             restart_policy=ContainerGroupRestartPolicy.never,
-            image_registry_credential=image_registry_credential,
             image_registry_credentials=image_registry_credential,
         )
 
