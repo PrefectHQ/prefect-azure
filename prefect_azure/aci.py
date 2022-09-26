@@ -3,6 +3,7 @@ import uuid
 from typing import Dict, List, Optional
 
 from anyio.abc import TaskStatus
+from azure.core.credentials import TokenCredential
 from azure.core.polling import LROPoller
 from azure.identity import ClientSecretCredential
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
@@ -156,80 +157,22 @@ class ACITask(Infrastructure):
             client_id=self.azure_credentials.client_id.get_secret_value(),
             client_secret=self.azure_credentials.client_secret.get_secret_value(),
         )
-
         aci_client = ContainerInstanceManagementClient(
             credential=token_credential,
             subscription_id=self.subscription_id.get_secret_value(),
         )
-        res_client = ResourceManagementClient(
-            credential=token_credential,
-            subscription_id=self.subscription_id.get_secret_value(),
+        container = self._configure_container(token_credential)
+        container_group = self._configure_container_group(token_credential, container)
+
+        # Create the container group and wait for it to start
+        creation_status_poller = aci_client.container_groups.begin_create_or_update(
+            self.azure_resource_group_name, container.name, container_group
         )
-
-        resource_group = res_client.resource_groups.get(self.azure_resource_group_name)
-
-        environment = [
-            EnvironmentVariable(name=k, value=v)
-            for (k, v) in {**self._base_environment(), **self.env}.items()
-        ]
-
-        # Configure the container resources
-        gpu_resource = (
-            GpuResource(count=self.gpu_count, sku=self.gpu_sku)
-            if self.gpu_count and self.gpu_sku
-            else None
-        )
-
-        container_resource_requests = ResourceRequests(
-            memory_in_gb=self.memory, cpu=self.cpu, gpu=gpu_resource
-        )
-
-        container_resource_requirements = ResourceRequirements(
-            requests=container_resource_requests
-        )
-        # all container names in a resource group must be unique
-        container_name = str(uuid.uuid4())
-        # add entrypoint.sh if the user does not supply an image
-        # look for a better way to do this - what if the user has their own image
-        # based off a prefect image?
-        container_command = self._base_aci_flow_run_command()
-
-        # create the container and container group
-        container = Container(
-            name=container_name,
-            image=self.image,
-            command=container_command,
-            resources=container_resource_requirements,
-            environment_variables=environment,
-        )
-
-        image_registry_credential = (
-            ImageRegistryCredential(
-                server=self.image_registry.registry_url,
-                username=self.image_registry.username,
-                password=self.image_registry.password,
-            )
-            if self.image_registry
-            else None
-        )
-
-        group = ContainerGroup(
-            location=resource_group.location,
-            containers=[container],
-            os_type=OperatingSystemTypes.linux,
-            restart_policy=ContainerGroupRestartPolicy.never,
-            image_registry_credentials=image_registry_credential,
-        )
-
-        # Create the container group
-        container_create_poller = aci_client.container_groups.begin_create_or_update(
-            self.azure_resource_group_name, container_name, group
-        )
-
         created_container_group = await run_sync_in_worker_thread(
-            self._wait_for_task_container_start, container_name, container_create_poller
+            self._wait_for_task_container_start, container.name, creation_status_poller
         )
 
+        # Check whether creation of the group and container was successful
         if not created_container_group:
             # TODO: handle container start failure. created_container_group *should* contain
             # contain a value even if starting the container fails
@@ -241,10 +184,72 @@ class ACITask(Infrastructure):
         exit_code = await run_sync_in_worker_thread(
             self._watch_task_and_get_exit_code, created_container_group
         )
-        return ACITaskResult(identifier=container_name, status_code=exit_code)
+        return ACITaskResult(identifier=container.name, status_code=exit_code)
 
     def preview(self) -> str:
         return ""
+
+    def _configure_container(self, credential: TokenCredential) -> Container:
+        # setup container environment variables
+        environment = [
+            EnvironmentVariable(name=k, value=v)
+            for (k, v) in {**self._base_environment(), **self.env}.items()
+        ]
+        # all container names in a resource group must be unique
+        container_name = str(uuid.uuid4())
+        # add entrypoint.sh if the user does not supply an image
+        # look for a better way to do this - what if the user has their own image
+        # based off a prefect image?
+        container_command = self._base_aci_flow_run_command()
+        container_resource_requirements = self._configure_container_resources()
+
+        return Container(
+            name=container_name,
+            image=self.image,
+            command=container_command,
+            resources=container_resource_requirements,
+            environment_variables=environment,
+        )
+
+    def _configure_container_resources(self) -> ResourceRequirements:
+        gpu_resource = (
+            GpuResource(count=self.gpu_count, sku=self.gpu_sku)
+            if self.gpu_count and self.gpu_sku
+            else None
+        )
+        container_resource_requests = ResourceRequests(
+            memory_in_gb=self.memory, cpu=self.cpu, gpu=gpu_resource
+        )
+
+        return ResourceRequirements(
+            requests=container_resource_requests
+        )
+
+    def _configure_container_group(self, credential: TokenCredential, container: Container) -> ContainerGroup:
+        # Load the resource group so we can set the container group location correctly
+        resource_group_client = ResourceManagementClient(
+            credential=credential,
+            subscription_id=self.subscription_id.get_secret_value(),
+        )
+        resource_group = resource_group_client.resource_groups.get(self.azure_resource_group_name)
+
+        image_registry_credential = (
+            ImageRegistryCredential(
+                server=self.image_registry.registry_url,
+                username=self.image_registry.username,
+                password=self.image_registry.password,
+            )
+            if self.image_registry
+            else None
+        )
+
+        return ContainerGroup(
+            location=resource_group.location,
+            containers=[container],
+            os_type=OperatingSystemTypes.linux,
+            restart_policy=ContainerGroupRestartPolicy.never,
+            image_registry_credentials=image_registry_credential,
+        )
 
     def _wait_for_task_container_start(
         self, container_name: str, aci_create_result: LROPoller[ContainerGroup]
