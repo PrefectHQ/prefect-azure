@@ -49,7 +49,7 @@ class ACITask(Infrastructure):
     type: Literal["aci-task"] = Field(
         default="aci-task", description="The slug for this task type."
     )
-    azure_credentials: ACICredentials = None  
+    azure_credentials: ACICredentials = None
     azure_resource_group_name: str = Field(
         title="Azure Resource Group Name",
         default=None,
@@ -60,7 +60,7 @@ class ACITask(Infrastructure):
     subscription_id: SecretStr = Field(
         title="Azure Subscription ID",
         default=None,
-        description=("The ID of the Azure subscription to create containers under."),
+        description="The ID of the Azure subscription to create containers under.",
     )
     image: Optional[str] = Field(
         default_factory=get_prefect_image_name,
@@ -124,8 +124,8 @@ class ACITask(Infrastructure):
     task_watch_poll_interval: float = Field(
         default=5.0,
         description=(
-            "The amount of time to wait between ACI API calls while monitoring the "
-            "state of an ACI task."
+            "The amount of time to wait between Azure API calls while monitoring the "
+            "state of an Azure Container Instances task."
         ),
     )
 
@@ -146,11 +146,11 @@ class ACITask(Infrastructure):
 
         aci_client = ContainerInstanceManagementClient(
             credential=token_credential,
-            subscription_id=self.subscription_id.get_secret_value()
+            subscription_id=self.subscription_id.get_secret_value(),
         )
         res_client = ResourceManagementClient(
             credential=token_credential,
-            subscription_id=self.subscription_id.get_secret_value()
+            subscription_id=self.subscription_id.get_secret_value(),
         )
 
         resource_group = res_client.resource_groups.get(self.azure_resource_group_name)
@@ -169,9 +169,7 @@ class ACITask(Infrastructure):
         )
         # all container names in a resource group must be unique
         container_name = str(uuid.uuid4())
-        container_command = (
-                self.command or self._base_aci_flow_run_command()
-        )
+        container_command = self.command or self._base_aci_flow_run_command()
         container = Container(
             name=container_name,
             image=self.image,
@@ -185,14 +183,16 @@ class ACITask(Infrastructure):
                 server=self.image_registry.registry_url,
                 username=self.image_registry.username,
                 password=self.image_registry.password,
-            ) if self.image_registry else None
+            )
+            if self.image_registry
+            else None
         )
         group = ContainerGroup(
             location=resource_group.location,
             containers=[container],
             os_type=OperatingSystemTypes.linux,
             restart_policy=ContainerGroupRestartPolicy.never,
-            image_registry_credential=image_registry_credential
+            image_registry_credential=image_registry_credential,
         )
 
         # Create the container group
@@ -212,16 +212,16 @@ class ACITask(Infrastructure):
             task_status.started()
 
         exit_code = await run_sync_in_worker_thread(
-            self._watch_task_and_get_exit_code,
-            created_container_group
+            self._watch_task_and_get_exit_code, created_container_group
         )
         return ACITaskResult(identifier=container_name, status_code=exit_code)
 
     def preview(self) -> str:
         return ""
 
-    def _wait_for_task_container_start(self, container_name: str,
-                                       aci_create_result: LROPoller[ContainerGroup]) -> Optional[ContainerGroup]:
+    def _wait_for_task_container_start(
+        self, container_name: str, aci_create_result: LROPoller[ContainerGroup]
+    ) -> Optional[ContainerGroup]:
         """
         Wait for the result of group and container creation.
         """
