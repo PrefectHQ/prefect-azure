@@ -150,6 +150,9 @@ class ACITask(Infrastructure):
         """
         Run the configured task on ACI.
         """
+        if not self.command:
+            raise ValueError("Container cannot be run with empty command.")
+
         # TODO: determine how to make DefaultAzureCredential work as expected
         # if self.azure_credentials:
         #     self.azure_credentials.login()
@@ -187,6 +190,8 @@ class ACITask(Infrastructure):
             )
         else:
             status_code = -1
+        finally:
+            if created_container_group:
 
         return ACITaskResult(identifier=container.name, status_code=status_code)
 
