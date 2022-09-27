@@ -177,30 +177,39 @@ class ACITask(Infrastructure):
         )
         container = self._configure_container(token_credential)
         container_group = self._configure_container_group(token_credential, container)
+        created_container_group = None
 
-        # Create the container group and wait for it to start
-        creation_status_poller = aci_client.container_groups.begin_create_or_update(
-            self.azure_resource_group_name, container.name, container_group
-        )
-        created_container_group = await run_sync_in_worker_thread(
-            self._wait_for_task_container_start, creation_status_poller
-        )
-
-        # If creation succeeded, group provisioning state should be 'Succeeded'
-        # and the group should have a single container
-        if (
-            created_container_group.provisioning_state == "Succeeded"
-            and len(created_container_group.containers) == 1
-        ):
-            if task_status:
-                task_status.started(value=container.name)
-            status_code = await run_sync_in_worker_thread(
-                self._watch_task_and_get_exit_code, aci_client, created_container_group
+        try:
+            # Create the container group and wait for it to start
+            creation_status_poller = aci_client.container_groups.begin_create_or_update(
+                self.azure_resource_group_name, container.name, container_group
             )
-        else:
-            status_code = -1
+            created_container_group = await run_sync_in_worker_thread(
+                self._wait_for_task_container_start, creation_status_poller
+            )
+
+            # If creation succeeded, group provisioning state should be 'Succeeded'
+            # and the group should have a single container
+            if (
+                created_container_group.provisioning_state == "Succeeded"
+                and len(created_container_group.containers) == 1
+            ):
+                if task_status:
+                    task_status.started(value=container.name)
+                status_code = await run_sync_in_worker_thread(
+                    self._watch_task_and_get_exit_code,
+                    aci_client,
+                    created_container_group,
+                )
+            else:
+                status_code = -1
+
         finally:
             if created_container_group:
+                aci_client.container_groups.begin_delete(
+                    resource_group_name=self.azure_resource_group_name,
+                    container_group_name=created_container_group.name,
+                )
 
         return ACITaskResult(identifier=container.name, status_code=status_code)
 
