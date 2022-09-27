@@ -77,6 +77,15 @@ class ACITask(Infrastructure):
             "defaults to a Prefect base image matching your local versions."
         ),
     )
+    entrypoint: str = Field(
+        default="/opt/prefect/entrypoint.sh",
+        description=(
+            "The entrypoint of the container you wish you run. This value defaults to the "
+            "entrypoint used by Prefect images and should only be changed when using a custom "
+            "image that is not based on an official Prefect image. Any commands set on deployments "
+            "will be passed to the entrypoint as parameters."
+        ),
+    )
     image_registry: Optional[DockerRegistry] = None
     cpu: float = Field(
         title="CPU",
@@ -208,16 +217,13 @@ class ACITask(Infrastructure):
         container_name = str(uuid.uuid4())
         container_resource_requirements = self._configure_container_resources()
 
-        # add entrypoint.sh if the user does not supply an image
-        # TODO: look for a better way to do this - what if the user has their own image
-        # based off a prefect image?
-        if self.image == get_prefect_image_name():
-            self.command.insert(0, "/opt/prefect/entrypoint.sh")
+        if self.entrypoint:
+            self.command.insert(0, self.entrypoint)
 
         return Container(
             name=container_name,
             image=self.image,
-            command=self.command,#container_command,
+            command=self.command,
             resources=container_resource_requirements,
             environment_variables=environment,
         )
