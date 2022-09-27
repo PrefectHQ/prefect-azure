@@ -17,10 +17,8 @@ from azure.mgmt.containerinstance.models import (
     OperatingSystemTypes,
     ResourceRequests,
     ResourceRequirements,
-    ContainerState,
 )
 from azure.mgmt.resource import ResourceManagementClient
-
 from prefect.docker import get_prefect_image_name
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.infrastructure.docker import DockerRegistry
