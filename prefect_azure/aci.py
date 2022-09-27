@@ -17,8 +17,10 @@ from azure.mgmt.containerinstance.models import (
     OperatingSystemTypes,
     ResourceRequests,
     ResourceRequirements,
+    ContainerState,
 )
 from azure.mgmt.resource import ResourceManagementClient
+
 from prefect.docker import get_prefect_image_name
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.infrastructure.docker import DockerRegistry
@@ -169,22 +171,24 @@ class ACITask(Infrastructure):
             self.azure_resource_group_name, container.name, container_group
         )
         created_container_group = await run_sync_in_worker_thread(
-            self._wait_for_task_container_start, container.name, creation_status_poller
+            self._wait_for_task_container_start, creation_status_poller
         )
 
-        # Check whether creation of the group and container was successful
-        if not created_container_group:
-            # TODO: handle container start failure. created_container_group *should* contain
-            # contain a value even if starting the container fails
-            pass
+        # If creation succeeded, group provisioning state should be 'Succeeded'
+        # and the group should have a single container
+        if (
+            created_container_group.provisioning_state == "Succeeded"
+            and len(created_container_group.containers) == 1
+        ):
+            if task_status:
+                task_status.started(value=container.name)
+            status_code = await run_sync_in_worker_thread(
+                self._watch_task_and_get_exit_code, aci_client, created_container_group
+            )
+        else:
+            status_code = -1
 
-        if task_status:
-            task_status.started()
-
-        exit_code = await run_sync_in_worker_thread(
-            self._watch_task_and_get_exit_code, created_container_group
-        )
-        return ACITaskResult(identifier=container.name, status_code=exit_code)
+        return ACITaskResult(identifier=container.name, status_code=status_code)
 
     def preview(self) -> str:
         return ""
@@ -197,16 +201,18 @@ class ACITask(Infrastructure):
         ]
         # all container names in a resource group must be unique
         container_name = str(uuid.uuid4())
-        # add entrypoint.sh if the user does not supply an image
-        # look for a better way to do this - what if the user has their own image
-        # based off a prefect image?
-        container_command = self._base_aci_flow_run_command()
         container_resource_requirements = self._configure_container_resources()
+
+        # add entrypoint.sh if the user does not supply an image
+        # TODO: look for a better way to do this - what if the user has their own image
+        # based off a prefect image?
+        if self.image == get_prefect_image_name():
+            self.command.insert(0, "/opt/prefect/entrypoint.sh")
 
         return Container(
             name=container_name,
             image=self.image,
-            command=container_command,
+            command=self.command,#container_command,
             resources=container_resource_requirements,
             environment_variables=environment,
         )
@@ -221,17 +227,19 @@ class ACITask(Infrastructure):
             memory_in_gb=self.memory, cpu=self.cpu, gpu=gpu_resource
         )
 
-        return ResourceRequirements(
-            requests=container_resource_requests
-        )
+        return ResourceRequirements(requests=container_resource_requests)
 
-    def _configure_container_group(self, credential: TokenCredential, container: Container) -> ContainerGroup:
-        # Load the resource group so we can set the container group location correctly
+    def _configure_container_group(
+        self, credential: TokenCredential, container: Container
+    ) -> ContainerGroup:
+        # Load the resource group, so we can set the container group location correctly.
         resource_group_client = ResourceManagementClient(
             credential=credential,
             subscription_id=self.subscription_id.get_secret_value(),
         )
-        resource_group = resource_group_client.resource_groups.get(self.azure_resource_group_name)
+        resource_group = resource_group_client.resource_groups.get(
+            self.azure_resource_group_name
+        )
 
         image_registry_credential = (
             ImageRegistryCredential(
@@ -252,7 +260,7 @@ class ACITask(Infrastructure):
         )
 
     def _wait_for_task_container_start(
-        self, container_name: str, aci_create_result: LROPoller[ContainerGroup]
+        self, creation_status_poller: LROPoller[ContainerGroup]
     ) -> Optional[ContainerGroup]:
         """
         Wait for the result of group and container creation.
@@ -260,20 +268,45 @@ class ACITask(Infrastructure):
         t0 = time.time()
         timeout = self.task_start_timeout_seconds
 
-        while aci_create_result.done() is False:
+        while not creation_status_poller.done():
             elapsed_time = time.time() - t0
 
-            if timeout is not None and elapsed_time > timeout:
+            if timeout and elapsed_time > timeout:
                 raise RuntimeError(
                     f"Timed out after {elapsed_time}s while watching waiting for container start."
                 )
             time.sleep(self.task_watch_poll_interval)
 
-        return aci_create_result.result()
+        return creation_status_poller.result()
 
-    def _watch_task_and_get_exit_code(self, container_group: ContainerGroup):
-        # TODO: implement task wait and exit code return
-        return 0
+    def _watch_task_and_get_exit_code(
+        self, client: ContainerInstanceManagementClient, container_group: ContainerGroup
+    ) -> int:
+        status_code = -1
+        running_container = container_group.containers[0]
+        current_state = running_container.instance_view.current_state.state
+
+        # return exit code if flow run already finished:
+        if current_state == "Terminated":
+            return running_container.instance_view.current_state.exit_code
+
+        # otherwise, watch until it finishes
+        while current_state != "Terminated":
+            container_group = client.container_groups.get(
+                resource_group_name=self.azure_resource_group_name,
+                container_group_name=container_group.name,
+            )
+
+            container = container_group.containers[0]
+            current_state = container.instance_view.current_state.state
+
+            if current_state == "Terminated":
+                status_code = container.instance_view.current_state.exit_code
+                break
+
+            time.sleep(self.task_watch_poll_interval)
+
+        return status_code
 
     def _base_aci_flow_run_command(self) -> List[str]:
         """
