@@ -42,8 +42,8 @@ setup(
             "AzureBlobStorageCredentials = prefect_azure.credentials",
             "AzureCosmosDbCredentials = prefect_azure.credentials",
             "AzureMlCredentials = prefect_azure.credentials",
-            "ACICredentials = prefect_azure.credentials",
-            "ACITask = prefect_azure.aci",
+            "prefect_azure = prefect_azure",
+            "prefect_azure_aci = prefect_azure.aci",
         ]
     },
     classifiers=[
