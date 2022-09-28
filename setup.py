@@ -43,7 +43,7 @@ setup(
             "AzureCosmosDbCredentials = prefect_azure.credentials",
             "AzureMlCredentials = prefect_azure.credentials",
             "ACICredentials = prefect_azure.credentials",
-            "ACITask = prefect_azure.aci"
+            "ACITask = prefect_azure.aci",
         ]
     },
     classifiers=[

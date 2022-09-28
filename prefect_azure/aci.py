@@ -1,3 +1,46 @@
+"""
+<span class="badge-api experimental"/>
+Integrations with the Azure Container Instances.
+Note this module is experimental. The interfaces within may change without notice.
+
+The infrastructure block in the module is ideally configured via the Prefect UI and run
+via a Prefect agent, but it can be called directly as demonstrated in the following
+examples.
+
+Examples:
+    Run a command using an Azure Container Instances container.
+    ```python
+    ACITask(command=["echo", "hello world"]).run()
+    ```
+    Run a command and stream the container's output to the local terminal.
+    ```python
+    ACITask(
+        command=["echo", "hello world"],
+        stream_output=True,
+    )
+    ```
+    Run a command with a specific image
+    ```python
+    ACITask(command=["echo", "hello world"], image="alpine:latest")
+    ```
+    Run a task with custom memory and CPU requirements
+    ```python
+    ACITask(command=["echo", "hello world"], memory=1.0, cpu=1.0)
+    ```
+    Run a task with custom memory and CPU requirements
+    ```python
+    ACITask(command=["echo", "hello world"], memory=1.0, cpu=1.0)
+    ```
+    Run a task with custom memory, CPU, and GPU requirements
+    ```python
+    ACITask(command=["echo", "hello world"], memory=1.0, cpu=1.0, gpu_count=1,
+            gpu_sku="V100")
+    ```
+    Run a task with custom environment variables
+    ```python
+    ACITask(command=["echo", "hello $PLANET"], env={"PLANET": "earth"})
+    ```
+"""
 import time
 import uuid
 from typing import Dict, List, Optional
@@ -34,16 +77,21 @@ ACI_DEFAULT_GPU = 0.0
 
 
 class ACITaskResult(InfrastructureResult):
+    """
+    The result of an `ACITask` run.
+    """
+
     pass
 
 
-# TODO: Consider renaming. This class was modeled after ECSTask, but 'Task' has actual meaning on ECS.
-# Using it here might be confusing since this is a flow runner, not a task runner. Perhaps `ACIFlowRunner`
+# TODO: Consider renaming. This class was modeled after ECSTask, but 'Task'
+# has actual meaning on ECS.Using it here might be confusing since this is
+# a flow runner, not a task runner. Perhaps `ACIFlowRunner`
 # or something similar?
 class ACITask(Infrastructure):
     """
     <span class="badge-api experimental"/>
-    Run a command as an Azure Container Instances task.
+    Run a command using a container on Azure Container Instances.
     Note this block is experimental. The interface may change without notice.
     """
 
@@ -78,10 +126,11 @@ class ACITask(Infrastructure):
     entrypoint: str = Field(
         default="/opt/prefect/entrypoint.sh",
         description=(
-            "The entrypoint of the container you wish you run. This value defaults to the "
-            "entrypoint used by Prefect images and should only be changed when using a custom "
-            "image that is not based on an official Prefect image. Any commands set on deployments "
-            "will be passed to the entrypoint as parameters."
+            "The entrypoint of the container you wish you run. This value "
+            "defaults to the entrypoint used by Prefect images and should only be "
+            "changed when using a custom image that is not based on an official "
+            "Prefect image. Any commands set on deployments will be passed "
+            " to the entrypoint as parameters."
         ),
     )
     image_registry: Optional[DockerRegistry] = None
@@ -98,7 +147,7 @@ class ACITask(Infrastructure):
         default=None,
         description=(
             "The number of GPUs to assign to the task container. "
-            f"If not provided, no GPU will be used."
+            "If not provided, no GPU will be used."
         ),
     )
     gpu_sku: Optional[str] = Field(
@@ -112,9 +161,10 @@ class ACITask(Infrastructure):
     memory: float = Field(
         default=ACI_DEFAULT_MEMORY,
         description=(
-            "The amount of memory in gigabytes to provide to the ACI task. Valid amounts are "
-            "specified in the Azure documentation. If not provided, a default value of "
-            f"{ACI_DEFAULT_MEMORY} will be used unless present on the task definition."
+            "The amount of memory in gigabytes to provide to the ACI task. Valid "
+            "amounts are specified in the Azure documentation. If not provided, a "
+            f"default value of  {ACI_DEFAULT_MEMORY} will be used unless present "
+            "on the task definition."
         ),
     )
     stream_output: bool = Field(
@@ -155,7 +205,13 @@ class ACITask(Infrastructure):
     @sync_compatible
     async def run(self, task_status: Optional[TaskStatus] = None) -> ACITaskResult:
         """
-        Run the configured task on ACI.
+        Runs the configured task using an ACI container.
+
+        Args:
+            task_status: An optional `TaskStatus` to update when the container starts.
+
+        Returns:
+            An `ACITaskResult` with the container's exit code.
         """
         if not self.command:
             raise ValueError("Container cannot be run with empty command.")
@@ -212,9 +268,26 @@ class ACITask(Infrastructure):
         return ACITaskResult(identifier=container.name, status_code=status_code)
 
     def preview(self) -> str:
+        """
+        Provides a summary of how the container will be created when `run` is called.
+
+        Returns:
+           A string containing the summary.
+        """
+
         return ""
 
     def _configure_container(self, credential: TokenCredential) -> Container:
+        """
+        Configures an Azure `Container` using data from the block's fields.
+
+        Args:
+            credential: A valid Azure `TokenCredential`.
+
+        Returns:
+            An instance of `Container` ready to submit to Azure.
+        """
+
         # setup container environment variables
         environment = [
             EnvironmentVariable(name=k, value=v)
@@ -236,6 +309,14 @@ class ACITask(Infrastructure):
         )
 
     def _configure_container_resources(self) -> ResourceRequirements:
+        """
+        Configures the container's memory, CPU, and GPU resources.
+
+        Returns:
+            A `ResourceRequirements` instance initialized with data from this
+            `ACITask` block.
+        """
+
         gpu_resource = (
             GpuResource(count=self.gpu_count, sku=self.gpu_sku)
             if self.gpu_count and self.gpu_sku
@@ -250,7 +331,20 @@ class ACITask(Infrastructure):
     def _configure_container_group(
         self, credential: TokenCredential, container: Container
     ) -> ContainerGroup:
-        # Load the resource group, so we can set the container group location correctly.
+        """
+        Configures the container group needed to start a container on ACI.
+
+        Args:
+            credential: A valid Azure `TokenCredential`
+            container: An initialized instance of `Container`
+
+        Returns:
+            An initialized `ContainerGroup` ready to submit to Azure.
+        """
+
+        # Load the resource group, so we can set the container group location
+        # correctly.
+
         resource_group_client = ResourceManagementClient(
             credential=credential,
             subscription_id=self.subscription_id.get_secret_value(),
@@ -279,10 +373,22 @@ class ACITask(Infrastructure):
 
     def _wait_for_task_container_start(
         self, creation_status_poller: LROPoller[ContainerGroup]
-    ) -> Optional[ContainerGroup]:
+    ) -> ContainerGroup:
         """
         Wait for the result of group and container creation.
+
+        Args:
+            creation_status_poller: Poller returned by the Azure SDK.
+
+        Raises:
+            RuntimeError: Raised if the timeout limit is exceeded before the
+            container starts.
+
+        Returns:
+            A `ContainerGroup` representing the current status of the group being
+            watched.
         """
+
         t0 = time.time()
         timeout = self.task_start_timeout_seconds
 
@@ -291,7 +397,10 @@ class ACITask(Infrastructure):
 
             if timeout and elapsed_time > timeout:
                 raise RuntimeError(
-                    f"Timed out after {elapsed_time}s while watching waiting for container start."
+                    (
+                        f"Timed out after {elapsed_time}s while watching waiting for "
+                        "container start."
+                    )
                 )
             time.sleep(self.task_watch_poll_interval)
 
@@ -300,6 +409,17 @@ class ACITask(Infrastructure):
     def _watch_task_and_get_exit_code(
         self, client: ContainerInstanceManagementClient, container_group: ContainerGroup
     ) -> int:
+        """
+        Waits until the container finishes running and obtains its exit code.
+
+        Args:
+            client: An initialized Azure `ContainerInstanceManagementClient`
+            container_group: The `ContainerGroup` in which the container resides.
+
+        Returns:
+            An `int` representing the container's exit code.
+        """
+
         status_code = -1
         running_container = container_group.containers[0]
         current_state = running_container.instance_view.current_state.state

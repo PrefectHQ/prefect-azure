@@ -387,8 +387,8 @@ class AzureMlCredentials(Block):
 
 class ACICredentials(Block):
     """
-    Block used to manage Container Instances authentication. Stores Azure Service Principal
-    authentication data.
+    Block used to manage Container Instances authentication. Stores Azure Service
+    Principal authentication data.
 
     Args:
         client_id: The service principal client ID.
@@ -412,8 +412,8 @@ class ACICredentials(Block):
 
     def login(self):
         """
-        Sets the AZURE_CLIENT_ID, AZURE_TENANT_ID, and AZURE_CLIENT_SECRET environment variables
-        so they will be available for use by DefaultAzureCredential.
+        Sets the AZURE_CLIENT_ID, AZURE_TENANT_ID, and AZURE_CLIENT_SECRET environment
+        variables so they will be available for use by DefaultAzureCredential.
         """
         os.environ["AZURE_CLIENT_ID"] = self.client_id.get_secret_value()
         os.environ["AZURE_TENANT_ID"] = self.tenant_id.get_secret_value()
