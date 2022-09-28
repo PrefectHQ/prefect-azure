@@ -103,7 +103,7 @@ class ACITask(Infrastructure):
     type: Literal["aci-task"] = Field(
         default="aci-task", description="The slug for this task type."
     )
-    azure_credentials: ACICredentials = None
+    aci_credentials: ACICredentials = None
     azure_resource_group_name: str = Field(
         title="Azure Resource Group Name",
         default=None,
@@ -217,13 +217,13 @@ class ACITask(Infrastructure):
             raise ValueError("Container cannot be run with empty command.")
 
         # TODO: determine how to make DefaultAzureCredential work as expected
-        # if self.azure_credentials:
-        #     self.azure_credentials.login()
+        # if self.aci_credentials:
+        #     self.aci_credentials.login()
         # token_credential = DefaultAzureCredential
         token_credential = ClientSecretCredential(
-            tenant_id=self.azure_credentials.tenant_id.get_secret_value(),
-            client_id=self.azure_credentials.client_id.get_secret_value(),
-            client_secret=self.azure_credentials.client_secret.get_secret_value(),
+            tenant_id=self.aci_credentials.tenant_id.get_secret_value(),
+            client_id=self.aci_credentials.client_id.get_secret_value(),
+            client_secret=self.aci_credentials.client_secret.get_secret_value(),
         )
         aci_client = ContainerInstanceManagementClient(
             credential=token_credential,
