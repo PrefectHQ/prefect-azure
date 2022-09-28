@@ -213,8 +213,6 @@ class ACITask(Infrastructure):
         Returns:
             An `ACITaskResult` with the container's exit code.
         """
-        if not self.command:
-            raise ValueError("Container cannot be run with empty command.")
 
         # TODO: determine how to make DefaultAzureCredential work as expected
         # if self.aci_credentials:
