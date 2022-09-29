@@ -41,6 +41,7 @@ Examples:
     ACITask(command=["echo", "hello $PLANET"], env={"PLANET": "earth"})
     ```
 """
+import json
 import time
 import uuid
 from typing import Dict, List, Optional
@@ -65,9 +66,10 @@ from azure.mgmt.resource import ResourceManagementClient
 from prefect.docker import get_prefect_image_name
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.infrastructure.docker import DockerRegistry
+from prefect.orion.schemas.core import FlowRun
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
 from pydantic import Field, SecretStr, validator
-from typing_extensions import Literal
+from typing_extensions import Literal, Self
 
 from .credentials import ACICredentials
 
@@ -201,6 +203,7 @@ class ACITask(Infrastructure):
             "state of an Azure Container Instances task."
         ),
     )
+    _flow_run: FlowRun = None
 
     @validator("command")
     def validate_command(cls, command: List[str]):
@@ -267,6 +270,7 @@ class ACITask(Infrastructure):
                 status_code = -1
 
         finally:
+            pass
             if created_container_group:
                 aci_client.container_groups.begin_delete(
                     resource_group_name=self.azure_resource_group_name,
@@ -275,6 +279,13 @@ class ACITask(Infrastructure):
 
         return ACITaskResult(identifier=container.name, status_code=status_code)
 
+    def prepare_for_flow_run(
+        self: Self,
+        flow_run: "FlowRun",
+    ) -> Self:
+        self._flow_run = flow_run
+        return super(ACITask, self).prepare_for_flow_run(flow_run)
+
     def preview(self) -> str:
         """
         Provides a summary of how the container will be created when `run` is called.
@@ -282,8 +293,19 @@ class ACITask(Infrastructure):
         Returns:
            A string containing the summary.
         """
+        preview = {
+            "container_name": self._flow_run.flow_id
+            if self._flow_run
+            else "generated when run",
+            "resource_group": self.azure_resource_group_name,
+            "memory": self.memory,
+            "cpu": self.cpu,
+            "gpu_count": self.gpu,
+            "gpu_sku": self.gpu_sku,
+            "env": self._get_environment(),
+        }
 
-        return ""
+        return json.dumps(preview)
 
     def _configure_container(self) -> Container:
         """
@@ -296,7 +318,7 @@ class ACITask(Infrastructure):
         # setup container environment variables
         environment = [
             EnvironmentVariable(name=k, value=v)
-            for (k, v) in {**self._base_environment(), **self.env}.items()
+            for (k, v) in self._get_environment().items()
         ]
         # all container names in a resource group must be unique
         container_name = str(uuid.uuid4())
@@ -495,6 +517,13 @@ class ACITask(Infrastructure):
             credential=token_credential,
             subscription_id=self.subscription_id.get_secret_value(),
         )
+
+    def _get_environment(self):
+        """
+        Generates a dictionary of all environment variables to send to the
+        ACI container.
+        """
+        return {**self._base_environment(), **self.env}
 
     def _base_aci_flow_run_command(self) -> List[str]:
         """
