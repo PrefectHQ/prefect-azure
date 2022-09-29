@@ -191,9 +191,8 @@ class ACITask(Infrastructure):
     task_start_timeout_seconds: int = Field(
         default=240,
         description=(
-            "The amount of time to watch for the start of the ACI task "
-            "before marking it as failed. The task must enter a RUNNING state to be "
-            "considered started."
+            "The amount of time to watch for the start of the ACI container. "
+            "before marking it as failed."
         ),
     )
     task_watch_poll_interval: float = Field(
