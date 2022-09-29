@@ -404,7 +404,7 @@ class ContainerInstanceJob(Infrastructure):
             ImageRegistryCredential(
                 server=self.image_registry.registry_url,
                 username=self.image_registry.username,
-                password=self.image_registry.password,
+                password=self.image_registry.password.get_secret_value(),
             )
             if self.image_registry
             else None
