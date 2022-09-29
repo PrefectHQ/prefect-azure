@@ -160,7 +160,7 @@ class ContainerInstanceJob(Infrastructure):
             f"If not provided, a default value of {ACI_DEFAULT_CPU} will be used."
         ),
     )
-    gpu_count: Optional[float] = Field(
+    gpu_count: Optional[int] = Field(
         title="GPU Count",
         default=None,
         description=(
