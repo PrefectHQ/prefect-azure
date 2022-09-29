@@ -471,6 +471,7 @@ class ACITask(Infrastructure):
     def _create_credential(self):
         """
         Creates an Azure credential intialized with data from this block's fields.
+        Creates an Azure credential initialized with data from this block's fields.
 
         Returns:
             An initialized Azure `TokenCredential` ready to use with Azure SDK client
