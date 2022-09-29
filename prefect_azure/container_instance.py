@@ -302,6 +302,10 @@ class ACITask(Infrastructure):
         self: Self,
         flow_run: "FlowRun",
     ) -> Self:
+        """
+        Return a `ContainerInstance` infrastructure block that is prepared to execute a
+        flow run.
+        """
         self._flow_run = flow_run
         return super(ACITask, self).prepare_for_flow_run(flow_run)
 
