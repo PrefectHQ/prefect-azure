@@ -203,7 +203,7 @@ class ACITask(Infrastructure):
     )
 
     @validator("command")
-    def validate_command(cls, command: list[str]):
+    def validate_command(cls, command: List[str]):
         """
         A Pydantic validator that ensures a command is available to run
         in an Azure container instance.
