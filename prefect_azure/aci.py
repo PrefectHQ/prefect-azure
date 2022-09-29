@@ -235,15 +235,8 @@ class ACITask(Infrastructure):
         # if self.aci_credentials:
         #     self.aci_credentials.login()
         # token_credential = DefaultAzureCredential
-        token_credential = ClientSecretCredential(
-            tenant_id=self.aci_credentials.tenant_id.get_secret_value(),
-            client_id=self.aci_credentials.client_id.get_secret_value(),
-            client_secret=self.aci_credentials.client_secret.get_secret_value(),
-        )
-        aci_client = ContainerInstanceManagementClient(
-            credential=token_credential,
-            subscription_id=self.subscription_id.get_secret_value(),
-        )
+        token_credential = self._create_credential()
+        aci_client = self._create_aci_client(token_credential)
         container = self._configure_container(token_credential)
         container_group = self._configure_container_group(token_credential, container)
         created_container_group = None
@@ -292,12 +285,9 @@ class ACITask(Infrastructure):
 
         return ""
 
-    def _configure_container(self, credential: TokenCredential) -> Container:
+    def _configure_container(self) -> Container:
         """
         Configures an Azure `Container` using data from the block's fields.
-
-        Args:
-            credential: A valid Azure `TokenCredential`.
 
         Returns:
             An instance of `Container` ready to submit to Azure.
@@ -344,13 +334,13 @@ class ACITask(Infrastructure):
         return ResourceRequirements(requests=container_resource_requests)
 
     def _configure_container_group(
-        self, credential: TokenCredential, container: Container
+        self, token_credential: TokenCredential, container: Container
     ) -> ContainerGroup:
         """
         Configures the container group needed to start a container on ACI.
 
         Args:
-            credential: A valid Azure `TokenCredential`
+            token_credential: A valid Azure `TokenCredential`
             container: An initialized instance of `Container`
 
         Returns:
@@ -360,10 +350,7 @@ class ACITask(Infrastructure):
         # Load the resource group, so we can set the container group location
         # correctly.
 
-        resource_group_client = ResourceManagementClient(
-            credential=credential,
-            subscription_id=self.subscription_id.get_secret_value(),
-        )
+        resource_group_client = self._create_resource_client(token_credential)
         resource_group = resource_group_client.resource_groups.get(
             self.azure_resource_group_name
         )
@@ -460,6 +447,54 @@ class ACITask(Infrastructure):
             time.sleep(self.task_watch_poll_interval)
 
         return status_code
+
+    def _create_credential(self):
+        """
+        Creates an Azure credential intialized with data from this block's fields.
+
+        Returns:
+            An initialized Azure `TokenCredential` ready to use with Azure SDK client
+            classes.
+        """
+        return ClientSecretCredential(
+            tenant_id=self.aci_credentials.tenant_id.get_secret_value(),
+            client_id=self.aci_credentials.client_id.get_secret_value(),
+            client_secret=self.aci_credentials.client_secret.get_secret_value(),
+        )
+
+    def _create_aci_client(self, token_credential: TokenCredential):
+        """
+        Creates an Azure Container Instances client initialized with data from
+        this block's fields.
+
+        Args:
+            token_credential: A valid Azure `TokenCredential`
+
+        Returns:
+            An initialized `ContainerInstanceManagementClient`
+        """
+
+        return ContainerInstanceManagementClient(
+            credential=token_credential,
+            subscription_id=self.subscription_id.get_secret_value(),
+        )
+
+    def _create_resource_client(self, token_credential: TokenCredential):
+        """
+        Creates an Azure resource management client initialized with data from
+        this block's fields.
+
+        Args:
+            token_credential: A valid Azure `TokenCredential`
+
+        Returns:
+            An initialized `ResourceManagementClient`
+        """
+
+        return ResourceManagementClient(
+            credential=token_credential,
+            subscription_id=self.subscription_id.get_secret_value(),
+        )
 
     def _base_aci_flow_run_command(self) -> List[str]:
         """
