@@ -10,35 +10,35 @@ examples.
 Examples:
     Run a command using an Azure Container Instances container.
     ```python
-    ACITask(command=["echo", "hello world"]).run()
+    ContainerInstanceJob(command=["echo", "hello world"]).run()
     ```
     Run a command and stream the container's output to the local terminal.
     ```python
-    ACITask(
+    ContainerInstanceJob(
         command=["echo", "hello world"],
         stream_output=True,
     )
     ```
     Run a command with a specific image
     ```python
-    ACITask(command=["echo", "hello world"], image="alpine:latest")
+    ContainerInstanceJob(command=["echo", "hello world"], image="alpine:latest")
     ```
     Run a task with custom memory and CPU requirements
     ```python
-    ACITask(command=["echo", "hello world"], memory=1.0, cpu=1.0)
+    ContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0)
     ```
     Run a task with custom memory and CPU requirements
     ```python
-    ACITask(command=["echo", "hello world"], memory=1.0, cpu=1.0)
+    ContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0)
     ```
     Run a task with custom memory, CPU, and GPU requirements
     ```python
-    ACITask(command=["echo", "hello world"], memory=1.0, cpu=1.0, gpu_count=1,
-            gpu_sku="V100")
+    ContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0,
+    gpu_count=1, gpu_sku="V100")
     ```
     Run a task with custom environment variables
     ```python
-    ACITask(command=["echo", "hello $PLANET"], env={"PLANET": "earth"})
+    ContainerInstanceJob(command=["echo", "hello $PLANET"], env={"PLANET": "earth"})
     ```
 """
 import json
@@ -98,19 +98,15 @@ class ContainerRunState(str, Enum):
     TERMINATED = "Terminated"
 
 
-class ACITaskResult(InfrastructureResult):
+class ContainerInstanceJobResult(InfrastructureResult):
     """
-    The result of an `ACITask` run.
+    The result of an `ContainerInstanceJob` run.
     """
 
     pass
 
 
-# TODO: Consider renaming. This class was modeled after ECSTask, but 'Task'
-# has actual meaning on ECS.Using it here might be confusing since this is
-# a flow runner, not a task runner. Perhaps `ACIFlowRunner`
-# or something similar?
-class ACITask(Infrastructure):
+class ContainerInstanceJob(Infrastructure):
     """
     <span class="badge-api experimental"/>
     Run a command using a container on Azure Container Instances.
@@ -242,7 +238,9 @@ class ACITask(Infrastructure):
         return command
 
     @sync_compatible
-    async def run(self, task_status: Optional[TaskStatus] = None) -> ACITaskResult:
+    async def run(
+        self, task_status: Optional[TaskStatus] = None
+    ) -> ContainerInstanceJobResult:
         """
         Runs the configured task using an ACI container.
 
@@ -250,7 +248,7 @@ class ACITask(Infrastructure):
             task_status: An optional `TaskStatus` to update when the container starts.
 
         Returns:
-            An `ACITaskResult` with the container's exit code.
+            An `ContainerInstanceJobResult` with the container's exit code.
         """
 
         # TODO: determine how to make DefaultAzureCredential work as expected
@@ -296,7 +294,9 @@ class ACITask(Infrastructure):
                     container_group_name=created_container_group.name,
                 )
 
-        return ACITaskResult(identifier=container.name, status_code=status_code)
+        return ContainerInstanceJobResult(
+            identifier=container.name, status_code=status_code
+        )
 
     def prepare_for_flow_run(
         self: Self,
@@ -307,7 +307,7 @@ class ACITask(Infrastructure):
         flow run.
         """
         self._flow_run = flow_run
-        return super(ACITask, self).prepare_for_flow_run(flow_run)
+        return super(ContainerInstanceJob, self).prepare_for_flow_run(flow_run)
 
     def preview(self) -> str:
         """
@@ -364,7 +364,7 @@ class ACITask(Infrastructure):
 
         Returns:
             A `ResourceRequirements` instance initialized with data from this
-            `ACITask` block.
+            `ContainerInstanceJob` block.
         """
 
         gpu_resource = (

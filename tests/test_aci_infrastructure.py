@@ -9,7 +9,10 @@ from azure.mgmt.resource import ResourceManagementClient
 
 import prefect_azure.container_instance
 from prefect_azure import ACICredentials
-from prefect_azure.container_instance import ACITask, ContainerGroupProvisioningState
+from prefect_azure.container_instance import (
+    ContainerGroupProvisioningState,
+    ContainerInstanceJob,
+)
 
 
 def credential_values(credentials: ACICredentials) -> Tuple[str, str, str]:
@@ -45,7 +48,7 @@ def aci_block():
         client_id=client_id, client_secret=client_secret, tenant_id=tenant_id
     )
 
-    aci_block = ACITask(
+    aci_block = ContainerInstanceJob(
         command=["test"],
         aci_credentials=credentials,
         azure_resource_group_name="testgroup",
@@ -62,7 +65,7 @@ def mock_aci_client(monkeypatch, mock_resource_client):
     mock_container_groups = Mock()
     mock_aci_client.container_groups.return_value = mock_container_groups
     monkeypatch.setattr(
-        ACITask, "_create_aci_client", Mock(return_value=mock_aci_client)
+        ContainerInstanceJob, "_create_aci_client", Mock(return_value=mock_aci_client)
     )
 
     return mock_aci_client
@@ -90,7 +93,7 @@ def mock_resource_client(monkeypatch):
     mock_resource_client.resource_groups.get = Mock(side_effect=return_group)
 
     monkeypatch.setattr(
-        ACITask,
+        ContainerInstanceJob,
         "_create_resource_client",
         MagicMock(return_value=mock_resource_client),
     )
@@ -101,32 +104,32 @@ def mock_resource_client(monkeypatch):
 def test_empty_list_command_validation():
     # ensure that the default command is set automatically if the user
     # provides an empty command list
-    aci_flow_run = ACITask(command=[])
+    aci_flow_run = ContainerInstanceJob(command=[])
     assert aci_flow_run.command == aci_flow_run._base_flow_run_command()
 
 
 def test_missing_command_validation():
     # ensure that the default command is set automatically if the user
     # provides None
-    aci_flow_run = ACITask(command=None)
+    aci_flow_run = ContainerInstanceJob(command=None)
     assert aci_flow_run.command == aci_flow_run._base_flow_run_command()
 
 
 def test_valid_command_validation():
     # ensure the validator allows valid commands to pass through
     command = ["command", "arg1", "arg2"]
-    aci_flow_run = ACITask(command=command)
+    aci_flow_run = ContainerInstanceJob(command=command)
     assert aci_flow_run.command == command
 
 
 def test_invalid_command_validation():
     # ensure invalid commands cause a validation error
     with pytest.raises(ValueError):
-        ACITask(command="invalid_command -a")
+        ContainerInstanceJob(command="invalid_command -a")
 
 
 @pytest.mark.usefixtures("mock_aci_client")
-def test_credentials_are_used(aci_block: ACITask, monkeypatch):
+def test_credentials_are_used(aci_block: ContainerInstanceJob, monkeypatch):
     credentials = aci_block.aci_credentials
     (client_id, client_secret, tenant_id) = credential_values(credentials)
 
