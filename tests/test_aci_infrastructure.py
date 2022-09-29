@@ -7,9 +7,9 @@ from azure.identity import ClientSecretCredential
 from azure.mgmt.containerinstance.operations import ContainerGroupsOperations
 from azure.mgmt.resource import ResourceManagementClient
 
-import prefect_azure.aci
+import prefect_azure.container_instance
 from prefect_azure import ACICredentials
-from prefect_azure.aci import ACITask, ContainerGroupProvisioningState
+from prefect_azure.container_instance import ACITask, ContainerGroupProvisioningState
 
 
 def credential_values(credentials: ACICredentials) -> Tuple[str, str, str]:
@@ -140,7 +140,9 @@ def test_credentials_are_used(aci_block: ACITask, monkeypatch):
         credentials.client_secret, "get_secret_value", mock_client_secret
     )
     monkeypatch.setattr(credentials.tenant_id, "get_secret_value", mock_tenant_id)
-    monkeypatch.setattr(prefect_azure.aci, "ClientSecretCredential", mock_credential)
+    monkeypatch.setattr(
+        prefect_azure.container_instance, "ClientSecretCredential", mock_credential
+    )
 
     aci_block.run()
 
