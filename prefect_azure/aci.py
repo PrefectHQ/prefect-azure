@@ -204,6 +204,17 @@ class ACITask(Infrastructure):
 
     @validator("command")
     def validate_command(cls, command: list[str]):
+        """
+        A Pydantic validator that ensures a command is available to run
+        in an Azure container instance.
+
+        Args:
+            command: The command to validate.
+
+        Returns:
+            A command list if present, otherwise the base flow run command.
+        """
+
         if not command:
             return cls._base_flow_run_command()
         return command
