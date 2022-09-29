@@ -269,7 +269,6 @@ class ACITask(Infrastructure):
                 status_code = -1
 
         finally:
-            pass
             if created_container_group:
                 aci_client.container_groups.begin_delete(
                     resource_group_name=self.azure_resource_group_name,
