@@ -1,5 +1,5 @@
 from typing import Tuple
-from unittest import MagicMock, Mock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 from azure.identity import ClientSecretCredential
@@ -54,7 +54,7 @@ def aci_block():
     return aci_block
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def mock_aci_client(monkeypatch, mock_resource_client):
 
     mock_aci_client = Mock()
@@ -122,6 +122,7 @@ def test_invalid_command_validation():
         ACITask(command="invalid_command -a")
 
 
+@pytest.mark.usefixtures("mock_aci_client")
 def test_credentials_are_used(aci_block: ACITask, monkeypatch):
     credentials = aci_block.aci_credentials
     (client_id, client_secret, tenant_id) = credential_values(credentials)
