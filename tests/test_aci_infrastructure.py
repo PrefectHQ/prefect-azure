@@ -2,13 +2,14 @@ from typing import Tuple
 from unittest.mock import MagicMock, Mock
 
 import pytest
+from azure.core.exceptions import HttpResponseError
 from azure.identity import ClientSecretCredential
 from azure.mgmt.containerinstance.operations import ContainerGroupsOperations
 from azure.mgmt.resource import ResourceManagementClient
 
 import prefect_azure.aci
 from prefect_azure import ACICredentials
-from prefect_azure.aci import ACITask
+from prefect_azure.aci import ACITask, ContainerGroupProvisioningState
 
 
 def credential_values(credentials: ACICredentials) -> Tuple[str, str, str]:
@@ -58,6 +59,8 @@ def aci_block():
 def mock_aci_client(monkeypatch, mock_resource_client):
 
     mock_aci_client = Mock()
+    mock_container_groups = Mock()
+    mock_aci_client.container_groups.return_value = mock_container_groups
     monkeypatch.setattr(
         ACITask, "_create_aci_client", Mock(return_value=mock_aci_client)
     )
@@ -147,3 +150,48 @@ def test_credentials_are_used(aci_block: ACITask, monkeypatch):
     mock_credential.assert_called_once_with(
         client_id=client_id, client_secret=client_secret, tenant_id=tenant_id
     )
+
+
+def test_container_creation_call(mock_aci_client, aci_block):
+    # ensure the block always tries to call the Azure SDK to create the container
+    aci_block.run()
+    mock_aci_client.container_groups.begin_create_or_update.assert_called_once()
+
+
+def test_delete_after_group_creation_failure(aci_block, mock_aci_client, monkeypatch):
+    # if provisioning failed, the container group should be deleted
+    mock_container_group = Mock()
+    mock_container_group.provisioning_state.return_value = (
+        ContainerGroupProvisioningState.FAILED
+    )
+    monkeypatch.setattr(
+        aci_block, "_wait_for_task_container_start", mock_container_group
+    )
+    aci_block.run()
+    mock_aci_client.container_groups.begin_delete.assert_called_once()
+
+
+def test_delete_after_group_creation_success(aci_block, mock_aci_client, monkeypatch):
+    # if provisioning was successful, the container group should eventually be deleted
+    mock_container_group = Mock()
+    mock_container_group.provisioning_state.return_value = (
+        ContainerGroupProvisioningState.SUCCEEDED
+    )
+    monkeypatch.setattr(
+        aci_block, "_wait_for_task_container_start", mock_container_group
+    )
+    aci_block.run()
+    mock_aci_client.container_groups.begin_delete.assert_called_once()
+
+
+def test_delete_after_after_exception(aci_block, mock_aci_client, monkeypatch):
+    # if an exception was thrown while waiting for container group provisioning,
+    # the group should be deleted
+    mock_aci_client.container_groups.begin_create_or_update.side_effect = (
+        HttpResponseError(message="it broke")
+    )
+
+    with pytest.raises(HttpResponseError):
+        aci_block.run()
+        mock_aci_client.container_groups.begin_create_or_update.assert_called_once()
+        mock_aci_client.container_groups.begin_delete.assert_called_once()
