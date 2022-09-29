@@ -44,6 +44,7 @@ Examples:
 import json
 import time
 import uuid
+from enum import Enum
 from typing import Dict, List, Optional
 
 from anyio.abc import TaskStatus
@@ -76,6 +77,25 @@ from .credentials import ACICredentials
 ACI_DEFAULT_CPU = 1.0
 ACI_DEFAULT_MEMORY = 1.0
 ACI_DEFAULT_GPU = 0.0
+
+
+class ContainerGroupProvisioningState(str, Enum):
+    """
+    Terminal provisioning states for ACI container groups. Per the Azure docs,
+    the states in this Enum are the only ones that can be relied on as dependencies.
+    """
+
+    SUCCEEDED = "Succeeded"
+    FAILED = "Failed"
+
+
+class ContainerRunState(str, Enum):
+    """
+    Terminal run states for ACI containers.
+    """
+
+    RUNNING = "Running"
+    TERMINATED = "Terminated"
 
 
 class ACITaskResult(InfrastructureResult):
@@ -255,7 +275,8 @@ class ACITask(Infrastructure):
             # If creation succeeded, group provisioning state should be 'Succeeded'
             # and the group should have a single container
             if (
-                created_container_group.provisioning_state == "Succeeded"
+                created_container_group.provisioning_state
+                == ContainerGroupProvisioningState.SUCCEEDED
                 and len(created_container_group.containers) == 1
             ):
                 if task_status:
@@ -447,11 +468,11 @@ class ACITask(Infrastructure):
         current_state = running_container.instance_view.current_state.state
 
         # return exit code if flow run already finished:
-        if current_state == "Terminated":
+        if current_state == ContainerRunState.TERMINATED:
             return running_container.instance_view.current_state.exit_code
 
         # otherwise, watch until it finishes
-        while current_state != "Terminated":
+        while current_state != ContainerRunState.TERMINATED:
             container_group = client.container_groups.get(
                 resource_group_name=self.azure_resource_group_name,
                 container_group_name=container_group.name,
@@ -460,7 +481,7 @@ class ACITask(Infrastructure):
             container = container_group.containers[0]
             current_state = container.instance_view.current_state.state
 
-            if current_state == "Terminated":
+            if current_state == ContainerRunState.TERMINATED:
                 status_code = container.instance_view.current_state.exit_code
                 break
 
@@ -470,7 +491,6 @@ class ACITask(Infrastructure):
 
     def _create_credential(self):
         """
-        Creates an Azure credential intialized with data from this block's fields.
         Creates an Azure credential initialized with data from this block's fields.
 
         Returns:
