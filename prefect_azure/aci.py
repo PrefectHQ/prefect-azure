@@ -237,7 +237,7 @@ class ACITask(Infrastructure):
         # token_credential = DefaultAzureCredential
         token_credential = self._create_credential()
         aci_client = self._create_aci_client(token_credential)
-        container = self._configure_container(token_credential)
+        container = self._configure_container()
         container_group = self._configure_container_group(token_credential, container)
         created_container_group = None
 
