@@ -67,10 +67,9 @@ from azure.mgmt.resource import ResourceManagementClient
 from prefect.docker import get_prefect_image_name
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.infrastructure.docker import DockerRegistry
-from prefect.orion.schemas.core import FlowRun
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
 from pydantic import Field, SecretStr, validator
-from typing_extensions import Literal, Self
+from typing_extensions import Literal
 
 from .credentials import ContainerInstanceCredentials
 
@@ -218,7 +217,6 @@ class ContainerInstanceJob(Infrastructure):
             "state of an Azure Container Instances task."
         ),
     )
-    _flow_run: FlowRun = None
 
     @validator("command")
     def validate_command(cls, command: List[str]):
@@ -294,17 +292,6 @@ class ContainerInstanceJob(Infrastructure):
             identifier=container.name, status_code=status_code
         )
 
-    def prepare_for_flow_run(
-        self: Self,
-        flow_run: "FlowRun",
-    ) -> Self:
-        """
-        Return a `ContainerInstance` infrastructure block that is prepared to execute a
-        flow run.
-        """
-        self._flow_run = flow_run
-        return super(ContainerInstanceJob, self).prepare_for_flow_run(flow_run)
-
     def preview(self) -> str:
         """
         Provides a summary of how the container will be created when `run` is called.
@@ -313,13 +300,11 @@ class ContainerInstanceJob(Infrastructure):
            A string containing the summary.
         """
         preview = {
-            "container_name": self._flow_run.flow_id
-            if self._flow_run
-            else "generated when run",
-            "resource_group": self.azure_resource_group_name,
+            "container_name": "generated when run",
+            "azure_resource_group_name": self.azure_resource_group_name,
             "memory": self.memory,
             "cpu": self.cpu,
-            "gpu_count": self.gpu,
+            "gpu_count": self.gpu_count,
             "gpu_sku": self.gpu_sku,
             "env": self._get_environment(),
         }
