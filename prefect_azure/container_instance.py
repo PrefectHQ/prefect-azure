@@ -47,6 +47,7 @@ import uuid
 from enum import Enum
 from typing import Dict, List, Optional
 
+import prefect.infrastructure.docker
 from anyio.abc import TaskStatus
 from azure.core.credentials import TokenCredential
 from azure.core.polling import LROPoller
@@ -66,7 +67,6 @@ from azure.mgmt.containerinstance.models import (
 from azure.mgmt.resource import ResourceManagementClient
 from prefect.docker import get_prefect_image_name
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
-from prefect.infrastructure.docker import DockerRegistry
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
 from pydantic import Field, SecretStr, validator
 from typing_extensions import Literal
@@ -150,7 +150,7 @@ class ContainerInstanceJob(Infrastructure):
             " to the entrypoint as parameters."
         ),
     )
-    image_registry: Optional[DockerRegistry] = None
+    image_registry: Optional[prefect.infrastructure.docker.DockerRegistry] = None
     cpu: float = Field(
         title="CPU",
         default=ACI_DEFAULT_CPU,
