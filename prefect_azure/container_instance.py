@@ -188,9 +188,7 @@ class ContainerInstanceJob(Infrastructure):
         default=None,
         description=(
             "If `True`, logs will be streamed from the Prefect container to the local "
-            "console. Unless you have configured AWS CloudWatch logs manually on your "
-            "task definition, this requires the same prerequisites outlined in "
-            "`configure_cloudwatch_logs`."
+            "console."
         ),
     )
     env: Dict[str, Optional[str]] = Field(
