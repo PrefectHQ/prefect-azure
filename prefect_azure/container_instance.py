@@ -247,10 +247,6 @@ class ContainerInstanceJob(Infrastructure):
             An `ContainerInstanceJobResult` with the container's exit code.
         """
 
-        # TODO: determine how to make DefaultAzureCredential work as expected
-        # if self.aci_credentials:
-        #     self.aci_credentials.login()
-        # token_credential = DefaultAzureCredential
         token_credential = self._create_credential()
         aci_client = self._create_aci_client(token_credential)
         container = self._configure_container()
