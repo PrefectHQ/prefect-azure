@@ -404,7 +404,7 @@ class ContainerInstanceCredentials(Block):
     """
 
     _block_type_slug = "aci-credentials"
-    _block_type_name = "Azure Container Instances Credentials"
+    _block_type_name = "Azure Container Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 
     client_id: SecretStr
