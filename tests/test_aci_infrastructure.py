@@ -40,7 +40,7 @@ def credential_values(
 def aci_block():
     """
     Returns a basic initialized ACI infrastructure block suitable for use
-    in multiple tests.
+    in a variety of tests.
     """
     client_id = "testclientid"
     client_secret = "testclientsecret"
