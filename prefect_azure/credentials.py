@@ -387,7 +387,7 @@ class AzureMlCredentials(Block):
 
 class ContainerInstanceCredentials(Block):
     """
-    Block used to manage Container Instances authentication. Stores Azure Service
+    Block used to manage Azure Container Instances authentication. Stores Azure Service
     Principal authentication data.
 
     Args:
