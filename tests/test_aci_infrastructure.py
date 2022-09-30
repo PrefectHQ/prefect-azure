@@ -339,7 +339,5 @@ def test_preview():
             for (k2, v2) in block_args["env"].items():
                 assert preview[k][k2] == block_args["env"][k2]
 
-            assert "PREFECT_API_URL" in preview[k]
-
         else:
             assert preview[k] == block_args[k]
