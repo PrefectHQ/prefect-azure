@@ -272,11 +272,7 @@ class ContainerInstanceJob(Infrastructure):
 
             # If creation succeeded, group provisioning state should be 'Succeeded'
             # and the group should have a single container
-            if (
-                created_container_group.provisioning_state
-                == ContainerGroupProvisioningState.SUCCEEDED
-                and len(created_container_group.containers) == 1
-            ):
+            if self._provisioning_succeeded(created_container_group):
                 if task_status:
                     task_status.started(value=container.name)
                 status_code = await run_sync_in_worker_thread(
@@ -553,3 +549,20 @@ class ContainerInstanceJob(Infrastructure):
         Generate a command for a flow run job on ACI.
         """
         return ["/opt/prefect/entrypoint.sh"] + self._base_flow_run_command()
+
+    @staticmethod
+    def _provisioning_succeeded(container_group: ContainerGroup) -> bool:
+        """
+        Determines whether ACI container group provisioning was successful.
+
+        Args:
+            container_group: a container group returned by the Azure SDK.
+
+        Returns:
+            True if provisioning was successful, False otherwise.
+        """
+        return (
+            container_group.provisioning_state
+            == ContainerGroupProvisioningState.SUCCEEDED
+            and len(container_group.containers) == 1
+        )
