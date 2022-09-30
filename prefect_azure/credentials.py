@@ -385,7 +385,7 @@ class AzureMlCredentials(Block):
         return workspace
 
 
-class ACICredentials(Block):
+class ContainerInstanceCredentials(Block):
     """
     Block used to manage Container Instances authentication. Stores Azure Service
     Principal authentication data.
@@ -398,11 +398,12 @@ class ACICredentials(Block):
     Example:
         Load stored Azure Blob Storage credentials:
         ```python
-        from prefect_azure import ACICredentials
-        azure_credentials_block = ACICredentials.load("BLOCK_NAME")
+        from prefect_azure import ContainerInstanceCredentials
+        azure_credentials_block = ContainerInstanceCredentials.load("BLOCK_NAME")
         ```
     """
 
+    _block_type_slug = "aci-credentials"
     _block_type_name = "Azure Container Instances Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 

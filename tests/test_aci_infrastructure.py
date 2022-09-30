@@ -8,14 +8,16 @@ from azure.mgmt.containerinstance.operations import ContainerGroupsOperations
 from azure.mgmt.resource import ResourceManagementClient
 
 import prefect_azure.container_instance
-from prefect_azure import ACICredentials
+from prefect_azure import ContainerInstanceCredentials
 from prefect_azure.container_instance import (
     ContainerGroupProvisioningState,
     ContainerInstanceJob,
 )
 
 
-def credential_values(credentials: ACICredentials) -> Tuple[str, str, str]:
+def credential_values(
+    credentials: ContainerInstanceCredentials,
+) -> Tuple[str, str, str]:
     """
     Helper function to extract values from an Azure container instances
     credential block
@@ -44,7 +46,7 @@ def aci_block():
     client_secret = "testclientsecret"
     tenant_id = "testtenandid"
 
-    credentials = ACICredentials(
+    credentials = ContainerInstanceCredentials(
         client_id=client_id, client_secret=client_secret, tenant_id=tenant_id
     )
 

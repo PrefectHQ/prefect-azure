@@ -72,7 +72,7 @@ from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compati
 from pydantic import Field, SecretStr, validator
 from typing_extensions import Literal, Self
 
-from .credentials import ACICredentials
+from .credentials import ContainerInstanceCredentials
 
 ACI_DEFAULT_CPU = 1.0
 ACI_DEFAULT_MEMORY = 1.0
@@ -113,7 +113,7 @@ class ContainerInstanceJob(Infrastructure):
     Note this block is experimental. The interface may change without notice.
     """
 
-    _block_type_slug = "aci-task"
+    _block_type_slug = "azure-container"
     _block_type_name = "Azure Container Instances Task"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
     _description = "Run tasks using Azure Container Instances. Note this block is experimental. The interface may change without notice."  # noqa
@@ -121,7 +121,7 @@ class ContainerInstanceJob(Infrastructure):
     type: Literal["aci-task"] = Field(
         default="aci-task", description="The slug for this task type."
     )
-    aci_credentials: ACICredentials = None
+    aci_credentials: ContainerInstanceCredentials = None
     azure_resource_group_name: str = Field(
         title="Azure Resource Group Name",
         default=None,
