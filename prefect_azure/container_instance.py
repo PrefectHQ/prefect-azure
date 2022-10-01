@@ -57,6 +57,7 @@ from azure.mgmt.containerinstance.models import (
     Container,
     ContainerGroup,
     ContainerGroupRestartPolicy,
+    ContainerGroupSubnetId,
     EnvironmentVariable,
     GpuResource,
     ImageRegistryCredential,
@@ -183,6 +184,10 @@ class ContainerInstanceJob(Infrastructure):
             f"default value of  {ACI_DEFAULT_MEMORY} will be used unless present "
             "on the task definition."
         ),
+    )
+    subnet_ids: List[str] = Field(
+        default=None,
+        description="A list of Azure subnet IDs the container should be connected to.",
     )
     stream_output: bool = Field(
         default=None,
@@ -385,12 +390,19 @@ class ContainerInstanceJob(Infrastructure):
             else None
         )
 
+        subnet_ids = (
+            [ContainerGroupSubnetId(id=subnet_id) for subnet_id in self.subnet_ids]
+            if self.subnet_ids
+            else None
+        )
+
         return ContainerGroup(
             location=resource_group.location,
             containers=[container],
             os_type=OperatingSystemTypes.linux,
             restart_policy=ContainerGroupRestartPolicy.never,
             image_registry_credentials=image_registry_credential,
+            subnet_ids=subnet_ids,
         )
 
     def _wait_for_task_container_start(
