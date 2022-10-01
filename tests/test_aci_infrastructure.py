@@ -288,6 +288,7 @@ def test_watch_for_container_termination(
     monkeypatch.setattr(
         container_instance_block, "_provisioning_succeeded", Mock(return_value=True)
     )
+
     monkeypatch.setattr(
         container_instance_block,
         "_wait_for_task_container_start",
@@ -317,6 +318,25 @@ def test_watch_for_container_termination(
     assert mock_aci_client.container_groups.get.call_count == run_count
     # ensure the run completed
     assert isinstance(result, ContainerInstanceJobResult)
+
+
+@pytest.mark.usefixtures("mock_aci_client")
+def test_subnets_included_when_present(container_instance_block, monkeypatch):
+    mock_container_group_cls = MagicMock()
+
+    monkeypatch.setattr(
+        prefect_azure.container_instance, "ContainerGroup", mock_container_group_cls
+    )
+    subnet_ids = ["subnet1", "subnet2", "subnet3"]
+    container_instance_block.subnet_ids = subnet_ids
+    container_instance_block.run()
+    mock_container_group_cls.assert_called_once()
+
+    (_, kwargs) = mock_container_group_cls.call_args
+    subnet_args = kwargs.get("subnet_ids")
+    assert len(subnet_args) == len(subnet_ids)
+    for subnet_id in subnet_ids:
+        assert subnet_id in subnet_ids
 
 
 def test_preview():
