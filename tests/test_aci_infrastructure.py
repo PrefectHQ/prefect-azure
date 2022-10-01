@@ -226,8 +226,8 @@ def test_delete_after_after_exception(
 
     with pytest.raises(HttpResponseError):
         container_instance_block.run()
-        mock_aci_client.container_groups.begin_create_or_update.assert_called_once()
-        mock_aci_client.container_groups.begin_delete.assert_called_once()
+
+    mock_aci_client.container_groups.begin_create_or_update.assert_called_once()
 
 
 @pytest.mark.usefixtures("mock_aci_client")
