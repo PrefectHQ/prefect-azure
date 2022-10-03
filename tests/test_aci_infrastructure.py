@@ -7,6 +7,7 @@ from anyio.abc import TaskStatus
 from azure.core.exceptions import HttpResponseError
 from azure.identity import ClientSecretCredential
 from azure.mgmt.resource import ResourceManagementClient
+from pydantic import SecretStr
 
 import prefect_azure.container_instance
 from prefect_azure import ContainerInstanceCredentials
@@ -15,6 +16,8 @@ from prefect_azure.container_instance import (
     ContainerInstanceJob,
     ContainerInstanceJobResult,
 )
+
+# Helper functions
 
 
 def credential_values(
@@ -36,6 +39,31 @@ def credential_values(
         credentials.client_secret.get_secret_value(),
         credentials.tenant_id.get_secret_value(),
     )
+
+
+def create_mock_container_group(state: str, exit_code: Union[int, None]):
+    """
+    Creates a mock container group with a single container to serve as a stand-in for
+    an Azure ContainerInstanceManagementClient's container_group property.
+
+    Args:
+        state: The state the single container in the group should report.
+        exit_code: The container's exit code, or None
+
+    Returns:
+        A mock container group.
+    """
+    container_group = Mock()
+    containers = MagicMock()
+    container = Mock()
+    container.instance_view.current_state.state = state
+    container.instance_view.current_state.exit_code = exit_code
+    containers.__getitem__.return_value = container
+    container_group.containers = containers
+    return container_group
+
+
+# Fixtures
 
 
 @pytest.fixture()
@@ -77,17 +105,6 @@ def mock_aci_client(monkeypatch, mock_resource_client):
     return mock_aci_client
 
 
-def create_mock_container_group(state: str, exit_code: Union[int, None]):
-    container_group = Mock()
-    containers = MagicMock()
-    container = Mock()
-    container.instance_view.current_state.state = state
-    container.instance_view.current_state.exit_code = exit_code
-    containers.__getitem__.return_value = container
-    container_group.containers = containers
-    return container_group
-
-
 @pytest.fixture()
 def mock_successful_container_group():
     """
@@ -121,6 +138,9 @@ def mock_resource_client(monkeypatch):
     return mock_resource_client
 
 
+# Tests
+
+
 def test_empty_list_command_validation():
     # ensure that the default command is set automatically if the user
     # provides an empty command list
@@ -146,6 +166,48 @@ def test_invalid_command_validation():
     # ensure invalid commands cause a validation error
     with pytest.raises(ValueError):
         ContainerInstanceJob(command="invalid_command -a")
+
+
+def test_container_client_creation(container_instance_block, monkeypatch):
+    # verify that the Azure Container Instances client and Azure Resource clients
+    # are created correctly.
+
+    mock_azure_credential = Mock(spec=ClientSecretCredential)
+    monkeypatch.setattr(
+        container_instance_block,
+        "_create_credential",
+        Mock(return_value=mock_azure_credential),
+    )
+
+    # don't use the mock_aci_client or mock_resource_client_fixtures, because we want to
+    # test the call to the client constructors to ensure the block is calling them
+    # with the correct information.
+    mock_container_client_constructor = Mock()
+    monkeypatch.setattr(
+        prefect_azure.container_instance,
+        "ContainerInstanceManagementClient",
+        mock_container_client_constructor,
+    )
+
+    mock_resource_client_constructor = Mock()
+    monkeypatch.setattr(
+        prefect_azure.container_instance,
+        "ResourceManagementClient",
+        mock_resource_client_constructor,
+    )
+
+    subscription_id = "test_subscription"
+    container_instance_block.subscription_id = SecretStr(value=subscription_id)
+    container_instance_block.run()
+
+    mock_resource_client_constructor.assert_called_once_with(
+        credential=mock_azure_credential,
+        subscription_id=subscription_id,
+    )
+    mock_container_client_constructor.assert_called_once_with(
+        credential=mock_azure_credential,
+        subscription_id=subscription_id,
+    )
 
 
 @pytest.mark.usefixtures("mock_aci_client")
