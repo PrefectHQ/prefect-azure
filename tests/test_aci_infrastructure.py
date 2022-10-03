@@ -247,6 +247,25 @@ def test_container_creation_call(mock_aci_client, container_instance_block):
     mock_aci_client.container_groups.begin_create_or_update.assert_called_once()
 
 
+def test_entrypoint_used_if_provided(
+    container_instance_block, mock_aci_client, monkeypatch
+):
+    mock_container = Mock()
+    mock_container.name = "TestContainer"
+    mock_container_constructor = Mock(return_value=mock_container)
+    monkeypatch.setattr(
+        prefect_azure.container_instance, "Container", mock_container_constructor
+    )
+
+    entrypoint = "/test/entrypoint.sh"
+    container_instance_block.entrypoint = entrypoint
+    container_instance_block.run()
+
+    mock_container_constructor.assert_called_once()
+    (_, kwargs) = mock_container_constructor.call_args
+    assert kwargs.get("command")[0] == entrypoint
+
+
 def test_delete_after_group_creation_failure(
     container_instance_block, mock_aci_client, monkeypatch
 ):

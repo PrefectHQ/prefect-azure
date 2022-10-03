@@ -77,6 +77,7 @@ from .credentials import ContainerInstanceCredentials
 ACI_DEFAULT_CPU = 1.0
 ACI_DEFAULT_MEMORY = 1.0
 ACI_DEFAULT_GPU = 0.0
+DEFAULT_CONTAINER_ENTRYPOINT = "/opt/prefect/entrypoint.sh"
 
 
 class ContainerGroupProvisioningState(str, Enum):
@@ -142,7 +143,7 @@ class ContainerInstanceJob(Infrastructure):
         ),
     )
     entrypoint: str = Field(
-        default="/opt/prefect/entrypoint.sh",
+        default=DEFAULT_CONTAINER_ENTRYPOINT,
         description=(
             "The entrypoint of the container you wish you run. This value "
             "defaults to the entrypoint used by Prefect images and should only be "
@@ -327,6 +328,8 @@ class ContainerInstanceJob(Infrastructure):
         container_name = str(uuid.uuid4())
         container_resource_requirements = self._configure_container_resources()
 
+        # add the entrypoint if provided, because creating an ACI container with a
+        # command overrides the container's built-in entrypoint.
         if self.entrypoint:
             self.command.insert(0, self.entrypoint)
 
@@ -539,7 +542,7 @@ class ContainerInstanceJob(Infrastructure):
         """
         Generate a command for a flow run job on ACI.
         """
-        return ["/opt/prefect/entrypoint.sh"] + self._base_flow_run_command()
+        return [DEFAULT_CONTAINER_ENTRYPOINT] + self._base_flow_run_command()
 
     @staticmethod
     def _provisioning_succeeded(container_group: ContainerGroup) -> bool:
