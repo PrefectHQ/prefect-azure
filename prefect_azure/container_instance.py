@@ -592,7 +592,7 @@ class ContainerInstanceJob(Infrastructure):
             try:
                 line_time = dateutil.parser.parse(line_timestamp)
                 if line_time > last_written_time:
-                    print(line, file=sys.stderr)
+                    self._write_output_line(line)
                     last_written_time = line_time
             except dateutil.parser.ParserError as e:
                 self.logger.debug(
@@ -680,3 +680,10 @@ class ContainerInstanceJob(Infrastructure):
             == ContainerGroupProvisioningState.SUCCEEDED
             and len(container_group.containers) == 1
         )
+
+    @staticmethod
+    def _write_output_line(line: str):
+        """
+        Writes a line of output to stderr.
+        """
+        print(line, file=sys.stderr)
