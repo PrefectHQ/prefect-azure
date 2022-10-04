@@ -84,7 +84,7 @@ def container_instance_block():
     container_instance_block = ContainerInstanceJob(
         command=["test"],
         aci_credentials=credentials,
-        azure_resource_group_name="testgroup",
+        resource_group_name="testgroup",
         subscription_id="subid",
     )
 
@@ -142,31 +142,47 @@ def mock_resource_client(monkeypatch):
 # Tests
 
 
-def test_empty_list_command_validation():
+def test_empty_list_command_validation(container_instance_block):
     # ensure that the default command is set automatically if the user
     # provides an empty command list
-    aci_flow_run = ContainerInstanceJob(command=[])
+    aci_flow_run = ContainerInstanceJob(
+        command=[],
+        subscription_id=SecretStr("test"),
+        resource_group_name="test",
+    )
     assert aci_flow_run.command == aci_flow_run._base_flow_run_command()
 
 
 def test_missing_command_validation():
     # ensure that the default command is set automatically if the user
     # provides None
-    aci_flow_run = ContainerInstanceJob(command=None)
+    aci_flow_run = ContainerInstanceJob(
+        command=None,
+        subscription_id=SecretStr("test"),
+        resource_group_name="test",
+    )
     assert aci_flow_run.command == aci_flow_run._base_flow_run_command()
 
 
 def test_valid_command_validation():
     # ensure the validator allows valid commands to pass through
     command = ["command", "arg1", "arg2"]
-    aci_flow_run = ContainerInstanceJob(command=command)
+    aci_flow_run = ContainerInstanceJob(
+        command=command,
+        subscription_id=SecretStr("test"),
+        resource_group_name="test",
+    )
     assert aci_flow_run.command == command
 
 
 def test_invalid_command_validation():
     # ensure invalid commands cause a validation error
     with pytest.raises(ValueError):
-        ContainerInstanceJob(command="invalid_command -a")
+        ContainerInstanceJob(
+            command="invalid_command -a",
+            subscription_id=SecretStr("test"),
+            resource_group_name="test",
+        )
 
 
 def test_container_client_creation(container_instance_block, monkeypatch):
@@ -424,7 +440,7 @@ def test_subnets_included_when_present(container_instance_block, monkeypatch):
 def test_preview():
     # ensures the preview generates the JSON expected
     block_args = {
-        "azure_resource_group_name": "test-group",
+        "resource_group_name": "test-group",
         "memory": 1.0,
         "cpu": 1.0,
         "gpu_count": 1,
@@ -432,7 +448,7 @@ def test_preview():
         "env": {"FAVORITE_ANIMAL": "cat"},
     }
 
-    block = ContainerInstanceJob(**block_args)
+    block = ContainerInstanceJob(**block_args, subscription_id=SecretStr("test"))
 
     preview = json.loads(block.preview())
 

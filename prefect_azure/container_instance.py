@@ -126,16 +126,16 @@ class ContainerInstanceJob(Infrastructure):
         default="aci-task", description="The slug for this task type."
     )
     aci_credentials: ContainerInstanceCredentials = None
-    azure_resource_group_name: str = Field(
+    resource_group_name: str = Field(
+        ...,
         title="Azure Resource Group Name",
-        default=None,
         description=(
             "The name of the Azure Resource Group in which to run Prefect ACI tasks."
         ),
     )
     subscription_id: SecretStr = Field(
+        ...,
         title="Azure Subscription ID",
-        default=None,
         description="The ID of the Azure subscription to create containers under.",
     )
     image: Optional[str] = Field(
@@ -266,7 +266,7 @@ class ContainerInstanceJob(Infrastructure):
         try:
             # Create the container group and wait for it to start
             creation_status_poller = aci_client.container_groups.begin_create_or_update(
-                self.azure_resource_group_name, container.name, container_group
+                self.resource_group_name, container.name, container_group
             )
             created_container_group = await run_sync_in_worker_thread(
                 self._wait_for_task_container_start, creation_status_poller
@@ -289,7 +289,7 @@ class ContainerInstanceJob(Infrastructure):
         finally:
             if created_container_group:
                 aci_client.container_groups.begin_delete(
-                    resource_group_name=self.azure_resource_group_name,
+                    resource_group_name=self.resource_group_name,
                     container_group_name=created_container_group.name,
                 )
 
@@ -306,7 +306,7 @@ class ContainerInstanceJob(Infrastructure):
         """
         preview = {
             "container_name": "generated when run",
-            "azure_resource_group_name": self.azure_resource_group_name,
+            "resource_group_name": self.resource_group_name,
             "memory": self.memory,
             "cpu": self.cpu,
             "gpu_count": self.gpu_count,
@@ -385,7 +385,7 @@ class ContainerInstanceJob(Infrastructure):
 
         resource_group_client = self._create_resource_client(token_credential)
         resource_group = resource_group_client.resource_groups.get(
-            self.azure_resource_group_name
+            self.resource_group_name
         )
 
         image_registry_credential = (
@@ -482,7 +482,7 @@ class ContainerInstanceJob(Infrastructure):
 
         while current_state != ContainerRunState.TERMINATED:
             container_group = client.container_groups.get(
-                resource_group_name=self.azure_resource_group_name,
+                resource_group_name=self.resource_group_name,
                 container_group_name=container_group.name,
             )
 
@@ -549,7 +549,7 @@ class ContainerInstanceJob(Infrastructure):
         container = self._get_container(container_group)
 
         logs = client.containers.list_logs(
-            resource_group_name=self.azure_resource_group_name,
+            resource_group_name=self.resource_group_name,
             container_group_name=container_group.name,
             container_name=container.name,
             tail=max_lines,
