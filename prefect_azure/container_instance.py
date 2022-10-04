@@ -41,12 +41,15 @@ Examples:
     ContainerInstanceJob(command=["echo", "hello $PLANET"], env={"PLANET": "earth"})
     ```
 """
+import datetime
 import json
+import sys
 import time
 import uuid
 from enum import Enum
 from typing import Dict, List, Optional
 
+import dateutil.parser
 import prefect.infrastructure.docker
 from anyio.abc import TaskStatus
 from azure.core.credentials import TokenCredential
@@ -253,6 +256,7 @@ class ContainerInstanceJob(Infrastructure):
             An `ContainerInstanceJobResult` with the container's exit code.
         """
 
+        run_start_time = datetime.datetime.now(datetime.timezone.utc)
         token_credential = self._create_credential()
         aci_client = self._create_aci_client(token_credential)
         container = self._configure_container()
@@ -277,6 +281,7 @@ class ContainerInstanceJob(Infrastructure):
                     self._watch_task_and_get_exit_code,
                     aci_client,
                     created_container_group,
+                    run_start_time,
                 )
             else:
                 status_code = -1
@@ -444,7 +449,10 @@ class ContainerInstanceJob(Infrastructure):
         return creation_status_poller.result()
 
     def _watch_task_and_get_exit_code(
-        self, client: ContainerInstanceManagementClient, container_group: ContainerGroup
+        self,
+        client: ContainerInstanceManagementClient,
+        container_group: ContainerGroup,
+        run_start_time: datetime.datetime,
     ) -> int:
         """
         Waits until the container finishes running and obtains its exit code.
@@ -458,22 +466,33 @@ class ContainerInstanceJob(Infrastructure):
         """
 
         status_code = -1
-        running_container = container_group.containers[0]
+        running_container = self._get_container(container_group)
         current_state = running_container.instance_view.current_state.state
+
+        # get any logs the container has already generated
+        last_log_time = run_start_time
+        if self.stream_output:
+            last_log_time = self._get_and_stream_output(
+                client, container_group, last_log_time
+            )
 
         # return exit code if flow run already finished:
         if current_state == ContainerRunState.TERMINATED:
             return running_container.instance_view.current_state.exit_code
 
-        # otherwise, watch until it finishes
         while current_state != ContainerRunState.TERMINATED:
             container_group = client.container_groups.get(
                 resource_group_name=self.azure_resource_group_name,
                 container_group_name=container_group.name,
             )
 
-            container = container_group.containers[0]
+            container = self._get_container(container_group)
             current_state = container.instance_view.current_state.state
+
+            if self.stream_output:
+                last_log_time = self._get_and_stream_output(
+                    client, container_group, last_log_time
+                )
 
             if current_state == ContainerRunState.TERMINATED:
                 status_code = container.instance_view.current_state.exit_code
@@ -482,6 +501,107 @@ class ContainerInstanceJob(Infrastructure):
             time.sleep(self.task_watch_poll_interval)
 
         return status_code
+
+    def _get_container(self, container_group: ContainerGroup) -> Container:
+        """
+        Extracts the job container from a container group.
+        """
+        return container_group.containers[0]
+
+    def _get_and_stream_output(
+        self,
+        client: ContainerInstanceManagementClient,
+        container_group: ContainerGroup,
+        last_log_time: datetime.datetime,
+    ) -> datetime.datetime:
+        """
+        Fetches logs output from the job container and writes all entries after
+        a given time to stderr.
+
+        Args:
+            client: An initialized `ContainerInstanceManagementClient`
+            container_group: The container group that holds the job container.
+            last_log_time: The timestamp of the last output line already streamed.
+
+        Returns:
+            The time of the most recent output line written by this call.
+        """
+        logs = self._get_logs(client, container_group)
+        return self._stream_output(logs, last_log_time)
+
+    def _get_logs(
+        self,
+        client: ContainerInstanceManagementClient,
+        container_group: ContainerGroup,
+        max_lines: int = 100,
+    ) -> str:
+        """
+        Gets the most container logs up to a given maximum.
+
+        Args:
+            client: An initialized `ContainerInstanceManagementClient`
+            container_group: The container group that holds the job container.
+            max_lines: The number of log lines to pull. Defaults to 100.
+
+        Returns:
+            A string containing the requested log entries, one per line.
+        """
+        container = self._get_container(container_group)
+
+        logs = client.containers.list_logs(
+            resource_group_name=self.azure_resource_group_name,
+            container_group_name=container_group.name,
+            container_name=container.name,
+            tail=max_lines,
+            timestamps=True,
+        )
+
+        return logs.content
+
+    def _stream_output(
+        self, log_content: str, last_log_time: datetime.datetime
+    ) -> datetime.datetime:
+        """
+        Writes each entry from a string of log lines to stderr.
+
+        Args:
+            log_content: A string containing Azure container logs.
+            last_log_time: The timestamp of the last output line already streamed.
+
+        Returns:
+            The time of the most recent output line written by this call.
+        """
+        log_lines = log_content.split("\n")
+
+        if not log_lines:
+            # nothing to stream
+            return last_log_time
+
+        last_written_time = last_log_time
+
+        for log_line in log_lines:
+            # skip if the line is blank or whitespace
+            if not log_line.strip():
+                continue
+
+            line_parts = log_line.split(" ")
+            # timestamp should always be before first space in line
+            line_timestamp = line_parts[0]
+            line = " ".join(line_parts[1:])
+
+            try:
+                line_time = dateutil.parser.parse(line_timestamp)
+                if line_time > last_written_time:
+                    print(line, file=sys.stderr)
+                    last_written_time = line_time
+            except dateutil.parser.ParserError as e:
+                self.logger.debug(
+                    "Unable to parse timestamp from Azure log line.",
+                    log_line,
+                    exc_info=e,
+                )
+
+        return last_written_time
 
     def _create_credential(self):
         """
