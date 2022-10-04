@@ -1,7 +1,6 @@
 """Credential classes used to perform authenticated interactions with Azure"""
 
 import functools
-import os
 from typing import TYPE_CHECKING
 
 from pydantic import SecretStr
@@ -410,12 +409,3 @@ class ContainerInstanceCredentials(Block):
     client_id: SecretStr
     tenant_id: SecretStr
     client_secret: SecretStr
-
-    def login(self):
-        """
-        Sets the AZURE_CLIENT_ID, AZURE_TENANT_ID, and AZURE_CLIENT_SECRET environment
-        variables so they will be available for use by DefaultAzureCredential.
-        """
-        os.environ["AZURE_CLIENT_ID"] = self.client_id.get_secret_value()
-        os.environ["AZURE_TENANT_ID"] = self.tenant_id.get_secret_value()
-        os.environ["AZURE_CLIENT_SECRET"] = self.client_secret.get_secret_value()
