@@ -2,6 +2,7 @@ import json
 from typing import Tuple, Union
 from unittest.mock import MagicMock, Mock
 
+import dateutil.parser
 import pytest
 from anyio.abc import TaskStatus
 from azure.core.exceptions import HttpResponseError
@@ -442,3 +443,85 @@ def test_preview():
 
         else:
             assert preview[k] == block_args[k]
+
+
+def test_output_streaming(
+    container_instance_block,
+    mock_aci_client,
+    mock_running_container_group,
+    mock_successful_container_group,
+    monkeypatch,
+):
+    # override datetime.now to ensure run start time is before log line timestamps
+    run_start_time = dateutil.parser.parse("2022-10-03T20:40:05.3119525Z")
+    mock_datetime = Mock()
+    mock_datetime.datetime.now.return_value = run_start_time
+
+    monkeypatch.setattr(prefect_azure.container_instance, "datetime", mock_datetime)
+
+    log_lines = """
+2022-10-03T20:41:05.3119525Z 20:41:05.307 | INFO    | Flow run 'ultramarine-dugong' - Created task run "Test-39fdf8ff-0" for task "ACI Test"
+2022-10-03T20:41:05.3120697Z 20:41:05.308 | INFO    | Flow run 'ultramarine-dugong' - Executing "Test-39fdf8ff-0" immediately...
+2022-10-03T20:41:05.6215928Z 20:41:05.616 | INFO    | Task run "Test-39fdf8ff-0" - Test Message
+2022-10-03T20:41:05.7758864Z 20:41:05.775 | INFO    | Task run "Test-39fdf8ff-0" - Finished in state Completed()
+"""  # noqa
+
+    # include some overlap in the second batch so we can make sure output
+    # is not duplicated
+    next_log_lines = """
+2022-10-03T20:41:05.6215928Z 20:41:05.616 | INFO    | Task run "Test-39fdf8ff-0" - Test Message
+2022-10-03T20:41:05.7758864Z 20:41:05.775 | INFO    | Task run "Test-39fdf8ff-0" - Finished in state Completed()
+2022-10-03T20:41:13.0149593Z 20:41:13.012 | INFO    | Flow run 'ultramarine-dugong' - Created task run "Test-39fdf8ff-1" for task "ACI Test"
+2022-10-03T20:41:13.0152433Z 20:41:13.013 | INFO    | Flow run 'ultramarine-dugong' - Executing "Test-39fdf8ff-1" immediately...
+2022-broken-03T20:41:13.0152433Z 20:41:13.013 | INFO    | Log line with broken timestamp should not be printed
+    """  # noqa
+
+    log_count = 0
+
+    def get_logs(*args, **kwargs):
+        nonlocal log_count
+        logs = Mock()
+        if log_count == 0:
+            log_count += 1
+            logs.content = log_lines
+        else:
+            logs.content = next_log_lines
+
+        return logs
+
+    run_count = 0
+
+    def get_container_group(**kwargs):
+        nonlocal run_count
+        run_count += 1
+        if run_count < 5:
+            return mock_running_container_group
+        else:
+            return mock_successful_container_group
+
+    mock_aci_client.container_groups.get.side_effect = get_container_group
+
+    mock_log_call = Mock(side_effect=get_logs)
+    monkeypatch.setattr(mock_aci_client.containers, "list_logs", mock_log_call)
+
+    mock_write_call = Mock()
+    monkeypatch.setattr(container_instance_block, "_write_output_line", mock_write_call)
+
+    monkeypatch.setattr(
+        container_instance_block, "_provisioning_succeeded", Mock(return_value=True)
+    )
+
+    monkeypatch.setattr(
+        container_instance_block,
+        "_wait_for_task_container_start",
+        Mock(return_value=mock_running_container_group),
+    )
+
+    container_instance_block.stream_output = True
+    container_instance_block.task_watch_poll_interval = 0.02
+    container_instance_block.run()
+
+    # 6 lines should be written because of the nine test log lines, two overlap
+    # and should not be written twice, and one has a broken timestamp so should
+    # not be written
+    assert mock_write_call.call_count == 6
