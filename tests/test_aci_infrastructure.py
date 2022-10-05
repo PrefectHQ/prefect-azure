@@ -100,7 +100,9 @@ def mock_aci_client(monkeypatch, mock_resource_client):
     mock_container_groups = Mock()
     mock_aci_client.container_groups.return_value = mock_container_groups
     monkeypatch.setattr(
-        ContainerInstanceJob, "_create_aci_client", Mock(return_value=mock_aci_client)
+        ContainerInstanceJob,
+        "_create_container_client",
+        Mock(return_value=mock_aci_client),
     )
 
     return mock_aci_client

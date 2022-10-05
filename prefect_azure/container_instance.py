@@ -258,7 +258,7 @@ class ContainerInstanceJob(Infrastructure):
 
         run_start_time = datetime.datetime.now(datetime.timezone.utc)
         token_credential = self._create_credential()
-        aci_client = self._create_aci_client(token_credential)
+        aci_client = self._create_container_client(token_credential)
         container = self._configure_container()
         container_group = self._configure_container_group(token_credential, container)
         created_container_group = None
@@ -617,7 +617,7 @@ class ContainerInstanceJob(Infrastructure):
             client_secret=self.aci_credentials.client_secret.get_secret_value(),
         )
 
-    def _create_aci_client(self, token_credential: TokenCredential):
+    def _create_container_client(self, token_credential: TokenCredential):
         """
         Creates an Azure Container Instances client initialized with data from
         this block's fields.
