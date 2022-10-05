@@ -658,12 +658,6 @@ class ContainerInstanceJob(Infrastructure):
         """
         return {**self._base_environment(), **self.env}
 
-    def _base_aci_flow_run_command(self) -> List[str]:
-        """
-        Generate a command for a flow run job on ACI.
-        """
-        return [DEFAULT_CONTAINER_ENTRYPOINT] + self._base_flow_run_command()
-
     @staticmethod
     def _provisioning_succeeded(container_group: ContainerGroup) -> bool:
         """

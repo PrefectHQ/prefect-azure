@@ -500,8 +500,11 @@ def test_output_streaming(
         if log_count == 0:
             log_count += 1
             logs.content = log_lines
-        else:
+        elif log_count == 1:
+            log_count += 1
             logs.content = next_log_lines
+        else:
+            logs.content = ""
 
         return logs
 
@@ -510,7 +513,7 @@ def test_output_streaming(
     def get_container_group(**kwargs):
         nonlocal run_count
         run_count += 1
-        if run_count < 5:
+        if run_count < 4:
             return mock_running_container_group
         else:
             return mock_successful_container_group
