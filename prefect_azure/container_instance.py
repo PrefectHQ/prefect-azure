@@ -311,7 +311,7 @@ class ContainerInstanceJob(Infrastructure):
             "cpu": self.cpu,
             "gpu_count": self.gpu_count,
             "gpu_sku": self.gpu_sku,
-            "env": self._get_environment(),
+            "env": self._environment,
         }
 
         return json.dumps(preview)
@@ -326,8 +326,7 @@ class ContainerInstanceJob(Infrastructure):
 
         # setup container environment variables
         environment = [
-            EnvironmentVariable(name=k, value=v)
-            for (k, v) in self._get_environment().items()
+            EnvironmentVariable(name=k, value=v) for (k, v) in self._environment.items()
         ]
         # all container names in a resource group must be unique
         container_name = str(uuid.uuid4())
@@ -651,7 +650,8 @@ class ContainerInstanceJob(Infrastructure):
             subscription_id=self.subscription_id.get_secret_value(),
         )
 
-    def _get_environment(self):
+    @property
+    def _environment(self):
         """
         Generates a dictionary of all environment variables to send to the
         ACI container.
