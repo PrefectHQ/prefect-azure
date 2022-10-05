@@ -571,11 +571,11 @@ class ContainerInstanceJob(Infrastructure):
         Returns:
             The time of the most recent output line written by this call.
         """
-        log_lines = log_content.split("\n")
-
-        if not log_lines:
+        if not log_content:
             # nothing to stream
             return last_log_time
+
+        log_lines = log_content.split("\n")
 
         last_written_time = last_log_time
 
