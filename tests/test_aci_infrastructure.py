@@ -286,6 +286,25 @@ def test_entrypoint_used_if_provided(
     assert kwargs.get("command")[0] == entrypoint
 
 
+def test_runs_without_entrypoint(
+    container_instance_block, mock_aci_client, monkeypatch
+):
+    mock_container = Mock()
+    mock_container.name = "TestContainer"
+    mock_container_constructor = Mock(return_value=mock_container)
+    monkeypatch.setattr(
+        prefect_azure.container_instance, "Container", mock_container_constructor
+    )
+
+    default_command = container_instance_block.command
+    container_instance_block.entrypoint = None
+    container_instance_block.run()
+
+    mock_container_constructor.assert_called_once()
+    (_, kwargs) = mock_container_constructor.call_args
+    assert kwargs.get("command")[0] == " ".join(default_command)
+
+
 def test_delete_after_group_creation_failure(
     container_instance_block, mock_aci_client, monkeypatch
 ):
@@ -299,6 +318,21 @@ def test_delete_after_group_creation_failure(
     )
     container_instance_block.run()
     mock_aci_client.container_groups.begin_delete.assert_called_once()
+
+
+def test_no_delete_if_no_container_group(
+    container_instance_block, mock_aci_client, monkeypatch
+):
+    # if provisioning failed because the ACI client returned nothing,
+    # we should not attempt to delete the container group because we don't
+    # have enough data to try
+    monkeypatch.setattr(
+        container_instance_block,
+        "_wait_for_task_container_start",
+        Mock(return_value=None),
+    )
+    container_instance_block.run()
+    mock_aci_client.container_groups.begin_delete.assert_not_called()
 
 
 def test_delete_after_group_creation_success(
@@ -417,6 +451,35 @@ def test_watch_for_container_termination(
     # ensure the watcher was watching
     assert run_count == 5
     assert mock_aci_client.container_groups.get.call_count == run_count
+    # ensure the run completed
+    assert isinstance(result, ContainerInstanceJobResult)
+
+
+def test_watch_for_quick_termination(
+    mock_aci_client,
+    mock_successful_container_group,
+    container_instance_block,
+    monkeypatch,
+):
+    # ensure that everything works as expected in the case where the container has
+    # already finished its flow run by the time the poller picked up the container
+    # group's successful provisioning status.
+
+    monkeypatch.setattr(
+        container_instance_block, "_provisioning_succeeded", Mock(return_value=True)
+    )
+
+    monkeypatch.setattr(
+        container_instance_block,
+        "_wait_for_task_container_start",
+        Mock(return_value=mock_successful_container_group),
+    )
+
+    result = container_instance_block.run()
+
+    # ensure the watcher didn't need to call to check status since the run
+    # already completed.
+    mock_aci_client.container_groups.get.assert_not_called()
     # ensure the run completed
     assert isinstance(result, ContainerInstanceJobResult)
 
