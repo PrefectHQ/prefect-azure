@@ -525,7 +525,7 @@ def test_output_streaming(
     mock_log_call = Mock(side_effect=get_logs)
     monkeypatch.setattr(mock_aci_client.containers, "list_logs", mock_log_call)
 
-    mock_write_call = Mock()
+    mock_write_call = Mock(wraps=container_instance_block._write_output_line)
     monkeypatch.setattr(container_instance_block, "_write_output_line", mock_write_call)
 
     monkeypatch.setattr(
