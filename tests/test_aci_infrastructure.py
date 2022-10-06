@@ -86,6 +86,7 @@ def container_instance_block():
         aci_credentials=credentials,
         resource_group_name="testgroup",
         subscription_id="subid",
+        name=None,
     )
 
     return container_instance_block
@@ -539,6 +540,7 @@ def test_output_streaming(
     )
 
     container_instance_block.stream_output = True
+    container_instance_block.name = "streaming test"
     container_instance_block.task_watch_poll_interval = 0.02
     container_instance_block.run()
 
