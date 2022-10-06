@@ -263,7 +263,12 @@ class ContainerInstanceJob(Infrastructure):
         container_group = self._configure_container_group(token_credential, container)
         created_container_group = None
 
+        self.logger.info(
+            f"{self._log_prefix}: Preparing to run command {' '.join(self.command)!r} "
+            f"in container {container.name!r} ({self.image})..."
+        )
         try:
+            self.logger.info(f"{self._log_prefix}: Waiting for container creation...")
             # Create the container group and wait for it to start
             creation_status_poller = aci_client.container_groups.begin_create_or_update(
                 self.resource_group_name, container.name, container_group
@@ -275,6 +280,7 @@ class ContainerInstanceJob(Infrastructure):
             # If creation succeeded, group provisioning state should be 'Succeeded'
             # and the group should have a single container
             if self._provisioning_succeeded(created_container_group):
+                self.logger.info(f"{self._log_prefix}: Running command...")
                 if task_status:
                     task_status.started(value=container.name)
                 status_code = await run_sync_in_worker_thread(
@@ -283,11 +289,16 @@ class ContainerInstanceJob(Infrastructure):
                     created_container_group,
                     run_start_time,
                 )
+                self.logger.info(f"{self._log_prefix}: Completed command run.")
             else:
+                self.logger.error(f"{self._log_prefix}: Container creation failed.")
                 status_code = -1
+                # note: we need to proceed to the `finally` block because even if
+                # provisioning failed, there may be a container group to clean up.
 
         finally:
             if created_container_group:
+                self.logger.info(f"{self._log_prefix}: Deleting container...")
                 aci_client.container_groups.begin_delete(
                     resource_group_name=self.resource_group_name,
                     container_group_name=created_container_group.name,
