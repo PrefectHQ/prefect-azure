@@ -145,7 +145,7 @@ class ContainerInstanceJob(Infrastructure):
             "defaults to a Prefect base image matching your local versions."
         ),
     )
-    entrypoint: str = Field(
+    entrypoint: Optional[str] = Field(
         default=DEFAULT_CONTAINER_ENTRYPOINT,
         description=(
             "The entrypoint of the container you wish you run. This value "
