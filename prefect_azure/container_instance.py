@@ -658,6 +658,16 @@ class ContainerInstanceJob(Infrastructure):
         """
         return {**self._base_environment(), **self.env}
 
+    @property
+    def _log_prefix(self) -> str:
+        """
+        Internal property for generating a prefix for logs where `name` may be null
+        """
+        if self.name is not None:
+            return f"ContainerInstanceJob {self.name!r}"
+        else:
+            return "ContainerInstanceJob"
+
     @staticmethod
     def _provisioning_succeeded(container_group: ContainerGroup) -> bool:
         """
