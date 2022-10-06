@@ -122,8 +122,8 @@ class ContainerInstanceJob(Infrastructure):
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
     _description = "Run tasks using Azure Container Instances. Note this block is experimental. The interface may change without notice."  # noqa
 
-    type: Literal["aci-task"] = Field(
-        default="aci-task", description="The slug for this task type."
+    type: Literal["azure-container"] = Field(
+        default="azure-container", description="The slug for this task type."
     )
     aci_credentials: ContainerInstanceCredentials = None
     resource_group_name: str = Field(
