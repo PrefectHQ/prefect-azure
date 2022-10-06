@@ -486,11 +486,11 @@ class ContainerInstanceJob(Infrastructure):
                 client, container_group, last_log_time
             )
 
-        # return exit code if flow run already finished:
+        # set exit code if flow run already finished:
         if current_state == ContainerRunState.TERMINATED:
-            return running_container.instance_view.current_state.exit_code
+            status_code = running_container.instance_view.current_state.exit_code
 
-        while current_state == ContainerRunState.RUNNING:
+        while current_state != ContainerRunState.TERMINATED:
             container_group = client.container_groups.get(
                 resource_group_name=self.resource_group_name,
                 container_group_name=container_group.name,
