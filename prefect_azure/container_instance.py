@@ -490,7 +490,7 @@ class ContainerInstanceJob(Infrastructure):
         if current_state == ContainerRunState.TERMINATED:
             return running_container.instance_view.current_state.exit_code
 
-        while current_state != ContainerRunState.TERMINATED:
+        while current_state == ContainerRunState.RUNNING:
             container_group = client.container_groups.get(
                 resource_group_name=self.resource_group_name,
                 container_group_name=container_group.name,
