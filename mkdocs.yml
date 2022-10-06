@@ -48,4 +48,5 @@ nav:
     - Credentials: credentials.md
     - Blob Storage: blob_storage.md
     - ML Datastore: ml_datastore.md
+    - Container Instances: container_instance.md
 
