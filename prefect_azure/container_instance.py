@@ -690,6 +690,9 @@ class ContainerInstanceJob(Infrastructure):
         Returns:
             True if provisioning was successful, False otherwise.
         """
+        if not container_group:
+            return False
+
         return (
             container_group.provisioning_state
             == ContainerGroupProvisioningState.SUCCEEDED
