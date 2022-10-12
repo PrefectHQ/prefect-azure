@@ -9,7 +9,7 @@
       "github_organization": "PrefectHQ",
       "collection_name": "prefect-azure",
       "collection_slug": "prefect_azure",
-      "collection_short_description": "Prefect integrations for interacting with Google Cloud Platform.",
+      "collection_short_description": "Prefect integrations for interacting with Azure.",
       "_copy_without_render": [
         ".github/workflows/*.yml"
       ],
