@@ -1,5 +1,21 @@
 # prefect-azure
 
+<p align="center">
+    <a href="https://pypi.python.org/pypi/prefect-azure/" alt="PyPI version">
+        <img alt="PyPI" src="https://img.shields.io/pypi/v/prefect-azure?color=0052FF&labelColor=090422"></a>
+    <a href="https://github.com/PrefectHQ/prefect-azure/" alt="Stars">
+        <img src="https://img.shields.io/github/stars/PrefectHQ/prefect-azure?color=0052FF&labelColor=090422" /></a>
+    <a href="https://pepy.tech/badge/prefect-azure/" alt="Downloads">
+        <img src="https://img.shields.io/pypi/dm/prefect-azure?color=0052FF&labelColor=090422" /></a>
+    <a href="https://github.com/PrefectHQ/prefect-azure/pulse" alt="Activity">
+        <img src="https://img.shields.io/github/commit-activity/m/PrefectHQ/prefect-azure?color=0052FF&labelColor=090422" /></a>
+    <br>
+    <a href="https://prefect-community.slack.com" alt="Slack">
+        <img src="https://img.shields.io/badge/slack-join_community-red.svg?color=0052FF&labelColor=090422&logo=slack" /></a>
+    <a href="https://discourse.prefect.io/" alt="Discourse">
+        <img src="https://img.shields.io/badge/discourse-browse_forum-red.svg?color=0052FF&labelColor=090422&logo=discourse" /></a>
+</p>
+
 ## Welcome!
 
 prefect-azure is a collection of prebuilt Prefect tasks that can be used to quickly construct Prefect flows.
@@ -37,6 +53,13 @@ To use ML Datastore:
 pip install "prefect-azure[ml_datastore]"
 ```
 
+Then, register to [view the block](https://orion-docs.prefect.io/ui/blocks/) on Prefect Cloud:
+
+```bash
+prefect block register -m prefect_azure
+```
+
+Note, to use the `load` method on Blocks, you must already have a block document [saved through code](https://orion-docs.prefect.io/concepts/blocks/#saving-blocks) or [saved through the UI](https://orion-docs.prefect.io/ui/blocks/).
 
 ### Write and run a flow
 
@@ -67,6 +90,8 @@ example_blob_storage_download_flow()
 If you encounter and bugs while using `prefect-azure`, feel free to open an issue in the [prefect-azure](https://github.com/PrefectHQ/prefect-azure) repository.
 
 If you have any questions or issues while using `prefect-azure`, you can find help in either the [Prefect Discourse forum](https://discourse.prefect.io/) or the [Prefect Slack community](https://prefect.io/slack)
+
+Feel free to ⭐️ or watch [`prefect-azure`](https://github.com/PrefectHQ/prefect-azure) for updates too!
 
 ## Development
 
