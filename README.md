@@ -38,7 +38,7 @@ pip install "prefect-azure[ml_datastore]"
 ```
 
 
-### Write and run a flow
+### Download a blob
 
 ```python
 from prefect import flow
@@ -61,6 +61,49 @@ def example_blob_storage_download_flow():
 
 example_blob_storage_download_flow()
 ```
+
+### Deploy command on Container Instance
+
+Save the following as `prefect_azure_flow.py`:
+
+```python
+from prefect import flow
+from prefect_azure.credentials import ContainerInstanceCredentials
+from prefect_azure.container_instance import ContainerInstanceJob
+
+@flow
+def container_instance_job_flow():
+    aci_credentials = ContainerInstanceCredentials.load("MY_BLOCK_NAME")
+    container_instance_job = ContainerInstanceJob(
+        aci_credentials=aci_credentials,
+        resource_group_name="azurerm_resource_group.example.name",
+        command=["echo", "hello world"],
+    )
+    return container_instance_job.run()
+```
+
+Deploy `prefect_azure_flow.py`:
+
+```python
+from prefect.deployments import Deployment
+from prefect_azure_flow import container_instance_job_flow
+
+deployment = Deployment.build_from_flow(
+    flow=container_instance_job_flow,
+    name="container_instance_job_flow_deployment",
+    version=1,
+    work_queue_name="demo",
+)
+deployment.apply()
+```
+
+Run the deployment either on the UI or through the CLI:
+```bash
+prefect deployment run container-instance-job-flow/container_instance_job_deployment
+```
+
+Visit [Prefect Deployments](https://docs.prefect.io/tutorials/deployments/) for more information about deployments.
+
 
 ## Resources
 

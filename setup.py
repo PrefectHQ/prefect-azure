@@ -39,9 +39,6 @@ setup(
     extras_require=extras_require,
     entry_points={
         "prefect.collections": [
-            "AzureBlobStorageCredentials = prefect_azure.credentials",
-            "AzureCosmosDbCredentials = prefect_azure.credentials",
-            "AzureMlCredentials = prefect_azure.credentials",
             "prefect_azure = prefect_azure",
             "prefect_azure_container_instance = prefect_azure.container_instance",
         ]

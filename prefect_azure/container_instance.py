@@ -72,7 +72,7 @@ from azure.mgmt.resource import ResourceManagementClient
 from prefect.docker import get_prefect_image_name
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
-from pydantic import Field, SecretStr, validator
+from pydantic import Field, validator
 from typing_extensions import Literal
 
 from prefect_azure.credentials import ContainerInstanceCredentials
@@ -117,7 +117,7 @@ class ContainerInstanceJob(Infrastructure):
     Note this block is experimental. The interface may change without notice.
     """
 
-    _block_type_slug = "azure-container"
+    _block_type_slug = "container-instance-job"
     _block_type_name = "Azure Container Instance Job"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
     _description = "Run tasks using Azure Container Instances. Note this block is experimental. The interface may change without notice."  # noqa
@@ -132,11 +132,6 @@ class ContainerInstanceJob(Infrastructure):
         description=(
             "The name of the Azure Resource Group in which to run Prefect ACI tasks."
         ),
-    )
-    subscription_id: SecretStr = Field(
-        default=...,
-        title="Azure Subscription ID",
-        description="The ID of the Azure subscription to create containers under.",
     )
     image: Optional[str] = Field(
         default_factory=get_prefect_image_name,
@@ -258,9 +253,12 @@ class ContainerInstanceJob(Infrastructure):
 
         run_start_time = datetime.datetime.now(datetime.timezone.utc)
         token_credential = self._create_credential()
-        aci_client = self._create_container_client(token_credential)
+        subscription_id = self.aci_credentials.subscription_id.get_secret_value()
+        aci_client = self._create_container_client(token_credential, subscription_id)
         container = self._configure_container()
-        container_group = self._configure_container_group(token_credential, container)
+        container_group = self._configure_container_group(
+            token_credential, subscription_id, container
+        )
         created_container_group = None
 
         self.logger.info(
@@ -291,10 +289,7 @@ class ContainerInstanceJob(Infrastructure):
                 )
                 self.logger.info(f"{self._log_prefix}: Completed command run.")
             else:
-                self.logger.error(f"{self._log_prefix}: Container creation failed.")
-                status_code = -1
-                # note: we need to proceed to the `finally` block because even if
-                # provisioning failed, there may be a container group to clean up.
+                raise RuntimeError(f"{self._log_prefix}: Container creation failed.")
 
         finally:
             if created_container_group:
@@ -377,13 +372,17 @@ class ContainerInstanceJob(Infrastructure):
         return ResourceRequirements(requests=container_resource_requests)
 
     def _configure_container_group(
-        self, token_credential: TokenCredential, container: Container
+        self,
+        token_credential: TokenCredential,
+        subscription_id: str,
+        container: Container,
     ) -> ContainerGroup:
         """
         Configures the container group needed to start a container on ACI.
 
         Args:
             token_credential: A valid Azure `TokenCredential`.
+            subscription_id: The ID of the Azure subscription to create containers.
             container: An initialized instance of `Container`.
 
         Returns:
@@ -393,7 +392,9 @@ class ContainerInstanceJob(Infrastructure):
         # Load the resource group, so we can set the container group location
         # correctly.
 
-        resource_group_client = self._create_resource_client(token_credential)
+        resource_group_client = self._create_resource_client(
+            token_credential, subscription_id
+        )
         resource_group = resource_group_client.resource_groups.get(
             self.resource_group_name
         )
@@ -621,18 +622,21 @@ class ContainerInstanceJob(Infrastructure):
             classes.
         """
         return ClientSecretCredential(
-            tenant_id=self.aci_credentials.tenant_id.get_secret_value(),
-            client_id=self.aci_credentials.client_id.get_secret_value(),
+            tenant_id=self.aci_credentials.tenant_id,
+            client_id=self.aci_credentials.client_id,
             client_secret=self.aci_credentials.client_secret.get_secret_value(),
         )
 
-    def _create_container_client(self, token_credential: TokenCredential):
+    def _create_container_client(
+        self, token_credential: TokenCredential, subscription_id: str
+    ):
         """
         Creates an Azure Container Instances client initialized with data from
         this block's fields.
 
         Args:
-            token_credential: A valid Azure `TokenCredential`
+            token_credential: A valid Azure `TokenCredential`.
+            subscription_id: The ID of the Azure subscription to create containers.
 
         Returns:
             An initialized `ContainerInstanceManagementClient`
@@ -640,16 +644,19 @@ class ContainerInstanceJob(Infrastructure):
 
         return ContainerInstanceManagementClient(
             credential=token_credential,
-            subscription_id=self.subscription_id.get_secret_value(),
+            subscription_id=subscription_id,
         )
 
-    def _create_resource_client(self, token_credential: TokenCredential):
+    def _create_resource_client(
+        self, token_credential: TokenCredential, subscription_id: str
+    ):
         """
         Creates an Azure resource management client initialized with data from
         this block's fields.
 
         Args:
-            token_credential: A valid Azure `TokenCredential`
+            token_credential: A valid Azure `TokenCredential`.
+            subscription_id: The ID of the Azure subscription to create containers.
 
         Returns:
             An initialized `ResourceManagementClient`
@@ -657,7 +664,7 @@ class ContainerInstanceJob(Infrastructure):
 
         return ResourceManagementClient(
             credential=token_credential,
-            subscription_id=self.subscription_id.get_secret_value(),
+            subscription_id=subscription_id,
         )
 
     @property

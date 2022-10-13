@@ -3,7 +3,7 @@
 import functools
 from typing import TYPE_CHECKING
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 
 try:
     from azure.cosmos import CosmosClient
@@ -388,24 +388,23 @@ class ContainerInstanceCredentials(Block):
     """
     Block used to manage Azure Container Instances authentication. Stores Azure Service
     Principal authentication data.
-
-    Args:
-        client_id: The service principal client ID.
-        tenant_id: The service principal tenant ID.
-        client_secret: The service principal client secret.
-
-    Example:
-        Load stored Azure Blob Storage credentials:
-        ```python
-        from prefect_azure import ContainerInstanceCredentials
-        azure_credentials_block = ContainerInstanceCredentials.load("BLOCK_NAME")
-        ```
     """
 
     _block_type_slug = "container-instance-credentials"
     _block_type_name = "Azure Container Instance Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 
-    client_id: str
-    tenant_id: str
-    client_secret: SecretStr
+    client_id: str = Field(
+        default="...", title="Client ID", description="The service principal client ID."
+    )
+    tenant_id: str = Field(
+        default=..., title="Tenant ID", description="The service principal tenant ID."
+    )
+    client_secret: SecretStr = Field(
+        default=..., description="The service principal client secret."
+    )
+    subscription_id: SecretStr = Field(
+        default=...,
+        title="Azure Subscription ID",
+        description="The ID of the Azure subscription to create containers under.",
+    )
