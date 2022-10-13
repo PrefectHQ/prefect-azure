@@ -402,10 +402,10 @@ class ContainerInstanceCredentials(Block):
         ```
     """
 
-    _block_type_slug = "azure-container-credentials"
-    _block_type_name = "Azure Container Credentials"
+    _block_type_slug = "container-instance-credentials"
+    _block_type_name = "Azure Container Instance Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 
-    client_id: SecretStr
-    tenant_id: SecretStr
+    client_id: str
+    tenant_id: str
     client_secret: SecretStr

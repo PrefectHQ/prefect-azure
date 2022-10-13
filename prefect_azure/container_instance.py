@@ -75,7 +75,7 @@ from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compati
 from pydantic import Field, SecretStr, validator
 from typing_extensions import Literal
 
-from .credentials import ContainerInstanceCredentials
+from prefect_azure.credentials import ContainerInstanceCredentials
 
 ACI_DEFAULT_CPU = 1.0
 ACI_DEFAULT_MEMORY = 1.0
@@ -118,23 +118,23 @@ class ContainerInstanceJob(Infrastructure):
     """
 
     _block_type_slug = "azure-container"
-    _block_type_name = "Azure Container Instances"
+    _block_type_name = "Azure Container Instance Job"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
     _description = "Run tasks using Azure Container Instances. Note this block is experimental. The interface may change without notice."  # noqa
 
-    type: Literal["azure-container"] = Field(
-        default="azure-container", description="The slug for this task type."
+    type: Literal["container-instance-job"] = Field(
+        default="container-instance-job", description="The slug for this task type."
     )
-    aci_credentials: ContainerInstanceCredentials = None
+    aci_credentials: ContainerInstanceCredentials
     resource_group_name: str = Field(
-        ...,
+        default=...,
         title="Azure Resource Group Name",
         description=(
             "The name of the Azure Resource Group in which to run Prefect ACI tasks."
         ),
     )
     subscription_id: SecretStr = Field(
-        ...,
+        default=...,
         title="Azure Subscription ID",
         description="The ID of the Azure subscription to create containers under.",
     )
@@ -152,7 +152,7 @@ class ContainerInstanceJob(Infrastructure):
             "defaults to the entrypoint used by Prefect images and should only be "
             "changed when using a custom image that is not based on an official "
             "Prefect image. Any commands set on deployments will be passed "
-            " to the entrypoint as parameters."
+            "to the entrypoint as parameters."
         ),
     )
     image_registry: Optional[prefect.infrastructure.docker.DockerRegistry] = None
@@ -189,11 +189,11 @@ class ContainerInstanceJob(Infrastructure):
             "on the task definition."
         ),
     )
-    subnet_ids: List[str] = Field(
+    subnet_ids: Optional[List[str]] = Field(
         default=None,
         description="A list of Azure subnet IDs the container should be connected to.",
     )
-    stream_output: bool = Field(
+    stream_output: Optional[bool] = Field(
         default=None,
         description=(
             "If `True`, logs will be streamed from the Prefect container to the local "
@@ -316,7 +316,7 @@ class ContainerInstanceJob(Infrastructure):
            A string containing the summary.
         """
         preview = {
-            "container_name": "generated when run",
+            "container_name": "<generated when run>",
             "resource_group_name": self.resource_group_name,
             "memory": self.memory,
             "cpu": self.cpu,
@@ -383,8 +383,8 @@ class ContainerInstanceJob(Infrastructure):
         Configures the container group needed to start a container on ACI.
 
         Args:
-            token_credential: A valid Azure `TokenCredential`
-            container: An initialized instance of `Container`
+            token_credential: A valid Azure `TokenCredential`.
+            container: An initialized instance of `Container`.
 
         Returns:
             An initialized `ContainerGroup` ready to submit to Azure.
@@ -506,7 +506,6 @@ class ContainerInstanceJob(Infrastructure):
 
             if current_state == ContainerRunState.TERMINATED:
                 status_code = container.instance_view.current_state.exit_code
-                break
 
             time.sleep(self.task_watch_poll_interval)
 
