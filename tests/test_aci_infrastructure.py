@@ -16,6 +16,7 @@ from prefect_azure.container_instance import (
     ContainerGroupProvisioningState,
     ContainerInstanceJob,
     ContainerInstanceJobResult,
+    ContainerRunState,
 )
 
 # Helper functions
@@ -36,9 +37,9 @@ def credential_values(
         the credentials block
     """
     return (
-        credentials.client_id.get_secret_value(),
+        credentials.client_id,
         credentials.client_secret.get_secret_value(),
-        credentials.tenant_id.get_secret_value(),
+        credentials.tenant_id,
     )
 
 
@@ -65,14 +66,8 @@ def create_mock_container_group(state: str, exit_code: Union[int, None]):
 
 
 # Fixtures
-
-
-@pytest.fixture()
-def container_instance_block():
-    """
-    Returns a basic initialized ACI infrastructure block suitable for use
-    in a variety of tests.
-    """
+@pytest.fixture
+def aci_credentials():
     client_id = "testclientid"
     client_secret = "testclientsecret"
     tenant_id = "testtenandid"
@@ -80,10 +75,18 @@ def container_instance_block():
     credentials = ContainerInstanceCredentials(
         client_id=client_id, client_secret=client_secret, tenant_id=tenant_id
     )
+    return credentials
 
+
+@pytest.fixture()
+def container_instance_block(aci_credentials):
+    """
+    Returns a basic initialized ACI infrastructure block suitable for use
+    in a variety of tests.
+    """
     container_instance_block = ContainerInstanceJob(
         command=["test"],
-        aci_credentials=credentials,
+        aci_credentials=aci_credentials,
         resource_group_name="testgroup",
         subscription_id="subid",
         name=None,
@@ -97,16 +100,30 @@ def mock_aci_client(monkeypatch, mock_resource_client):
     """
     A fixture that provides a mock Azure Container Instances client
     """
-    mock_aci_client = Mock()
-    mock_container_groups = Mock()
-    mock_aci_client.container_groups.return_value = mock_container_groups
+    container_groups = Mock(name="container_group")
+    creation_status_poller = Mock(name="created container groups")
+    creation_status_poller_result = Mock(name="created container groups result")
+    container_groups.begin_create_or_update.side_effect = (
+        lambda *args: creation_status_poller
+    )
+    creation_status_poller.result.side_effect = lambda: creation_status_poller_result
+    creation_status_poller_result.provisioning_state = (
+        ContainerGroupProvisioningState.SUCCEEDED
+    )
+    container = Mock()
+    container.instance_view.current_state.exit_code = 0
+    container.instance_view.current_state.state = ContainerRunState.TERMINATED
+    containers = Mock(name="containers", containers=[container])
+    container_groups.get.side_effect = [containers]
+    creation_status_poller_result.containers = [containers]
+
+    aci_client = Mock(container_groups=container_groups)
     monkeypatch.setattr(
         ContainerInstanceJob,
         "_create_container_client",
-        Mock(return_value=mock_aci_client),
+        Mock(return_value=aci_client),
     )
-
-    return mock_aci_client
+    return aci_client
 
 
 @pytest.fixture()
@@ -145,46 +162,50 @@ def mock_resource_client(monkeypatch):
 # Tests
 
 
-def test_empty_list_command_validation(container_instance_block):
+def test_empty_list_command_validation(aci_credentials):
     # ensure that the default command is set automatically if the user
     # provides an empty command list
     aci_flow_run = ContainerInstanceJob(
         command=[],
         subscription_id=SecretStr("test"),
         resource_group_name="test",
+        aci_credentials=aci_credentials,
     )
     assert aci_flow_run.command == aci_flow_run._base_flow_run_command()
 
 
-def test_missing_command_validation():
+def test_missing_command_validation(aci_credentials):
     # ensure that the default command is set automatically if the user
     # provides None
     aci_flow_run = ContainerInstanceJob(
         command=None,
         subscription_id=SecretStr("test"),
         resource_group_name="test",
+        aci_credentials=aci_credentials,
     )
     assert aci_flow_run.command == aci_flow_run._base_flow_run_command()
 
 
-def test_valid_command_validation():
+def test_valid_command_validation(aci_credentials):
     # ensure the validator allows valid commands to pass through
     command = ["command", "arg1", "arg2"]
     aci_flow_run = ContainerInstanceJob(
         command=command,
         subscription_id=SecretStr("test"),
         resource_group_name="test",
+        aci_credentials=aci_credentials,
     )
     assert aci_flow_run.command == command
 
 
-def test_invalid_command_validation():
+def test_invalid_command_validation(aci_credentials):
     # ensure invalid commands cause a validation error
     with pytest.raises(ValueError):
         ContainerInstanceJob(
             command="invalid_command -a",
             subscription_id=SecretStr("test"),
             resource_group_name="test",
+            aci_credentials=aci_credentials,
         )
 
 
@@ -218,7 +239,8 @@ def test_container_client_creation(container_instance_block, monkeypatch):
 
     subscription_id = "test_subscription"
     container_instance_block.subscription_id = SecretStr(value=subscription_id)
-    container_instance_block.run()
+    with pytest.raises(RuntimeError):
+        container_instance_block.run()
 
     mock_resource_client_constructor.assert_called_once_with(
         credential=mock_azure_credential,
@@ -232,30 +254,24 @@ def test_container_client_creation(container_instance_block, monkeypatch):
 
 @pytest.mark.usefixtures("mock_aci_client")
 def test_credentials_are_used(
-    container_instance_block: ContainerInstanceJob, monkeypatch
+    container_instance_block: ContainerInstanceJob, mock_aci_client, monkeypatch
 ):
     credentials = container_instance_block.aci_credentials
     (client_id, client_secret, tenant_id) = credential_values(credentials)
 
-    mock_client_id = Mock(return_value=client_id)
     mock_client_secret = Mock(return_value=client_secret)
-    mock_tenant_id = Mock(return_value=tenant_id)
     mock_credential = Mock(wraps=ClientSecretCredential)
 
-    monkeypatch.setattr(credentials.client_id, "get_secret_value", mock_client_id)
     monkeypatch.setattr(
         credentials.client_secret, "get_secret_value", mock_client_secret
     )
-    monkeypatch.setattr(credentials.tenant_id, "get_secret_value", mock_tenant_id)
     monkeypatch.setattr(
         prefect_azure.container_instance, "ClientSecretCredential", mock_credential
     )
 
     container_instance_block.run()
 
-    mock_client_id.assert_called_once()
     mock_client_secret.assert_called_once()
-    mock_tenant_id.assert_called_once()
     mock_credential.assert_called_once_with(
         client_id=client_id, client_secret=client_secret, tenant_id=tenant_id
     )
@@ -316,7 +332,8 @@ def test_delete_after_group_creation_failure(
     monkeypatch.setattr(
         container_instance_block, "_wait_for_task_container_start", mock_container_group
     )
-    container_instance_block.run()
+    with pytest.raises(RuntimeError, match="Container creation failed"):
+        container_instance_block.run()
     mock_aci_client.container_groups.begin_delete.assert_called_once()
 
 
@@ -331,7 +348,8 @@ def test_no_delete_if_no_container_group(
         "_wait_for_task_container_start",
         Mock(return_value=None),
     )
-    container_instance_block.run()
+    with pytest.raises(RuntimeError, match="Container creation failed"):
+        container_instance_block.run()
     mock_aci_client.container_groups.begin_delete.assert_not_called()
 
 
@@ -339,13 +357,6 @@ def test_delete_after_group_creation_success(
     container_instance_block, mock_aci_client, monkeypatch
 ):
     # if provisioning was successful, the container group should eventually be deleted
-    mock_container_group = Mock()
-    mock_container_group.provisioning_state.return_value = (
-        ContainerGroupProvisioningState.SUCCEEDED
-    )
-    monkeypatch.setattr(
-        container_instance_block, "_wait_for_task_container_start", mock_container_group
-    )
     container_instance_block.run()
     mock_aci_client.container_groups.begin_delete.assert_called_once()
 
@@ -394,7 +405,8 @@ def test_task_status_not_started_on_provisioning_failure(
     )
 
     task_status = Mock(spec=TaskStatus)
-    container_instance_block.run(task_status=task_status)
+    with pytest.raises(RuntimeError, match="Container creation failed"):
+        container_instance_block.run(task_status=task_status)
     task_status.started.assert_not_called()
 
 
@@ -403,13 +415,15 @@ def test_provisioning_timeout_throws_exception(
 ):
     mock_poller = Mock()
     mock_poller.done.return_value = False
-    mock_aci_client.container_groups.begin_create_or_update.return_value = mock_poller
+    mock_aci_client.container_groups.begin_create_or_update.side_effect = (
+        lambda *args: mock_poller
+    )
 
     # avoid delaying test runs
-    container_instance_block.task_watch_poll_interval = 0.02
+    container_instance_block.task_watch_poll_interval = 0.09
     container_instance_block.task_start_timeout_seconds = 0.10
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match="Timed out after"):
         container_instance_block.run()
 
 
@@ -503,7 +517,7 @@ def test_subnets_included_when_present(container_instance_block, monkeypatch):
         assert subnet_id in subnet_ids
 
 
-def test_preview():
+def test_preview(aci_credentials):
     # ensures the preview generates the JSON expected
     block_args = {
         "resource_group_name": "test-group",
@@ -514,7 +528,9 @@ def test_preview():
         "env": {"FAVORITE_ANIMAL": "cat"},
     }
 
-    block = ContainerInstanceJob(**block_args, subscription_id=SecretStr("test"))
+    block = ContainerInstanceJob(
+        **block_args, aci_credentials=aci_credentials, subscription_id=SecretStr("test")
+    )
 
     preview = json.loads(block.preview())
 

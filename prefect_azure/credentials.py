@@ -403,8 +403,3 @@ class ContainerInstanceCredentials(Block):
     client_secret: SecretStr = Field(
         default=..., description="The service principal client secret."
     )
-    subscription_id: SecretStr = Field(
-        default=...,
-        title="Azure Subscription ID",
-        description="The ID of the Azure subscription to create containers under.",
-    )
