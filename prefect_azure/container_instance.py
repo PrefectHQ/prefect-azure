@@ -78,7 +78,7 @@ from azure.mgmt.resource import ResourceManagementClient
 from prefect.docker import get_prefect_image_name
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
-from pydantic import Field, SecretStr, validator
+from pydantic import Field, SecretStr
 from typing_extensions import Literal
 
 from prefect_azure.credentials import ContainerInstanceCredentials
@@ -228,23 +228,6 @@ class ContainerInstanceJob(Infrastructure):
             "state of an Azure Container Instances task."
         ),
     )
-
-    @validator("command")
-    def validate_command(cls, command: List[str]):
-        """
-        A Pydantic validator that ensures a command is available to run
-        in an Azure container instance.
-
-        Args:
-            command: The command to validate.
-
-        Returns:
-            A command list if present, otherwise the base flow run command.
-        """
-
-        if not command:
-            return cls._base_flow_run_command()
-        return command
 
     @sync_compatible
     async def run(
