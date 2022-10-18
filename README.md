@@ -85,7 +85,7 @@ def example_blob_storage_download_flow():
 example_blob_storage_download_flow()
 ```
 
-### Deploy command on Container Instance
+### Run a command on an Azure container instance
 
 Save the following as `prefect_azure_flow.py`:
 

@@ -12,6 +12,7 @@ Examples:
     ```python
     ContainerInstanceJob(command=["echo", "hello world"]).run()
     ```
+    
     Run a command and stream the container's output to the local terminal.
     ```python
     ContainerInstanceJob(
@@ -19,23 +20,28 @@ Examples:
         stream_output=True,
     )
     ```
+    
     Run a command with a specific image
     ```python
     ContainerInstanceJob(command=["echo", "hello world"], image="alpine:latest")
     ```
+    
     Run a task with custom memory and CPU requirements
     ```python
     ContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0)
     ```
+    
     Run a task with custom memory and CPU requirements
     ```python
     ContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0)
     ```
+    
     Run a task with custom memory, CPU, and GPU requirements
     ```python
     ContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0,
     gpu_count=1, gpu_sku="V100")
     ```
+    
     Run a task with custom environment variables
     ```python
     ContainerInstanceJob(command=["echo", "hello $PLANET"], env={"PLANET": "earth"})
@@ -106,8 +112,6 @@ class ContainerInstanceJobResult(InfrastructureResult):
     """
     The result of an `ContainerInstanceJob` run.
     """
-
-    pass
 
 
 class ContainerInstanceJob(Infrastructure):
@@ -603,7 +607,7 @@ class ContainerInstanceJob(Infrastructure):
                     last_written_time = line_time
             except dateutil.parser.ParserError as e:
                 self.logger.debug(
-                    "Unable to parse timestamp from Azure log line.",
+                    "Unable to parse timestamp from Azure log line: %s",
                     log_line,
                     exc_info=e,
                 )
