@@ -12,7 +12,7 @@ Examples:
     ```python
     ContainerInstanceJob(command=["echo", "hello world"]).run()
     ```
-    
+
     Run a command and stream the container's output to the local terminal.
     ```python
     ContainerInstanceJob(
@@ -20,28 +20,28 @@ Examples:
         stream_output=True,
     )
     ```
-    
+
     Run a command with a specific image
     ```python
     ContainerInstanceJob(command=["echo", "hello world"], image="alpine:latest")
     ```
-    
+
     Run a task with custom memory and CPU requirements
     ```python
     ContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0)
     ```
-    
+
     Run a task with custom memory and CPU requirements
     ```python
     ContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0)
     ```
-    
+
     Run a task with custom memory, CPU, and GPU requirements
     ```python
     ContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0,
     gpu_count=1, gpu_sku="V100")
     ```
-    
+
     Run a task with custom environment variables
     ```python
     ContainerInstanceJob(command=["echo", "hello $PLANET"], env={"PLANET": "earth"})
@@ -274,8 +274,11 @@ class ContainerInstanceJob(Infrastructure):
         try:
             self.logger.info(f"{self._log_prefix}: Waiting for container creation...")
             # Create the container group and wait for it to start
-            creation_status_poller = aci_client.container_groups.begin_create_or_update(
-                self.resource_group_name, container.name, container_group
+            creation_status_poller = await run_sync_in_worker_thread(
+                aci_client.container_groups.begin_create_or_update,
+                self.resource_group_name,
+                container.name,
+                container_group,
             )
             created_container_group = await run_sync_in_worker_thread(
                 self._wait_for_task_container_start, creation_status_poller
@@ -300,7 +303,8 @@ class ContainerInstanceJob(Infrastructure):
         finally:
             if created_container_group:
                 self.logger.info(f"{self._log_prefix}: Deleting container...")
-                aci_client.container_groups.begin_delete(
+                await run_sync_in_worker_thread(
+                    aci_client.container_groups.begin_delete,
                     resource_group_name=self.resource_group_name,
                     container_group_name=created_container_group.name,
                 )
@@ -323,7 +327,7 @@ class ContainerInstanceJob(Infrastructure):
             "cpu": self.cpu,
             "gpu_count": self.gpu_count,
             "gpu_sku": self.gpu_sku,
-            "env": self._environment,
+            "env": self._get_environment(),
         }
 
         return json.dumps(preview)
@@ -338,7 +342,8 @@ class ContainerInstanceJob(Infrastructure):
 
         # setup container environment variables
         environment = [
-            EnvironmentVariable(name=k, value=v) for (k, v) in self._environment.items()
+            EnvironmentVariable(name=k, value=v)
+            for (k, v) in self._get_environment().items()
         ]
         # all container names in a resource group must be unique
         container_name = str(uuid.uuid4())
@@ -662,8 +667,7 @@ class ContainerInstanceJob(Infrastructure):
             subscription_id=self.subscription_id.get_secret_value(),
         )
 
-    @property
-    def _environment(self):
+    def _get_environment(self):
         """
         Generates a dictionary of all environment variables to send to the
         ACI container.

@@ -99,13 +99,13 @@ def container_instance_job_flow():
     aci_credentials = ContainerInstanceCredentials.load("MY_BLOCK_NAME")
     container_instance_job = ContainerInstanceJob(
         aci_credentials=aci_credentials,
-        resource_group_name="azurerm_resource_group.example.name",
+        resource_group_name="azure_resource_group.example.name",
         command=["echo", "hello world"],
     )
     return container_instance_job.run()
 ```
 
-Deploy `prefect_azure_flow.py`:
+It's also possible to deploy `prefect_azure_flow.py`:
 
 ```python
 from prefect.deployments import Deployment
