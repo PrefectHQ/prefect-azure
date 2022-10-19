@@ -433,7 +433,6 @@ class ContainerInstanceJob(Infrastructure):
         t0 = time.time()
         timeout = self.task_start_timeout_seconds
 
-        print(creation_status_poller)
         while not creation_status_poller.done():
             elapsed_time = time.time() - t0
 
