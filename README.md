@@ -105,18 +105,21 @@ def container_instance_job_flow():
 
 ### Use Azure Container Instance as infrastructure
 
-If we have a `a_flow_module.py`:
+If we have `a_flow_module.py`:
 
 ```python
 from prefect import flow, get_run_logger
 
 @flow
-def log_hello_flow(name):
+def log_hello_flow(name="Marvin"):
     logger = get_run_logger()
     logger.info(f"{name} said hello!")
+
+if __name__ == "__main__":
+    log_hello_flow()
 ```
 
-We can run that flow using an Azure Container Instance, but first create the deployment:
+We can run that flow using an Azure Container Instance, but first create the infrastructure block:
 
 ```python
 from prefect_azure import ContainerInstanceCredentials
@@ -127,12 +130,12 @@ container_instance_job = ContainerInstanceJob(
     aci_credentials=ContainerInstanceCredentials.load("MY_BLOCK_NAME"),
     resource_group_name="azure_resource_group.example.name",
 )
-container_instance_job.save("aci_dev")
+container_instance_job.save("aci-dev")
 ```
 
-Create the deployment either on the UI or through the CLI:
+Then, create the deployment either on the UI or through the CLI:
 ```bash
-prefect deployment build a_flow_module.py:log_hello_flow --name aci_dev -ib container-instance-job/aci_dev
+prefect deployment build a_flow_module.py:log_hello_flow --name aci-dev -ib container-instance-job/aci-dev
 ```
 
 Visit [Prefect Deployments](https://docs.prefect.io/tutorials/deployments/) for more information about deployments.
