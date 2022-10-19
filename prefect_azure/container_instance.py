@@ -114,7 +114,7 @@ class ContainerInstanceJobResult(InfrastructureResult):
     """
 
 
-class ContainerInstanceJob(Infrastructure):
+class AzureContainerInstanceJob(Infrastructure):
     """
     <span class="badge-api experimental"/>
     Run a command using a container on Azure Container Instances.
