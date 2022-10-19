@@ -40,7 +40,6 @@ setup(
     entry_points={
         "prefect.collections": [
             "prefect_azure = prefect_azure",
-            "prefect_azure_container_instance = prefect_azure.container_instance",
         ]
     },
     classifiers=[
