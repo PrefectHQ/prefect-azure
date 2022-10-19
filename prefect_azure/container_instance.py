@@ -61,9 +61,7 @@ from typing import Dict, List, Optional
 import dateutil.parser
 import prefect.infrastructure.docker
 from anyio.abc import TaskStatus
-from azure.core.credentials import TokenCredential
 from azure.core.polling import LROPoller
-from azure.identity import ClientSecretCredential
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
 from azure.mgmt.containerinstance.models import (
     Container,
@@ -77,7 +75,6 @@ from azure.mgmt.containerinstance.models import (
     ResourceRequests,
     ResourceRequirements,
 )
-from azure.mgmt.resource import ResourceManagementClient
 from prefect.docker import get_prefect_image_name
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
@@ -111,7 +108,7 @@ class ContainerRunState(str, Enum):
     TERMINATED = "Terminated"
 
 
-class ContainerInstanceJobResult(InfrastructureResult):
+class AzureContainerInstanceJobResult(InfrastructureResult):
     """
     The result of an `AzureContainerInstanceJob` run.
     """
@@ -235,7 +232,7 @@ class AzureContainerInstanceJob(Infrastructure):
     @sync_compatible
     async def run(
         self, task_status: Optional[TaskStatus] = None
-    ) -> ContainerInstanceJobResult:
+    ) -> AzureContainerInstanceJobResult:
         """
         Runs the configured task using an ACI container.
 
@@ -243,15 +240,18 @@ class AzureContainerInstanceJob(Infrastructure):
             task_status: An optional `TaskStatus` to update when the container starts.
 
         Returns:
-            An `ContainerInstanceJobResult` with the container's exit code.
+            An `AzureContainerInstanceJobResult` with the container's exit code.
         """
 
         run_start_time = datetime.datetime.now(datetime.timezone.utc)
-        token_credential = self._create_credential()
-        aci_client = self._create_container_client(token_credential)
+
         container = self._configure_container()
-        container_group = self._configure_container_group(token_credential, container)
+        container_group = self._configure_container_group(container)
         created_container_group = None
+
+        aci_client = self.aci_credentials.get_container_client(
+            self.subscription_id.get_secret_value()
+        )
 
         self.logger.info(
             f"{self._log_prefix}: Preparing to run command {' '.join(self.command)!r} "
@@ -295,7 +295,7 @@ class AzureContainerInstanceJob(Infrastructure):
                     container_group_name=created_container_group.name,
                 )
 
-        return ContainerInstanceJobResult(
+        return AzureContainerInstanceJobResult(
             identifier=created_container_group.name, status_code=status_code
         )
 
@@ -368,14 +368,11 @@ class AzureContainerInstanceJob(Infrastructure):
 
         return ResourceRequirements(requests=container_resource_requests)
 
-    def _configure_container_group(
-        self, token_credential: TokenCredential, container: Container
-    ) -> ContainerGroup:
+    def _configure_container_group(self, container: Container) -> ContainerGroup:
         """
         Configures the container group needed to start a container on ACI.
 
         Args:
-            token_credential: A valid Azure `TokenCredential`.
             container: An initialized instance of `Container`.
 
         Returns:
@@ -385,7 +382,10 @@ class AzureContainerInstanceJob(Infrastructure):
         # Load the resource group, so we can set the container group location
         # correctly.
 
-        resource_group_client = self._create_resource_client(token_credential)
+        resource_group_client = self.aci_credentials.get_resource_client(
+            self.subscription_id.get_secret_value()
+        )
+
         resource_group = resource_group_client.resource_groups.get(
             self.resource_group_name
         )
@@ -603,54 +603,6 @@ class AzureContainerInstanceJob(Infrastructure):
                 )
 
         return last_written_time
-
-    def _create_credential(self):
-        """
-        Creates an Azure credential initialized with data from this block's fields.
-
-        Returns:
-            An initialized Azure `TokenCredential` ready to use with Azure SDK client
-            classes.
-        """
-        return ClientSecretCredential(
-            tenant_id=self.aci_credentials.tenant_id,
-            client_id=self.aci_credentials.client_id,
-            client_secret=self.aci_credentials.client_secret.get_secret_value(),
-        )
-
-    def _create_container_client(self, token_credential: TokenCredential):
-        """
-        Creates an Azure Container Instances client initialized with data from
-        this block's fields.
-
-        Args:
-            token_credential: A valid Azure `TokenCredential`
-
-        Returns:
-            An initialized `ContainerInstanceManagementClient`
-        """
-
-        return ContainerInstanceManagementClient(
-            credential=token_credential,
-            subscription_id=self.subscription_id.get_secret_value(),
-        )
-
-    def _create_resource_client(self, token_credential: TokenCredential):
-        """
-        Creates an Azure resource management client initialized with data from
-        this block's fields.
-
-        Args:
-            token_credential: A valid Azure `TokenCredential`
-
-        Returns:
-            An initialized `ResourceManagementClient`
-        """
-
-        return ResourceManagementClient(
-            credential=token_credential,
-            subscription_id=self.subscription_id.get_secret_value(),
-        )
 
     def _get_environment(self):
         """

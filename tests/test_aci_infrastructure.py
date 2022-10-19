@@ -15,8 +15,8 @@ import prefect_azure.container_instance
 from prefect_azure import AzureContainerInstanceCredentials
 from prefect_azure.container_instance import (
     AzureContainerInstanceJob,
+    AzureContainerInstanceJobResult,
     ContainerGroupProvisioningState,
-    ContainerInstanceJobResult,
     ContainerRunState,
 )
 
@@ -94,6 +94,8 @@ def container_instance_block(aci_credentials):
         resource_group_name="testgroup",
         subscription_id="subid",
         name=None,
+        task_watch_poll_interval=0.05,
+        task_start_timeout_seconds=0.10,
     )
 
     return container_instance_block
@@ -124,8 +126,8 @@ def mock_aci_client(monkeypatch, mock_resource_client):
 
     aci_client = Mock(container_groups=container_groups)
     monkeypatch.setattr(
-        AzureContainerInstanceJob,
-        "_create_container_client",
+        prefect_azure.credentials,
+        "ContainerInstanceManagementClient",
         Mock(return_value=aci_client),
     )
     return aci_client
@@ -157,8 +159,8 @@ def mock_resource_client(monkeypatch):
     mock_resource_client.resource_groups.get = Mock(side_effect=return_group)
 
     monkeypatch.setattr(
-        AzureContainerInstanceJob,
-        "_create_resource_client",
+        AzureContainerInstanceCredentials,
+        "get_resource_client",
         MagicMock(return_value=mock_resource_client),
     )
 
@@ -191,14 +193,16 @@ def test_invalid_command_validation(aci_credentials):
         )
 
 
-def test_container_client_creation(container_instance_block, monkeypatch):
+def test_container_client_creation(
+    aci_credentials, container_instance_block, monkeypatch
+):
     # verify that the Azure Container Instances client and Azure Resource clients
     # are created correctly.
 
     mock_azure_credential = Mock(spec=ClientSecretCredential)
     monkeypatch.setattr(
-        container_instance_block,
-        "_create_credential",
+        prefect_azure.credentials,
+        "ClientSecretCredential",
         Mock(return_value=mock_azure_credential),
     )
 
@@ -207,14 +211,14 @@ def test_container_client_creation(container_instance_block, monkeypatch):
     # with the correct information.
     mock_container_client_constructor = Mock()
     monkeypatch.setattr(
-        prefect_azure.container_instance,
+        prefect_azure.credentials,
         "ContainerInstanceManagementClient",
         mock_container_client_constructor,
     )
 
     mock_resource_client_constructor = Mock()
     monkeypatch.setattr(
-        prefect_azure.container_instance,
+        prefect_azure.credentials,
         "ResourceManagementClient",
         mock_resource_client_constructor,
     )
@@ -235,20 +239,18 @@ def test_container_client_creation(container_instance_block, monkeypatch):
 
 
 @pytest.mark.usefixtures("mock_aci_client")
-def test_credentials_are_used(
-    container_instance_block: AzureContainerInstanceJob, mock_aci_client, monkeypatch
-):
+def test_credentials_are_used(container_instance_block, mock_aci_client, monkeypatch):
     credentials = container_instance_block.aci_credentials
     (client_id, client_secret, tenant_id) = credential_values(credentials)
 
-    mock_client_secret = Mock(return_value=client_secret)
+    mock_client_secret = Mock(name="Mock client secret", return_value=client_secret)
     mock_credential = Mock(wraps=ClientSecretCredential)
 
     monkeypatch.setattr(
         credentials.client_secret, "get_secret_value", mock_client_secret
     )
     monkeypatch.setattr(
-        prefect_azure.container_instance, "ClientSecretCredential", mock_credential
+        prefect_azure.credentials, "ClientSecretCredential", mock_credential
     )
 
     container_instance_block.run()
@@ -450,7 +452,7 @@ def test_watch_for_container_termination(
     assert run_count == 5
     assert mock_aci_client.container_groups.get.call_count == run_count
     # ensure the run completed
-    assert isinstance(result, ContainerInstanceJobResult)
+    assert isinstance(result, AzureContainerInstanceJobResult)
 
 
 def test_watch_for_quick_termination(
@@ -479,7 +481,7 @@ def test_watch_for_quick_termination(
     # already completed.
     mock_aci_client.container_groups.get.assert_not_called()
     # ensure the run completed
-    assert isinstance(result, ContainerInstanceJobResult)
+    assert isinstance(result, AzureContainerInstanceJobResult)
 
 
 @pytest.mark.usefixtures("mock_aci_client")
