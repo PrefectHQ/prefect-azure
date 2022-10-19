@@ -225,7 +225,7 @@ class ContainerInstanceJob(Infrastructure):
     task_watch_poll_interval: float = Field(
         default=5.0,
         description=(
-            "The amount of time to wait between Azure API calls while monitoring the "
+            "The number of seconds to wait between Azure API calls while monitoring the "
             "state of an Azure Container Instances task."
         ),
     )
