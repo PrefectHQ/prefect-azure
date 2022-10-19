@@ -195,6 +195,7 @@ class ContainerInstanceJob(Infrastructure):
     )
     subnet_ids: Optional[List[str]] = Field(
         default=None,
+        title="Subnet IDs",
         description="A list of Azure subnet IDs the container should be connected to.",
     )
     stream_output: Optional[bool] = Field(
