@@ -272,7 +272,7 @@ class ContainerInstanceJob(Infrastructure):
             if self._provisioning_succeeded(created_container_group):
                 self.logger.info(f"{self._log_prefix}: Running command...")
                 if task_status:
-                    task_status.started(value=container.name)
+                    task_status.started(value=created_container_group.name)
                 status_code = await run_sync_in_worker_thread(
                     self._watch_task_and_get_exit_code,
                     aci_client,
@@ -293,7 +293,7 @@ class ContainerInstanceJob(Infrastructure):
                 )
 
         return ContainerInstanceJobResult(
-            identifier=container.name, status_code=status_code
+            identifier=created_container_group.name, status_code=status_code
         )
 
     def preview(self) -> str:

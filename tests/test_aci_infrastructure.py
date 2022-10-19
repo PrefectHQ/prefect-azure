@@ -1,4 +1,5 @@
 import json
+import uuid
 from typing import Tuple, Union
 from unittest.mock import MagicMock, Mock
 
@@ -62,6 +63,9 @@ def create_mock_container_group(state: str, exit_code: Union[int, None]):
     container.instance_view.current_state.exit_code = exit_code
     containers.__getitem__.return_value = container
     container_group.containers = containers
+    # Azure assigns all provisioned container groups a stringified
+    # UUID name.
+    container_group.name = str(uuid.uuid4())
     return container_group
 
 
@@ -110,6 +114,7 @@ def mock_aci_client(monkeypatch, mock_resource_client):
     creation_status_poller_result.provisioning_state = (
         ContainerGroupProvisioningState.SUCCEEDED
     )
+    creation_status_poller_result.name = str(uuid.uuid4())
     container = Mock()
     container.instance_view.current_state.exit_code = 0
     container.instance_view.current_state.state = ContainerRunState.TERMINATED
@@ -132,6 +137,7 @@ def mock_successful_container_group():
     A fixture that returns a mock container group that mimics a successfully
     provisioned container group returned from Azure.
     """
+
     return create_mock_container_group(state="Terminated", exit_code=0)
 
 
@@ -369,7 +375,9 @@ def test_task_status_started_on_provisioning_success(
     task_status = Mock(spec=TaskStatus)
     container_instance_block.run(task_status=task_status)
 
-    task_status.started.assert_called_once()
+    task_status.started.assert_called_once_with(
+        value=mock_successful_container_group.name
+    )
 
 
 @pytest.mark.usefixtures("mock_aci_client")
