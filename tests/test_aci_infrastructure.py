@@ -162,30 +162,6 @@ def mock_resource_client(monkeypatch):
 # Tests
 
 
-def test_empty_list_command_validation(aci_credentials):
-    # ensure that the default command is set automatically if the user
-    # provides an empty command list
-    aci_flow_run = ContainerInstanceJob(
-        command=[],
-        subscription_id=SecretStr("test"),
-        resource_group_name="test",
-        aci_credentials=aci_credentials,
-    )
-    assert aci_flow_run.command == aci_flow_run._base_flow_run_command()
-
-
-def test_missing_command_validation(aci_credentials):
-    # ensure that the default command is set automatically if the user
-    # provides None
-    aci_flow_run = ContainerInstanceJob(
-        command=None,
-        subscription_id=SecretStr("test"),
-        resource_group_name="test",
-        aci_credentials=aci_credentials,
-    )
-    assert aci_flow_run.command == aci_flow_run._base_flow_run_command()
-
-
 def test_valid_command_validation(aci_credentials):
     # ensure the validator allows valid commands to pass through
     command = ["command", "arg1", "arg2"]
