@@ -10,12 +10,12 @@ examples.
 Examples:
     Run a command using an Azure Container Instances container.
     ```python
-    ContainerInstanceJob(command=["echo", "hello world"]).run()
+    AzureContainerInstanceJob(command=["echo", "hello world"]).run()
     ```
 
     Run a command and stream the container's output to the local terminal.
     ```python
-    ContainerInstanceJob(
+    AzureContainerInstanceJob(
         command=["echo", "hello world"],
         stream_output=True,
     )
@@ -23,28 +23,31 @@ Examples:
 
     Run a command with a specific image
     ```python
-    ContainerInstanceJob(command=["echo", "hello world"], image="alpine:latest")
+    AzureContainerInstanceJob(command=["echo", "hello world"], image="alpine:latest")
     ```
 
     Run a task with custom memory and CPU requirements
     ```python
-    ContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0)
+    AzureContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0)
     ```
 
     Run a task with custom memory and CPU requirements
     ```python
-    ContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0)
+    AzureContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0)
     ```
 
     Run a task with custom memory, CPU, and GPU requirements
     ```python
-    ContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0,
+    AzureContainerInstanceJob(command=["echo", "hello world"], memory=1.0, cpu=1.0,
     gpu_count=1, gpu_sku="V100")
     ```
 
     Run a task with custom environment variables
     ```python
-    ContainerInstanceJob(command=["echo", "hello $PLANET"], env={"PLANET": "earth"})
+    AzureContainerInstanceJob(
+        command=["echo", "hello $PLANET"],
+        env={"PLANET": "earth"}
+    )
     ```
 """
 import datetime
@@ -81,7 +84,7 @@ from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compati
 from pydantic import Field, SecretStr
 from typing_extensions import Literal
 
-from prefect_azure.credentials import ContainerInstanceCredentials
+from prefect_azure.credentials import AzureContainerInstanceCredentials
 
 ACI_DEFAULT_CPU = 1.0
 ACI_DEFAULT_MEMORY = 1.0
@@ -110,7 +113,7 @@ class ContainerRunState(str, Enum):
 
 class ContainerInstanceJobResult(InfrastructureResult):
     """
-    The result of an `ContainerInstanceJob` run.
+    The result of an `AzureContainerInstanceJob` run.
     """
 
 
@@ -121,7 +124,6 @@ class AzureContainerInstanceJob(Infrastructure):
     Note this block is experimental. The interface may change without notice.
     """
 
-    _block_type_slug = "container-instance-job"
     _block_type_name = "Azure Container Instance Job"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
     _description = "Run tasks using Azure Container Instances. Note this block is experimental. The interface may change without notice."  # noqa
@@ -129,7 +131,7 @@ class AzureContainerInstanceJob(Infrastructure):
     type: Literal["container-instance-job"] = Field(
         default="container-instance-job", description="The slug for this task type."
     )
-    aci_credentials: ContainerInstanceCredentials
+    aci_credentials: AzureContainerInstanceCredentials
     resource_group_name: str = Field(
         default=...,
         title="Azure Resource Group Name",
@@ -225,8 +227,8 @@ class AzureContainerInstanceJob(Infrastructure):
     task_watch_poll_interval: float = Field(
         default=5.0,
         description=(
-            "The number of seconds to wait between Azure API calls while monitoring the "
-            "state of an Azure Container Instances task."
+            "The number of seconds to wait between Azure API calls while monitoring "
+            "the state of an Azure Container Instances task."
         ),
     )
 
@@ -352,7 +354,7 @@ class AzureContainerInstanceJob(Infrastructure):
 
         Returns:
             A `ResourceRequirements` instance initialized with data from this
-            `ContainerInstanceJob` block.
+            `AzureContainerInstanceJob` block.
         """
 
         gpu_resource = (
@@ -663,9 +665,9 @@ class AzureContainerInstanceJob(Infrastructure):
         Internal property for generating a prefix for logs where `name` may be null
         """
         if self.name is not None:
-            return f"ContainerInstanceJob {self.name!r}"
+            return f"AzureContainerInstanceJob {self.name!r}"
         else:
-            return "ContainerInstanceJob"
+            return "AzureContainerInstanceJob"
 
     @staticmethod
     def _provisioning_succeeded(container_group: ContainerGroup) -> bool:

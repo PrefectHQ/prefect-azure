@@ -12,10 +12,10 @@ from azure.mgmt.resource import ResourceManagementClient
 from pydantic import SecretStr
 
 import prefect_azure.container_instance
-from prefect_azure import ContainerInstanceCredentials
+from prefect_azure import AzureContainerInstanceCredentials
 from prefect_azure.container_instance import (
+    AzureContainerInstanceJob,
     ContainerGroupProvisioningState,
-    ContainerInstanceJob,
     ContainerInstanceJobResult,
     ContainerRunState,
 )
@@ -24,7 +24,7 @@ from prefect_azure.container_instance import (
 
 
 def credential_values(
-    credentials: ContainerInstanceCredentials,
+    credentials: AzureContainerInstanceCredentials,
 ) -> Tuple[str, str, str]:
     """
     Helper function to extract values from an Azure container instances
@@ -76,7 +76,7 @@ def aci_credentials():
     client_secret = "testclientsecret"
     tenant_id = "testtenandid"
 
-    credentials = ContainerInstanceCredentials(
+    credentials = AzureContainerInstanceCredentials(
         client_id=client_id, client_secret=client_secret, tenant_id=tenant_id
     )
     return credentials
@@ -88,7 +88,7 @@ def container_instance_block(aci_credentials):
     Returns a basic initialized ACI infrastructure block suitable for use
     in a variety of tests.
     """
-    container_instance_block = ContainerInstanceJob(
+    container_instance_block = AzureContainerInstanceJob(
         command=["test"],
         aci_credentials=aci_credentials,
         resource_group_name="testgroup",
@@ -124,7 +124,7 @@ def mock_aci_client(monkeypatch, mock_resource_client):
 
     aci_client = Mock(container_groups=container_groups)
     monkeypatch.setattr(
-        ContainerInstanceJob,
+        AzureContainerInstanceJob,
         "_create_container_client",
         Mock(return_value=aci_client),
     )
@@ -157,7 +157,7 @@ def mock_resource_client(monkeypatch):
     mock_resource_client.resource_groups.get = Mock(side_effect=return_group)
 
     monkeypatch.setattr(
-        ContainerInstanceJob,
+        AzureContainerInstanceJob,
         "_create_resource_client",
         MagicMock(return_value=mock_resource_client),
     )
@@ -171,7 +171,7 @@ def mock_resource_client(monkeypatch):
 def test_valid_command_validation(aci_credentials):
     # ensure the validator allows valid commands to pass through
     command = ["command", "arg1", "arg2"]
-    aci_flow_run = ContainerInstanceJob(
+    aci_flow_run = AzureContainerInstanceJob(
         command=command,
         subscription_id=SecretStr("test"),
         resource_group_name="test",
@@ -183,7 +183,7 @@ def test_valid_command_validation(aci_credentials):
 def test_invalid_command_validation(aci_credentials):
     # ensure invalid commands cause a validation error
     with pytest.raises(ValueError):
-        ContainerInstanceJob(
+        AzureContainerInstanceJob(
             command="invalid_command -a",
             subscription_id=SecretStr("test"),
             resource_group_name="test",
@@ -236,7 +236,7 @@ def test_container_client_creation(container_instance_block, monkeypatch):
 
 @pytest.mark.usefixtures("mock_aci_client")
 def test_credentials_are_used(
-    container_instance_block: ContainerInstanceJob, mock_aci_client, monkeypatch
+    container_instance_block: AzureContainerInstanceJob, mock_aci_client, monkeypatch
 ):
     credentials = container_instance_block.aci_credentials
     (client_id, client_secret, tenant_id) = credential_values(credentials)
@@ -512,7 +512,7 @@ def test_preview(aci_credentials):
         "env": {"FAVORITE_ANIMAL": "cat"},
     }
 
-    block = ContainerInstanceJob(
+    block = AzureContainerInstanceJob(
         **block_args, aci_credentials=aci_credentials, subscription_id=SecretStr("test")
     )
 

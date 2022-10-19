@@ -89,13 +89,14 @@ example_blob_storage_download_flow()
 
 ```python
 from prefect import flow
-from prefect_azure import ContainerInstanceCredentials
-from prefect_azure.container_instance import ContainerInstanceJob
+from prefect_azure import AzureContainerInstanceCredentials
+from prefect_azure.container_instance import AzureContainerInstanceJob
+
 
 @flow
 def container_instance_job_flow():
-    aci_credentials = ContainerInstanceCredentials.load("MY_BLOCK_NAME")
-    container_instance_job = ContainerInstanceJob(
+    aci_credentials = AzureContainerInstanceCredentials.load("MY_BLOCK_NAME")
+    container_instance_job = AzureContainerInstanceJob(
         aci_credentials=aci_credentials,
         resource_group_name="azure_resource_group.example.name",
         subscription_id="<MY_AZURE_SUBSCRIPTION_ID>",
@@ -123,11 +124,11 @@ if __name__ == "__main__":
 We can run that flow using an Azure Container Instance, but first create the infrastructure block:
 
 ```python
-from prefect_azure import ContainerInstanceCredentials
-from prefect_azure.container_instance import ContainerInstanceJob
+from prefect_azure import AzureContainerInstanceCredentials
+from prefect_azure.container_instance import AzureContainerInstanceJob
 
-container_instance_job = ContainerInstanceJob(
-    aci_credentials=ContainerInstanceCredentials.load("MY_BLOCK_NAME"),
+container_instance_job = AzureContainerInstanceJob(
+    aci_credentials=AzureContainerInstanceCredentials.load("MY_BLOCK_NAME"),
     resource_group_name="azure_resource_group.example.name",
     subscription_id="<MY_AZURE_SUBSCRIPTION_ID>",
 )

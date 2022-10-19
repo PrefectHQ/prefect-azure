@@ -384,7 +384,7 @@ class AzureMlCredentials(Block):
         return workspace
 
 
-class ContainerInstanceCredentials(Block):
+class AzureContainerInstanceCredentials(Block):
     """
     Block used to manage Azure Container Instances authentication. Stores Azure Service
     Principal authentication data.
