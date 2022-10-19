@@ -98,6 +98,7 @@ def container_instance_job_flow():
     container_instance_job = ContainerInstanceJob(
         aci_credentials=aci_credentials,
         resource_group_name="azure_resource_group.example.name",
+        subscription_id="<MY_AZURE_SUBSCRIPTION_ID>",
         command=["echo", "hello world"],
     )
     return container_instance_job.run()
@@ -126,9 +127,9 @@ from prefect_azure import ContainerInstanceCredentials
 from prefect_azure.container_instance import ContainerInstanceJob
 
 container_instance_job = ContainerInstanceJob(
-    namespace="dev",
     aci_credentials=ContainerInstanceCredentials.load("MY_BLOCK_NAME"),
     resource_group_name="azure_resource_group.example.name",
+    subscription_id="<MY_AZURE_SUBSCRIPTION_ID>",
 )
 container_instance_job.save("aci-dev")
 ```
