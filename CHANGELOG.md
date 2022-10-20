@@ -25,7 +25,7 @@ Released on October 20th, 2022.
 
 ### Added
 
-- Azure Container Instances infrastructure block - [#45](https://github.com/PrefectHQ/prefect-azure/pull/45)
+- `AzureContainerInstanceJob` infrastructure block - [#45](https://github.com/PrefectHQ/prefect-azure/pull/45)
 
 ## 0.2.0
 
