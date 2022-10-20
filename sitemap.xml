@@ -1,23 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://prefecthq.github.io/prefect-azure/</loc>
-         <lastmod>2022-07-26</lastmod>
+         <loc>https://PrefectHQ.github.io/prefect-azure/</loc>
+         <lastmod>2022-10-20</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://prefecthq.github.io/prefect-azure/blob_storage/</loc>
-         <lastmod>2022-07-26</lastmod>
+         <loc>https://PrefectHQ.github.io/prefect-azure/blob_storage/</loc>
+         <lastmod>2022-10-20</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://prefecthq.github.io/prefect-azure/credentials/</loc>
-         <lastmod>2022-07-26</lastmod>
+         <loc>https://PrefectHQ.github.io/prefect-azure/container_instance/</loc>
+         <lastmod>2022-10-20</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://prefecthq.github.io/prefect-azure/ml_datastore/</loc>
-         <lastmod>2022-07-26</lastmod>
+         <loc>https://PrefectHQ.github.io/prefect-azure/credentials/</loc>
+         <lastmod>2022-10-20</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://PrefectHQ.github.io/prefect-azure/ml_datastore/</loc>
+         <lastmod>2022-10-20</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
