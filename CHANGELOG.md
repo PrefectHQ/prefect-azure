@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## 0.2.1
+
+Released on October 20th, 2022.
+
+- Azure Container Instances infrastructure block - [#45](https://github.com/PrefectHQ/prefect-azure/pull/45)
+
 ## 0.2.0
 
 Released on July 26th, 2022.
