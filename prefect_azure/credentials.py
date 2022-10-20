@@ -3,7 +3,10 @@
 import functools
 from typing import TYPE_CHECKING
 
-from pydantic import SecretStr
+from azure.identity import ClientSecretCredential
+from azure.mgmt.containerinstance import ContainerInstanceManagementClient
+from azure.mgmt.resource import ResourceManagementClient
+from pydantic import Field, SecretStr
 
 try:
     from azure.cosmos import CosmosClient
@@ -382,3 +385,71 @@ class AzureMlCredentials(Block):
         )
 
         return workspace
+
+
+class AzureContainerInstanceCredentials(Block):
+    """
+    Block used to manage Azure Container Instances authentication. Stores Azure Service
+    Principal authentication data.
+    """
+
+    _block_type_name = "Azure Container Instance Credentials"
+    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+
+    client_id: str = Field(
+        default="...", title="Client ID", description="The service principal client ID."
+    )
+    tenant_id: str = Field(
+        default=..., title="Tenant ID", description="The service principal tenant ID."
+    )
+    client_secret: SecretStr = Field(
+        default=..., description="The service principal client secret."
+    )
+
+    def get_container_client(self, subscription_id: str):
+        """
+        Creates an Azure Container Instances client initialized with data from
+        this block's fields and a provided Azure subscription ID.
+
+        Args:
+            subscription_id: A valid Azure subscription ID.
+
+        Returns:
+            An initialized `ContainerInstanceManagementClient`
+        """
+
+        return ContainerInstanceManagementClient(
+            credential=self._create_credential(),
+            subscription_id=subscription_id,
+        )
+
+    def get_resource_client(self, subscription_id: str):
+        """
+        Creates an Azure resource management client initialized with data from
+        this block's fields and a provided Azure subscription ID.
+
+        Args:
+            subscription_id: A valid Azure subscription ID.
+
+        Returns:
+            An initialized `ResourceManagementClient`
+        """
+
+        return ResourceManagementClient(
+            credential=self._create_credential(),
+            subscription_id=subscription_id,
+        )
+
+    def _create_credential(self):
+        """
+        Creates an Azure credential initialized with data from this block's fields.
+
+        Returns:
+            An initialized Azure `TokenCredential` ready to use with Azure SDK client
+            classes.
+        """
+        return ClientSecretCredential(
+            tenant_id=self.tenant_id,
+            client_id=self.client_id,
+            client_secret=self.client_secret.get_secret_value(),
+        )

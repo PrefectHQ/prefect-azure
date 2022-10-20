@@ -61,7 +61,7 @@ prefect block register -m prefect_azure
 
 Note, to use the `load` method on Blocks, you must already have a block document [saved through code](https://orion-docs.prefect.io/concepts/blocks/#saving-blocks) or [saved through the UI](https://orion-docs.prefect.io/ui/blocks/).
 
-### Write and run a flow
+### Download a blob
 
 ```python
 from prefect import flow
@@ -84,6 +84,64 @@ def example_blob_storage_download_flow():
 
 example_blob_storage_download_flow()
 ```
+
+### Run a command on an Azure container instance
+
+```python
+from prefect import flow
+from prefect_azure import AzureContainerInstanceCredentials
+from prefect_azure.container_instance import AzureContainerInstanceJob
+
+
+@flow
+def container_instance_job_flow():
+    aci_credentials = AzureContainerInstanceCredentials.load("MY_BLOCK_NAME")
+    container_instance_job = AzureContainerInstanceJob(
+        aci_credentials=aci_credentials,
+        resource_group_name="azure_resource_group.example.name",
+        subscription_id="<MY_AZURE_SUBSCRIPTION_ID>",
+        command=["echo", "hello world"],
+    )
+    return container_instance_job.run()
+```
+
+### Use Azure Container Instance as infrastructure
+
+If we have `a_flow_module.py`:
+
+```python
+from prefect import flow, get_run_logger
+
+@flow
+def log_hello_flow(name="Marvin"):
+    logger = get_run_logger()
+    logger.info(f"{name} said hello!")
+
+if __name__ == "__main__":
+    log_hello_flow()
+```
+
+We can run that flow using an Azure Container Instance, but first create the infrastructure block:
+
+```python
+from prefect_azure import AzureContainerInstanceCredentials
+from prefect_azure.container_instance import AzureContainerInstanceJob
+
+container_instance_job = AzureContainerInstanceJob(
+    aci_credentials=AzureContainerInstanceCredentials.load("MY_BLOCK_NAME"),
+    resource_group_name="azure_resource_group.example.name",
+    subscription_id="<MY_AZURE_SUBSCRIPTION_ID>",
+)
+container_instance_job.save("aci-dev")
+```
+
+Then, create the deployment either on the UI or through the CLI:
+```bash
+prefect deployment build a_flow_module.py:log_hello_flow --name aci-dev -ib container-instance-job/aci-dev
+```
+
+Visit [Prefect Deployments](https://docs.prefect.io/tutorials/deployments/) for more information about deployments.
+
 
 ## Resources
 

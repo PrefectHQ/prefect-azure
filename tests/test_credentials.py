@@ -56,10 +56,9 @@ def test_get_cosmos_client(cosmos_connection_string):
         client = AzureCosmosDbCredentials(
             connection_string=cosmos_connection_string
         ).get_client()
-        return client
+        assert isinstance(client, CosmosClientMock)
 
-    client = test_flow()
-    assert isinstance(client, CosmosClientMock)
+    test_flow()
 
 
 def test_get_database_client(cosmos_connection_string):
@@ -68,10 +67,9 @@ def test_get_database_client(cosmos_connection_string):
         client = AzureCosmosDbCredentials(
             connection_string=cosmos_connection_string
         ).get_database_client("database")
-        return client
+        assert client.database == "database"
 
-    client = test_flow()
-    assert client.database == "database"
+    test_flow()
 
 
 def test_get_cosmos_container_client(cosmos_connection_string):
@@ -80,10 +78,9 @@ def test_get_cosmos_container_client(cosmos_connection_string):
         client = AzureCosmosDbCredentials(
             connection_string=cosmos_connection_string
         ).get_container_client("container", "database")
-        return client
+        assert client.container == "container"
 
-    client = test_flow()
-    assert client.container == "container"
+    test_flow()
 
 
 def test_get_workspace(monkeypatch):
@@ -99,7 +96,6 @@ def test_get_workspace(monkeypatch):
             resource_group="resource_group",
             workspace_name="workspace_name",
         ).get_workspace()
-        return workspace
+        assert isinstance(workspace, MagicMock)
 
-    workspace = test_flow()
-    assert isinstance(workspace, MagicMock)
+    test_flow()
