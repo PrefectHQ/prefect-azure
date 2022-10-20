@@ -613,3 +613,9 @@ def test_output_streaming(
     # and should not be written twice, and one has a broken timestamp so should
     # not be written
     assert mock_write_call.call_count == 6
+
+
+def test_block_accessible_in_module_toplevel():
+    # will raise an exception and fail the test if `AzureContainerInstanceJob`
+    # is not accessible directly from `prefect_azure`
+    from prefect_azure import AzureContainerInstanceJob  # noqa

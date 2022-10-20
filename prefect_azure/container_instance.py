@@ -1,11 +1,11 @@
 """
 <span class="badge-api experimental"/>
-Integrations with the Azure Container Instances.
+Integrations with the Azure Container Instances service.
 Note this module is experimental. The interfaces within may change without notice.
 
-The infrastructure block in the module is ideally configured via the Prefect UI and run
-via a Prefect agent, but it can be called directly as demonstrated in the following
-examples.
+The `AzureContainerInstanceJob` infrastructure block in this module is ideally
+configured via the Prefect UI and run via a Prefect agent, but it can be called directly
+as demonstrated in the following examples.
 
 Examples:
     Run a command using an Azure Container Instances container.

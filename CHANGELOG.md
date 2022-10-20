@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
-
+- Made `AzureContainerInstanceJob` accessible directly from the `prefect_azure` module. 
 ### Changed
 
 ### Deprecated
