@@ -390,12 +390,14 @@ class AzureContainerInstanceJob(Infrastructure):
             self.resource_group_name
         )
 
-        image_registry_credential = (
-            ImageRegistryCredential(
-                server=self.image_registry.registry_url,
-                username=self.image_registry.username,
-                password=self.image_registry.password.get_secret_value(),
-            )
+        image_registry_credentials = (
+            [
+                ImageRegistryCredential(
+                    server=self.image_registry.registry_url,
+                    username=self.image_registry.username,
+                    password=self.image_registry.password.get_secret_value(),
+                )
+            ]
             if self.image_registry
             else None
         )
@@ -411,7 +413,7 @@ class AzureContainerInstanceJob(Infrastructure):
             containers=[container],
             os_type=OperatingSystemTypes.linux,
             restart_policy=ContainerGroupRestartPolicy.never,
-            image_registry_credentials=image_registry_credential,
+            image_registry_credentials=image_registry_credentials,
             subnet_ids=subnet_ids,
         )
 
