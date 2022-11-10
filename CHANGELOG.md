@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
-
+ 
 ### Changed
 
 ### Deprecated
@@ -18,6 +18,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
+
+## 0.2.2
+
+Released on October 20th, 2022.
+
+### Changed
+
+- Made `AzureContainerInstanceJob` accessible directly from the `prefect_azure` module - [#50](https://github.com/PrefectHQ/prefect-azure/pull/50)
+
+## 0.2.1
+
+Released on October 20th, 2022.
+
+### Added
+
+- `AzureContainerInstanceJob` infrastructure block - [#45](https://github.com/PrefectHQ/prefect-azure/pull/45)
 
 ## 0.2.0
 
