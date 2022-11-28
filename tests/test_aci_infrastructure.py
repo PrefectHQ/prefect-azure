@@ -1,6 +1,6 @@
 import json
 import uuid
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 from unittest.mock import MagicMock, Mock
 
 import dateutil.parser
@@ -8,7 +8,9 @@ import pytest
 from anyio.abc import TaskStatus
 from azure.core.exceptions import HttpResponseError
 from azure.identity import ClientSecretCredential
+from azure.mgmt.containerinstance.models import ImageRegistryCredential
 from azure.mgmt.resource import ResourceManagementClient
+from prefect.infrastructure.docker import DockerRegistry
 from pydantic import SecretStr
 
 import prefect_azure.container_instance
@@ -619,3 +621,40 @@ def test_block_accessible_in_module_toplevel():
     # will raise an exception and fail the test if `AzureContainerInstanceJob`
     # is not accessible directly from `prefect_azure`
     from prefect_azure import AzureContainerInstanceJob  # noqa
+
+
+def test_registry_credentials(container_instance_block, mock_aci_client, monkeypatch):
+    mock_container_group_constructor = MagicMock()
+
+    monkeypatch.setattr(
+        prefect_azure.container_instance,
+        "ContainerGroup",
+        mock_container_group_constructor,
+    )
+
+    registry = DockerRegistry(
+        username="username",
+        password="password",
+        registry_url="https://myregistry.dockerhub.com",
+    )
+
+    container_instance_block.image_registry = registry
+    container_instance_block.run()
+
+    mock_container_group_constructor.assert_called_once()
+
+    (_, kwargs) = mock_container_group_constructor.call_args
+    registry_arg: List[ImageRegistryCredential] = kwargs.get(
+        "image_registry_credentials"
+    )
+
+    # ensure the registry was used, passed as a list the way the Azure SDK expects it,
+    # and correctly converted to an Azure ImageRegistryCredential.
+    assert registry_arg is not None
+    assert isinstance(registry_arg, list)
+
+    registry_object = registry_arg[0]
+    assert isinstance(registry_object, ImageRegistryCredential)
+    assert registry_object.username == registry.username
+    assert registry_object.password == registry.password.get_secret_value()
+    assert registry_object.server == registry.registry_url
