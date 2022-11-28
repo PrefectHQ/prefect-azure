@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
- 
+
 ### Changed
 
 ### Deprecated
@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed handling of private Docker image registries - [#54](https://github.com/PrefectHQ/prefect-azure/pull/54)
 ### Security
 
 ## 0.2.2
