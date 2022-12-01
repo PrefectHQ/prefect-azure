@@ -334,12 +334,12 @@ class AzureContainerInstanceJob(Infrastructure):
                 resource_group_name=self.resource_group_name,
                 container_group_name=container_group_name,
             )
-        except ResourceNotFoundError:
+        except ResourceNotFoundError as exc:
             # the container group no longer exists, so there's nothing to cancel
             raise InfrastructureNotFound(
                 f"Cannot stop ACI job: container group {container_group_name} "
                 "no longer exists."
-            )
+            ) from exc
 
         # get the container state to check if the container has terminated
         container = self._get_container(container_group)
