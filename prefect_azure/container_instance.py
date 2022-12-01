@@ -62,6 +62,7 @@ import anyio
 import dateutil.parser
 import prefect.infrastructure.docker
 from anyio.abc import TaskStatus
+from azure.core.exceptions import ResourceNotFoundError
 from azure.core.polling import LROPoller
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
 from azure.mgmt.containerinstance.models import (
@@ -77,6 +78,7 @@ from azure.mgmt.containerinstance.models import (
     ResourceRequirements,
 )
 from prefect.docker import get_prefect_image_name
+from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
 from pydantic import Field, SecretStr
@@ -305,6 +307,55 @@ class AzureContainerInstanceJob(Infrastructure):
         return AzureContainerInstanceJobResult(
             identifier=created_container_group.name, status_code=status_code
         )
+
+    async def kill(self, container_group_name: str, grace_seconds: int = 30):
+        """
+        Kill a flow running in an ACI container group.
+        Args:
+            container_group_name: The container group name yielded by
+                `AzureContainerInstanceJob.run`.
+        """
+        # ACI does not provide a way to specify grace period, but it gives
+        # applications ~30 seconds to gracefully terminate before killing
+        # a container group.
+        if grace_seconds != 30:
+            self.logger.warning(
+                f"Kill grace period of {grace_seconds}s requested, but ACI does not "
+                "support grace period configuration."
+            )
+
+        aci_client = self.aci_credentials.get_container_client(
+            self.subscription_id.get_secret_value()
+        )
+
+        # get the container group to check that it still exists
+        try:
+            container_group = aci_client.container_groups.get(
+                resource_group_name=self.resource_group_name,
+                container_group_name=container_group_name,
+            )
+        except ResourceNotFoundError:
+            # the container group no longer exists, so there's nothing to cancel
+            raise InfrastructureNotFound(
+                f"Cannot stop ACI job: container group {container_group_name} "
+                "no longer exists."
+            )
+
+        # get the container state to check if the container has terminated
+        container = self._get_container(container_group)
+        container_state = container.instance_view.current_state.state
+
+        # the container group needs to be deleted regardless of whether the container
+        # already terminated
+        await self._wait_for_container_group_deletion(aci_client, container_group)
+
+        # if the container had already terminated, raise an exception to let the agent
+        # know the flow was not cancelled
+        if container_state == ContainerRunState.TERMINATED:
+            raise InfrastructureNotAvailable(
+                f"Cannot stop ACI job: container group {container_group.name} exists, "
+                f"but container {container.name} has already terminated."
+            )
 
     def preview(self) -> str:
         """
