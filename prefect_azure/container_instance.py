@@ -58,6 +58,7 @@ import uuid
 from enum import Enum
 from typing import Dict, List, Optional
 
+import anyio
 import dateutil.parser
 import prefect.infrastructure.docker
 from anyio.abc import TaskStatus
@@ -87,6 +88,12 @@ ACI_DEFAULT_CPU = 1.0
 ACI_DEFAULT_MEMORY = 1.0
 ACI_DEFAULT_GPU = 0.0
 DEFAULT_CONTAINER_ENTRYPOINT = "/opt/prefect/entrypoint.sh"
+
+# The maximum time to wait for container group deletion before giving up and
+# moving on. Deletion is usually quick, so exceeding this timeout means something
+# has gone wrong and we should raise an exception to inform the user they should
+# check their Azure account for orphaned container groups.
+CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS = 30
 
 
 class ContainerGroupProvisioningState(str, Enum):
@@ -504,6 +511,36 @@ class AzureContainerInstanceJob(Infrastructure):
             time.sleep(self.task_watch_poll_interval)
 
         return status_code
+
+    async def _wait_for_container_group_deletion(
+        self,
+        aci_client: ContainerInstanceManagementClient,
+        container_group: ContainerGroup,
+    ):
+        self.logger.info(f"{self._log_prefix}: Deleting container...")
+
+        deletion_status_poller = await run_sync_in_worker_thread(
+            aci_client.container_groups.begin_delete,
+            resource_group_name=self.resource_group_name,
+            container_group_name=container_group.name,
+        )
+
+        t0 = time.time()
+        timeout = CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS
+
+        while not deletion_status_poller.done():
+            elapsed_time = time.time() - t0
+
+            if timeout and elapsed_time > timeout:
+                raise RuntimeError(
+                    (
+                        f"Timed out after {elapsed_time}s while waiting for deletion of"
+                        f" container group {container_group.name}. To verify the group "
+                        "has been deleted, check the Azure Portal or run "
+                        f"az container show --name {container_group.name} --resource-group {self.resource_group_name}"  # noqa
+                    )
+                )
+            await anyio.sleep(self.task_watch_poll_interval)
 
     def _get_container(self, container_group: ContainerGroup) -> Container:
         """
