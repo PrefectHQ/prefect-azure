@@ -297,18 +297,19 @@ class AzureContainerInstanceJob(Infrastructure):
 
         finally:
             if created_container_group:
-                self.logger.info(f"{self._log_prefix}: Deleting container...")
-                await run_sync_in_worker_thread(
-                    aci_client.container_groups.begin_delete,
-                    resource_group_name=self.resource_group_name,
-                    container_group_name=created_container_group.name,
+                await self._wait_for_container_group_deletion(
+                    aci_client, created_container_group
                 )
 
         return AzureContainerInstanceJobResult(
             identifier=created_container_group.name, status_code=status_code
         )
 
-    async def kill(self, container_group_name: str, grace_seconds: int = 30):
+    async def kill(
+        self,
+        container_group_name: str,
+        grace_seconds: int = CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS,
+    ):
         """
         Kill a flow running in an ACI container group.
 
@@ -319,7 +320,7 @@ class AzureContainerInstanceJob(Infrastructure):
         # ACI does not provide a way to specify grace period, but it gives
         # applications ~30 seconds to gracefully terminate before killing
         # a container group.
-        if grace_seconds != 30:
+        if grace_seconds != CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS:
             self.logger.warning(
                 f"Kill grace period of {grace_seconds}s requested, but ACI does not "
                 "support grace period configuration."
