@@ -1,6 +1,6 @@
 import json
 import uuid
-from typing import List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 from unittest.mock import MagicMock, Mock
 
 import dateutil.parser
@@ -8,9 +8,13 @@ import pytest
 from anyio.abc import TaskStatus
 from azure.core.exceptions import HttpResponseError
 from azure.identity import ClientSecretCredential
-from azure.mgmt.containerinstance.models import ImageRegistryCredential
+from azure.mgmt.containerinstance.models import (
+    EnvironmentVariable,
+    ImageRegistryCredential,
+)
 from azure.mgmt.resource import ResourceManagementClient
 from prefect.infrastructure.docker import DockerRegistry
+from prefect.settings import get_current_settings
 from pydantic import SecretStr
 
 import prefect_azure.container_instance
@@ -658,3 +662,39 @@ def test_registry_credentials(container_instance_block, mock_aci_client, monkeyp
     assert registry_object.username == registry.username
     assert registry_object.password == registry.password.get_secret_value()
     assert registry_object.server == registry.registry_url
+
+
+def test_secure_environment_variables(
+    container_instance_block, mock_aci_client, monkeypatch
+):
+    # setup environment containing an API key we want to keep secret
+    base_env: Dict[str, str] = get_current_settings().to_environment_variables(
+        exclude_unset=True
+    )
+    base_env["PREFECT_API_KEY"] = "my-api-key"
+
+    base_env_call = Mock(return_value=base_env)
+    monkeypatch.setattr(container_instance_block, "_base_environment", base_env_call)
+
+    mock_container_constructor = Mock()
+    monkeypatch.setattr(
+        prefect_azure.container_instance, "Container", mock_container_constructor
+    )
+
+    container_instance_block.run()
+
+    mock_container_constructor.assert_called_once()
+    (_, kwargs) = mock_container_constructor.call_args
+    env_variables_parameter: List = kwargs.get("environment_variables")
+
+    api_key_aci_env_variable: List[EnvironmentVariable] = list(
+        filter(lambda v: v.name == "PREFECT_API_KEY", env_variables_parameter)
+    )
+
+    # ensure the env variable made it into the list of env variables set in the
+    # ACI container
+    assert len(api_key_aci_env_variable) == 1
+    assert api_key_aci_env_variable[0].name == "PREFECT_API_KEY"
+    # ensure that `secure_value` was used instead of `value`
+    assert api_key_aci_env_variable[0].value is None
+    assert api_key_aci_env_variable[0].secure_value == "my-api-key"

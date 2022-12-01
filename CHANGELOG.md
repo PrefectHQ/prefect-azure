@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated the Container Instance Job block to treat `PREFECT_API_KEY` as a secure environment variable - [#57](https://github.com/PrefectHQ/prefect-azure/pull/57)
+
 ### Deprecated
 
 ### Removed
@@ -18,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed handling of private Docker image registries - [#54](https://github.com/PrefectHQ/prefect-azure/pull/54)
+
 ### Security
 
 ## 0.2.2
