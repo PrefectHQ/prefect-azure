@@ -6,10 +6,11 @@ from unittest.mock import MagicMock, Mock
 import dateutil.parser
 import pytest
 from anyio.abc import TaskStatus
-from azure.core.exceptions import HttpResponseError
+from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 from azure.identity import ClientSecretCredential
 from azure.mgmt.containerinstance.models import ImageRegistryCredential
 from azure.mgmt.resource import ResourceManagementClient
+from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.infrastructure.docker import DockerRegistry
 from pydantic import SecretStr
 
@@ -658,3 +659,56 @@ def test_registry_credentials(container_instance_block, mock_aci_client, monkeyp
     assert registry_object.username == registry.username
     assert registry_object.password == registry.password.get_secret_value()
     assert registry_object.server == registry.registry_url
+
+
+async def test_kill_deletes_container_group(
+    container_instance_block, mock_aci_client, mock_running_container_group, monkeypatch
+):
+    container_group_name = "test_container_group"
+    mock_running_container_group.name = container_group_name
+
+    # simulate a running container to avoid `InfrastructureNotAvailable` exception
+    # since it is covered in a separate test
+    container = Mock(name="container")
+    container.instance_view.current_state.state = ContainerRunState.RUNNING
+
+    mock_aci_client.container_groups.get.side_effect = Mock(
+        name="container_group", return_value=mock_running_container_group
+    )
+
+    # shorten wait time
+    monkeypatch.setattr(
+        prefect_azure.container_instance,
+        "CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS",
+        0.1,
+    )
+    container_instance_block.task_watch_poll_interval = 0.02
+
+    await container_instance_block.kill(container_group_name)
+
+    mock_aci_client.container_groups.begin_delete.assert_called_once_with(
+        resource_group_name=container_instance_block.resource_group_name,
+        container_group_name=container_group_name,
+    )
+
+
+async def test_kill_raises_not_found_when_container_group_gone(
+    container_instance_block, mock_aci_client
+):
+    mock_aci_client.container_groups.get.side_effect = ResourceNotFoundError()
+
+    # ResourceNotFoundError means the container group no longers exists on Azure, so
+    # it should always cause an InfrastructureNotFound exception
+    with pytest.raises(InfrastructureNotFound):
+        await container_instance_block.kill("test_container_group")
+
+
+async def test_kill_raises_not_available_when_container_terminated(
+    container_instance_block, mock_aci_client
+):
+    # mock_aci_client already contains a mock container group that has finished running,
+    # i.e. its status is ContainerRunState.TERMINATED, so it should trigger
+    # InfrastructureNotAvailable as-is
+
+    with pytest.raises(InfrastructureNotAvailable):
+        await container_instance_block.kill("test_container_group")
