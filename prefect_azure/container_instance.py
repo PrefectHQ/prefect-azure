@@ -311,6 +311,7 @@ class AzureContainerInstanceJob(Infrastructure):
     async def kill(self, container_group_name: str, grace_seconds: int = 30):
         """
         Kill a flow running in an ACI container group.
+
         Args:
             container_group_name: The container group name yielded by
                 `AzureContainerInstanceJob.run`.
