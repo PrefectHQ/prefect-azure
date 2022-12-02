@@ -56,13 +56,13 @@ import sys
 import time
 import uuid
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import anyio
 import dateutil.parser
 import prefect.infrastructure.docker
 from anyio.abc import TaskStatus
-from azure.core.exceptions import ResourceNotFoundError
+from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 from azure.core.polling import LROPoller
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
 from azure.mgmt.containerinstance.models import (
@@ -73,6 +73,7 @@ from azure.mgmt.containerinstance.models import (
     EnvironmentVariable,
     GpuResource,
     ImageRegistryCredential,
+    Logs,
     OperatingSystemTypes,
     ResourceRequests,
     ResourceRequirements,
@@ -325,8 +326,8 @@ class AzureContainerInstanceJob(Infrastructure):
         # a container group.
         if grace_seconds != CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS:
             self.logger.warning(
-                f"Kill grace period of {grace_seconds}s requested, but ACI does not "
-                "support grace period configuration."
+                f"{self._log_prefix}: Kill grace period of {grace_seconds}s requested, "
+                f"but ACI does not support grace period configuration."
             )
 
         aci_client = self.aci_credentials.get_container_client(
@@ -559,13 +560,16 @@ class AzureContainerInstanceJob(Infrastructure):
             container = self._get_container(container_group)
             current_state = container.instance_view.current_state.state
 
+            if current_state == ContainerRunState.TERMINATED:
+                status_code = container.instance_view.current_state.exit_code
+                # break instead of waiting for next loop iteration because
+                # trying to read logs from a terminated container raises an exception
+                break
+
             if self.stream_output:
                 last_log_time = self._get_and_stream_output(
                     client, container_group, last_log_time
                 )
-
-            if current_state == ContainerRunState.TERMINATED:
-                status_code = container.instance_view.current_state.exit_code
 
             time.sleep(self.task_watch_poll_interval)
 
@@ -633,7 +637,7 @@ class AzureContainerInstanceJob(Infrastructure):
         client: ContainerInstanceManagementClient,
         container_group: ContainerGroup,
         max_lines: int = 100,
-    ) -> str:
+    ) -> Union[str, None]:
         """
         Gets the most container logs up to a given maximum.
 
@@ -647,18 +651,25 @@ class AzureContainerInstanceJob(Infrastructure):
         """
         container = self._get_container(container_group)
 
-        logs = client.containers.list_logs(
-            resource_group_name=self.resource_group_name,
-            container_group_name=container_group.name,
-            container_name=container.name,
-            tail=max_lines,
-            timestamps=True,
-        )
+        logs: Union[Logs, None] = None
+        try:
+            logs = client.containers.list_logs(
+                resource_group_name=self.resource_group_name,
+                container_group_name=container_group.name,
+                container_name=container.name,
+                tail=max_lines,
+                timestamps=True,
+            )
+        except HttpResponseError:
+            self.logger.exception(
+                f"{self._log_prefix}: Error trying to list logs from container "
+                f"{container.name} in container group {container_group.name}."
+            )
 
-        return logs.content
+        return logs.content if logs else ""
 
     def _stream_output(
-        self, log_content: str, last_log_time: datetime.datetime
+        self, log_content: Union[str, None], last_log_time: datetime.datetime
     ) -> datetime.datetime:
         """
         Writes each entry from a string of log lines to stderr.
@@ -695,7 +706,10 @@ class AzureContainerInstanceJob(Infrastructure):
                     last_written_time = line_time
             except dateutil.parser.ParserError as e:
                 self.logger.debug(
-                    "Unable to parse timestamp from Azure log line: %s",
+                    (
+                        f"{self._log_prefix}: Unable to parse timestamp from Azure "
+                        "log line: %s"
+                    ),
                     log_line,
                     exc_info=e,
                 )
