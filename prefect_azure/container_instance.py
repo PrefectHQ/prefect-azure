@@ -68,8 +68,10 @@ from azure.mgmt.containerinstance import ContainerInstanceManagementClient
 from azure.mgmt.containerinstance.models import (
     Container,
     ContainerGroup,
+    ContainerGroupIdentity,
     ContainerGroupRestartPolicy,
     ContainerGroupSubnetId,
+    DnsConfiguration,
     EnvironmentVariable,
     GpuResource,
     ImageRegistryCredential,
@@ -77,6 +79,7 @@ from azure.mgmt.containerinstance.models import (
     OperatingSystemTypes,
     ResourceRequests,
     ResourceRequirements,
+    UserAssignedIdentities,
 )
 from prefect.docker import get_prefect_image_name
 from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
@@ -154,6 +157,15 @@ class AzureContainerInstanceJob(Infrastructure):
         title="Azure Subscription ID",
         description="The ID of the Azure subscription to create containers under.",
     )
+    identity: Optional[str] = Field(
+        title="Identity",
+        default=None,
+        description=(
+            "A user identity to associate with the container group. "
+            "The user identity should be an ARM resource id in the form: "
+            "'/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}'."  # noqa
+        ),
+    )
     image: Optional[str] = Field(
         default_factory=get_prefect_image_name,
         description=(
@@ -209,6 +221,11 @@ class AzureContainerInstanceJob(Infrastructure):
         default=None,
         title="Subnet IDs",
         description="A list of Azure subnet IDs the container should be connected to.",
+    )
+    dns_servers: Optional[List[str]] = Field(
+        default=None,
+        title="DNS Servers",
+        description="A list of custom DNS Servers the container should use.",
     )
     stream_output: Optional[bool] = Field(
         default=None,
@@ -469,19 +486,36 @@ class AzureContainerInstanceJob(Infrastructure):
             else None
         )
 
+        identity = (
+            ContainerGroupIdentity(
+                type="UserAssigned",
+                user_assigned_identities={self.identity: UserAssignedIdentities()},
+            )
+            if self.identity
+            else None
+        )
+
         subnet_ids = (
             [ContainerGroupSubnetId(id=subnet_id) for subnet_id in self.subnet_ids]
             if self.subnet_ids
             else None
         )
 
+        dns_config = (
+            DnsConfiguration(name_servers=self.dns_servers)
+            if self.dns_servers
+            else None
+        )
+
         return ContainerGroup(
             location=resource_group.location,
+            identity=identity,
             containers=[container],
             os_type=OperatingSystemTypes.linux,
             restart_policy=ContainerGroupRestartPolicy.never,
             image_registry_credentials=image_registry_credentials,
             subnet_ids=subnet_ids,
+            dns_config=dns_config,
         )
 
     def _wait_for_task_container_start(
