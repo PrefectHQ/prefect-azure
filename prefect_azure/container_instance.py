@@ -157,12 +157,12 @@ class AzureContainerInstanceJob(Infrastructure):
         title="Azure Subscription ID",
         description="The ID of the Azure subscription to create containers under.",
     )
-    identity: Optional[str] = Field(
-        title="Identity",
+    identities: Optional[List[str]] = Field(
+        title="Identities",
         default=None,
         description=(
-            "A user identity to associate with the container group. "
-            "The user identity should be an ARM resource id in the form: "
+            "A list of user-assigned identities to associate with the container group. "
+            "The identities should be an ARM resource IDs in the form: "
             "'/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}'."  # noqa
         ),
     )
@@ -489,9 +489,14 @@ class AzureContainerInstanceJob(Infrastructure):
         identity = (
             ContainerGroupIdentity(
                 type="UserAssigned",
-                user_assigned_identities={self.identity: UserAssignedIdentities()},
+                # The Azure API only uses the dict keys and ignores values when
+                # creating a container group. Using empty `UserAssignedIdentities`
+                # instances as dict values satisfies Python type checkers.
+                user_assigned_identities={
+                    identity: UserAssignedIdentities() for identity in self.identities
+                },
             )
-            if self.identity
+            if self.identities
             else None
         )
 
