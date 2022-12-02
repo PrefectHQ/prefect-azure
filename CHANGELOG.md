@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added flow run cancellation support to the `AzureContainerInstanceJob` block - [#58](https://github.com/PrefectHQ/prefect-azure/pull/58)
+- Added Managed Identities and custom DNS servers to `AzureContainerInstanceJob` - [#60](https://github.com/PrefectHQ/prefect-azure/pull/60)
 
 ### Changed
 
