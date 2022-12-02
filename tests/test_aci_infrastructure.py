@@ -6,13 +6,14 @@ from unittest.mock import MagicMock, Mock
 import dateutil.parser
 import pytest
 from anyio.abc import TaskStatus
-from azure.core.exceptions import HttpResponseError
+from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 from azure.identity import ClientSecretCredential
 from azure.mgmt.containerinstance.models import (
     EnvironmentVariable,
     ImageRegistryCredential,
 )
 from azure.mgmt.resource import ResourceManagementClient
+from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.infrastructure.docker import DockerRegistry
 from prefect.settings import get_current_settings
 from pydantic import SecretStr
@@ -698,3 +699,88 @@ def test_secure_environment_variables(
     # ensure that `secure_value` was used instead of `value`
     assert api_key_aci_env_variable[0].value is None
     assert api_key_aci_env_variable[0].secure_value == "my-api-key"
+
+
+async def test_kill_deletes_container_group(
+    container_instance_block, mock_aci_client, mock_running_container_group, monkeypatch
+):
+    container_group_name = "test_container_group"
+    mock_running_container_group.name = container_group_name
+
+    # simulate a running container to avoid `InfrastructureNotAvailable` exception
+    # since it is covered in a separate test
+    container = Mock(name="container")
+    container.instance_view.current_state.state = ContainerRunState.RUNNING
+
+    mock_aci_client.container_groups.get.side_effect = Mock(
+        name="container_group", return_value=mock_running_container_group
+    )
+
+    # shorten wait time
+    monkeypatch.setattr(
+        prefect_azure.container_instance,
+        "CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS",
+        0.1,
+    )
+    container_instance_block.task_watch_poll_interval = 0.02
+
+    await container_instance_block.kill(container_group_name)
+
+    mock_aci_client.container_groups.begin_delete.assert_called_once_with(
+        resource_group_name=container_instance_block.resource_group_name,
+        container_group_name=container_group_name,
+    )
+
+
+async def test_kill_raises_not_found_when_container_group_gone(
+    container_instance_block, mock_aci_client
+):
+    mock_aci_client.container_groups.get.side_effect = ResourceNotFoundError()
+
+    # ResourceNotFoundError means the container group no longers exists on Azure, so
+    # it should always cause an InfrastructureNotFound exception
+    with pytest.raises(InfrastructureNotFound):
+        await container_instance_block.kill("test_container_group")
+
+
+async def test_kill_raises_not_available_when_container_terminated(
+    container_instance_block, mock_aci_client
+):
+    # mock_aci_client already contains a mock container group that has finished running,
+    # i.e. its status is ContainerRunState.TERMINATED, so it should trigger
+    # InfrastructureNotAvailable as-is
+
+    with pytest.raises(InfrastructureNotAvailable):
+        await container_instance_block.kill("test_container_group")
+
+
+async def test_run_exits_when_resource_group_disappears(
+    container_instance_block, mock_aci_client, mock_running_container_group
+):
+    """
+    Test to ensure that when a flow run is cancelled, the container group will disappear
+    mid-run. Ensure the run method exits gracefully instead of showing an exception
+    since the user requested cancellation.
+    """
+
+    # make the block wait a few times before the container group disappears
+    # to simulate what happens when a flow is cancelled before it completes.
+    run_count = 0
+
+    def get_container_group(**kwargs):
+        nonlocal run_count
+        run_count += 1
+        if run_count < 3:
+            return mock_running_container_group
+        else:
+            raise ResourceNotFoundError()
+
+    mock_aci_client.container_groups.get.side_effect = get_container_group
+
+    container_instance_block.task_watch_poll_interval = 0.02
+
+    status_code = await container_instance_block.run()
+
+    # Expect a non-success status code. This ensures that the flow status is set to
+    # CRASHED if the container group's absence was not caused by cancellation.
+    assert status_code != 0

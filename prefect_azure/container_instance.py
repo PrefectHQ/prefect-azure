@@ -56,11 +56,13 @@ import sys
 import time
 import uuid
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
+import anyio
 import dateutil.parser
 import prefect.infrastructure.docker
 from anyio.abc import TaskStatus
+from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 from azure.core.polling import LROPoller
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
 from azure.mgmt.containerinstance.models import (
@@ -71,11 +73,13 @@ from azure.mgmt.containerinstance.models import (
     EnvironmentVariable,
     GpuResource,
     ImageRegistryCredential,
+    Logs,
     OperatingSystemTypes,
     ResourceRequests,
     ResourceRequirements,
 )
 from prefect.docker import get_prefect_image_name
+from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
 from pydantic import Field, SecretStr
@@ -90,6 +94,12 @@ DEFAULT_CONTAINER_ENTRYPOINT = "/opt/prefect/entrypoint.sh"
 # environment variables that ACI should treat as secure variables so they
 # won't appear in logs
 ENV_SECRETS = ["PREFECT_API_KEY"]
+
+# The maximum time to wait for container group deletion before giving up and
+# moving on. Deletion is usually quick, so exceeding this timeout means something
+# has gone wrong and we should raise an exception to inform the user they should
+# check their Azure account for orphaned container groups.
+CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS = 30
 
 
 class ContainerGroupProvisioningState(str, Enum):
@@ -291,16 +301,67 @@ class AzureContainerInstanceJob(Infrastructure):
 
         finally:
             if created_container_group:
-                self.logger.info(f"{self._log_prefix}: Deleting container...")
-                await run_sync_in_worker_thread(
-                    aci_client.container_groups.begin_delete,
-                    resource_group_name=self.resource_group_name,
-                    container_group_name=created_container_group.name,
+                await self._wait_for_container_group_deletion(
+                    aci_client, created_container_group
                 )
 
         return AzureContainerInstanceJobResult(
             identifier=created_container_group.name, status_code=status_code
         )
+
+    async def kill(
+        self,
+        container_group_name: str,
+        grace_seconds: int = CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS,
+    ):
+        """
+        Kill a flow running in an ACI container group.
+
+        Args:
+            container_group_name: The container group name yielded by
+                `AzureContainerInstanceJob.run`.
+        """
+        # ACI does not provide a way to specify grace period, but it gives
+        # applications ~30 seconds to gracefully terminate before killing
+        # a container group.
+        if grace_seconds != CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS:
+            self.logger.warning(
+                f"{self._log_prefix}: Kill grace period of {grace_seconds}s requested, "
+                f"but ACI does not support grace period configuration."
+            )
+
+        aci_client = self.aci_credentials.get_container_client(
+            self.subscription_id.get_secret_value()
+        )
+
+        # get the container group to check that it still exists
+        try:
+            container_group = aci_client.container_groups.get(
+                resource_group_name=self.resource_group_name,
+                container_group_name=container_group_name,
+            )
+        except ResourceNotFoundError as exc:
+            # the container group no longer exists, so there's nothing to cancel
+            raise InfrastructureNotFound(
+                f"Cannot stop ACI job: container group {container_group_name} "
+                "no longer exists."
+            ) from exc
+
+        # get the container state to check if the container has terminated
+        container = self._get_container(container_group)
+        container_state = container.instance_view.current_state.state
+
+        # the container group needs to be deleted regardless of whether the container
+        # already terminated
+        await self._wait_for_container_group_deletion(aci_client, container_group)
+
+        # if the container had already terminated, raise an exception to let the agent
+        # know the flow was not cancelled
+        if container_state == ContainerRunState.TERMINATED:
+            raise InfrastructureNotAvailable(
+                f"Cannot stop ACI job: container group {container_group.name} exists, "
+                f"but container {container.name} has already terminated."
+            )
 
     def preview(self) -> str:
         """
@@ -491,25 +552,70 @@ class AzureContainerInstanceJob(Infrastructure):
             status_code = running_container.instance_view.current_state.exit_code
 
         while current_state != ContainerRunState.TERMINATED:
-            container_group = client.container_groups.get(
-                resource_group_name=self.resource_group_name,
-                container_group_name=container_group.name,
-            )
+            try:
+                container_group = client.container_groups.get(
+                    resource_group_name=self.resource_group_name,
+                    container_group_name=container_group.name,
+                )
+            except ResourceNotFoundError:
+                self.logger.exception(
+                    f"{self._log_prefix}: Container group was deleted before flow run "
+                    "completed, likely due to flow cancellation."
+                )
+
+                # since the flow was cancelled, exit early instead of raising an
+                # exception
+                return status_code
 
             container = self._get_container(container_group)
             current_state = container.instance_view.current_state.state
+
+            if current_state == ContainerRunState.TERMINATED:
+                status_code = container.instance_view.current_state.exit_code
+                # break instead of waiting for next loop iteration because
+                # trying to read logs from a terminated container raises an exception
+                break
 
             if self.stream_output:
                 last_log_time = self._get_and_stream_output(
                     client, container_group, last_log_time
                 )
 
-            if current_state == ContainerRunState.TERMINATED:
-                status_code = container.instance_view.current_state.exit_code
-
             time.sleep(self.task_watch_poll_interval)
 
         return status_code
+
+    async def _wait_for_container_group_deletion(
+        self,
+        aci_client: ContainerInstanceManagementClient,
+        container_group: ContainerGroup,
+    ):
+        self.logger.info(f"{self._log_prefix}: Deleting container...")
+
+        deletion_status_poller = await run_sync_in_worker_thread(
+            aci_client.container_groups.begin_delete,
+            resource_group_name=self.resource_group_name,
+            container_group_name=container_group.name,
+        )
+
+        t0 = time.time()
+        timeout = CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS
+
+        while not deletion_status_poller.done():
+            elapsed_time = time.time() - t0
+
+            if timeout and elapsed_time > timeout:
+                raise RuntimeError(
+                    (
+                        f"Timed out after {elapsed_time}s while waiting for deletion of"
+                        f" container group {container_group.name}. To verify the group "
+                        "has been deleted, check the Azure Portal or run "
+                        f"az container show --name {container_group.name} --resource-group {self.resource_group_name}"  # noqa
+                    )
+                )
+            await anyio.sleep(self.task_watch_poll_interval)
+
+        self.logger.info(f"{self._log_prefix}: Container deleted.")
 
     def _get_container(self, container_group: ContainerGroup) -> Container:
         """
@@ -557,18 +663,29 @@ class AzureContainerInstanceJob(Infrastructure):
         """
         container = self._get_container(container_group)
 
-        logs = client.containers.list_logs(
-            resource_group_name=self.resource_group_name,
-            container_group_name=container_group.name,
-            container_name=container.name,
-            tail=max_lines,
-            timestamps=True,
-        )
+        logs: Union[Logs, None] = None
+        try:
+            logs = client.containers.list_logs(
+                resource_group_name=self.resource_group_name,
+                container_group_name=container_group.name,
+                container_name=container.name,
+                tail=max_lines,
+                timestamps=True,
+            )
+        except HttpResponseError:
+            # Trying to get logs when the container is under heavy CPU load sometimes
+            # results in an error, but we won't want to raise an exception and stop
+            # monitoring the flow. Instead, log the error and carry on so we can try to
+            # get all missed logs on the next check.
+            self.logger.warning(
+                f"{self._log_prefix}: Unable to retrieve logs from container "
+                f"{container.name}. Trying again in {self.task_watch_poll_interval}s"
+            )
 
-        return logs.content
+        return logs.content if logs else ""
 
     def _stream_output(
-        self, log_content: str, last_log_time: datetime.datetime
+        self, log_content: Union[str, None], last_log_time: datetime.datetime
     ) -> datetime.datetime:
         """
         Writes each entry from a string of log lines to stderr.
@@ -605,7 +722,10 @@ class AzureContainerInstanceJob(Infrastructure):
                     last_written_time = line_time
             except dateutil.parser.ParserError as e:
                 self.logger.debug(
-                    "Unable to parse timestamp from Azure log line: %s",
+                    (
+                        f"{self._log_prefix}: Unable to parse timestamp from Azure "
+                        "log line: %s"
+                    ),
                     log_line,
                     exc_info=e,
                 )
