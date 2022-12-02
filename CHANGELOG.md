@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added flow run cancellation support to the `AzureContainerInstanceJob` block - [#58](https://github.com/PrefectHQ/prefect-azure/pull/57)
+
 ### Changed
 
 - Updated the Container Instance Job block to treat `PREFECT_API_KEY` as a secure environment variable - [#57](https://github.com/PrefectHQ/prefect-azure/pull/57)
