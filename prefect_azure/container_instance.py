@@ -90,6 +90,9 @@ ACI_DEFAULT_CPU = 1.0
 ACI_DEFAULT_MEMORY = 1.0
 ACI_DEFAULT_GPU = 0.0
 DEFAULT_CONTAINER_ENTRYPOINT = "/opt/prefect/entrypoint.sh"
+# environment variables that ACI should treat as secure variables so they
+# won't appear in logs
+ENV_SECRETS = ["PREFECT_API_KEY"]
 
 # The maximum time to wait for container group deletion before giving up and
 # moving on. Deletion is usually quick, so exceeding this timeout means something
@@ -388,9 +391,12 @@ class AzureContainerInstanceJob(Infrastructure):
 
         # setup container environment variables
         environment = [
-            EnvironmentVariable(name=k, value=v)
+            EnvironmentVariable(name=k, secure_value=v)
+            if k in ENV_SECRETS
+            else EnvironmentVariable(name=k, value=v)
             for (k, v) in self._get_environment().items()
         ]
+
         # all container names in a resource group must be unique
         container_name = str(uuid.uuid4())
         container_resource_requirements = self._configure_container_resources()
