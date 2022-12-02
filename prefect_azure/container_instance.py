@@ -552,10 +552,20 @@ class AzureContainerInstanceJob(Infrastructure):
             status_code = running_container.instance_view.current_state.exit_code
 
         while current_state != ContainerRunState.TERMINATED:
-            container_group = client.container_groups.get(
-                resource_group_name=self.resource_group_name,
-                container_group_name=container_group.name,
-            )
+            try:
+                container_group = client.container_groups.get(
+                    resource_group_name=self.resource_group_name,
+                    container_group_name=container_group.name,
+                )
+            except ResourceNotFoundError:
+                self.logger.exception(
+                    f"{self._log_prefix}: Container group was deleted before flow run "
+                    "completed, likely due to flow cancellation."
+                )
+
+                # since the flow was cancelled, exit early instead of raising an
+                # exception
+                return status_code
 
             container = self._get_container(container_group)
             current_state = container.instance_view.current_state.state
