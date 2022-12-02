@@ -699,8 +699,8 @@ def test_secure_environment_variables(
     # ensure that `secure_value` was used instead of `value`
     assert api_key_aci_env_variable[0].value is None
     assert api_key_aci_env_variable[0].secure_value == "my-api-key"
-    
-    
+
+
 async def test_kill_deletes_container_group(
     container_instance_block, mock_aci_client, mock_running_container_group, monkeypatch
 ):
