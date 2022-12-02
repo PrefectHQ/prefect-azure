@@ -649,7 +649,7 @@ class AzureContainerInstanceJob(Infrastructure):
         client: ContainerInstanceManagementClient,
         container_group: ContainerGroup,
         max_lines: int = 100,
-    ) -> Union[str, None]:
+    ) -> str:
         """
         Gets the most container logs up to a given maximum.
 
