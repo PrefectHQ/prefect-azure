@@ -661,9 +661,13 @@ class AzureContainerInstanceJob(Infrastructure):
                 timestamps=True,
             )
         except HttpResponseError:
-            self.logger.exception(
-                f"{self._log_prefix}: Error trying to list logs from container "
-                f"{container.name} in container group {container_group.name}."
+            # Trying to get logs when the container is under heavy CPU load sometimes
+            # results in an error, but we won't want to raise an exception and stop
+            # monitoring the flow. Instead, log the error and carry on so we can try to
+            # get all missed logs on the next check.
+            self.logger.warning(
+                f"{self._log_prefix}: Unable to retrieve logs from container "
+                f"{container.name}. Trying again in {self.task_watch_poll_interval}s"
             )
 
         return logs.content if logs else ""
