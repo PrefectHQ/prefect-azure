@@ -11,6 +11,7 @@ from azure.identity import ClientSecretCredential
 from azure.mgmt.containerinstance.models import (
     EnvironmentVariable,
     ImageRegistryCredential,
+    UserAssignedIdentities,
 )
 from azure.mgmt.resource import ResourceManagementClient
 from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
@@ -784,3 +785,72 @@ async def test_run_exits_when_resource_group_disappears(
     # Expect a non-success status code. This ensures that the flow status is set to
     # CRASHED if the container group's absence was not caused by cancellation.
     assert status_code != 0
+
+
+async def test_identities_used_if_provided(
+    container_instance_block, mock_aci_client, monkeypatch
+):
+    mock_container_group = Mock(name="TestContainerGroup")
+    mock_container_group_constructor = Mock(return_value=mock_container_group)
+    monkeypatch.setattr(
+        prefect_azure.container_instance,
+        "ContainerGroup",
+        mock_container_group_constructor,
+    )
+
+    mock_container_group_identity = Mock()
+    mock_identities_constructor = Mock(return_value=mock_container_group_identity)
+    monkeypatch.setattr(
+        prefect_azure.container_instance,
+        "ContainerGroupIdentity",
+        mock_identities_constructor,
+    )
+
+    identities = [
+        "/my/managed_identity/one",
+        "/my/managed_identity/two",
+    ]
+
+    container_instance_block.identities = identities
+    await container_instance_block.run()
+
+    expected_identities_param = {
+        identity: UserAssignedIdentities() for identity in identities
+    }
+    mock_identities_constructor.assert_called_once_with(
+        type="UserAssigned", user_assigned_identities=expected_identities_param
+    )
+
+    mock_container_group_constructor.assert_called_once()
+    (_, kwargs) = mock_container_group_constructor.call_args
+    assert kwargs.get("identity") == mock_container_group_identity
+
+
+async def test_dns_config_used_if_provided(
+    container_instance_block, mock_aci_client, monkeypatch
+):
+    mock_container_group = Mock(name="TestContainerGroup")
+    mock_container_group_constructor = Mock(return_value=mock_container_group)
+    monkeypatch.setattr(
+        prefect_azure.container_instance,
+        "ContainerGroup",
+        mock_container_group_constructor,
+    )
+
+    mock_dns_config = Mock()
+    mock_dns_config_constructor = Mock(return_value=mock_dns_config)
+    monkeypatch.setattr(
+        prefect_azure.container_instance,
+        "DnsConfiguration",
+        mock_dns_config_constructor,
+    )
+
+    dns_servers = ["1.2.3.4", "5.6.7.8", "9.10.11.12"]
+    container_instance_block.dns_servers = dns_servers
+    await container_instance_block.run()
+
+    mock_dns_config_constructor.assert_called_once_with(name_servers=dns_servers)
+
+    mock_container_group_constructor.assert_called_once()
+    (_, kwargs) = mock_container_group_constructor.call_args
+    assert kwargs.get("dns_config") == mock_dns_config
