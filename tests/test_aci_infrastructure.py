@@ -752,3 +752,35 @@ async def test_kill_raises_not_available_when_container_terminated(
 
     with pytest.raises(InfrastructureNotAvailable):
         await container_instance_block.kill("test_container_group")
+
+
+async def test_run_exits_when_resource_group_disappears(
+    container_instance_block, mock_aci_client, mock_running_container_group
+):
+    """
+    Test to ensure that when a flow run is cancelled, the container group will disappear
+    mid-run. Ensure the run method exits gracefully instead of showing an exception
+    since the user requested cancellation.
+    """
+
+    # make the block wait a few times before the container group disappears
+    # to simulate what happens when a flow is cancelled before it completes.
+    run_count = 0
+
+    def get_container_group(**kwargs):
+        nonlocal run_count
+        run_count += 1
+        if run_count < 3:
+            return mock_running_container_group
+        else:
+            raise ResourceNotFoundError()
+
+    mock_aci_client.container_groups.get.side_effect = get_container_group
+
+    container_instance_block.task_watch_poll_interval = 0.02
+
+    status_code = await container_instance_block.run()
+
+    # Expect a non-success status code. This ensures that the flow status is set to
+    # CRASHED if the container group's absence was not caused by cancellation.
+    assert status_code != 0
