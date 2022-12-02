@@ -615,6 +615,8 @@ class AzureContainerInstanceJob(Infrastructure):
                 )
             await anyio.sleep(self.task_watch_poll_interval)
 
+        self.logger.info(f"{self._log_prefix}: Container deleted.")
+
     def _get_container(self, container_group: ContainerGroup) -> Container:
         """
         Extracts the job container from a container group.
