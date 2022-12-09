@@ -1,7 +1,9 @@
+import datetime
 from unittest.mock import MagicMock
 
 import pytest
 from azure.core.exceptions import ResourceExistsError
+from azure.storage.blob import BlobProperties, BlobType
 from prefect.testing.utilities import AsyncMock
 
 
@@ -43,7 +45,80 @@ class BlobStorageClientMethodsMock:
         return self.blob
 
     def list_blobs(self):
-        return AsyncIter(range(5))
+        return AsyncIter(
+            [
+                BlobProperties(
+                    **{
+                        "name": "test-blob",
+                        "container": "test-container",
+                        "snapshot": None,
+                        "version_id": None,
+                        "is_current_version": None,
+                        "blob_type": BlobType.BLOCKBLOB,
+                        "metadata": {},
+                        "encrypted_metadata": None,
+                        "last_modified": datetime.datetime(
+                            2022, 12, 9, 18, 29, 44, tzinfo=datetime.timezone.utc
+                        ),
+                        "etag": "etag",
+                        "size": 9,
+                        "content_range": None,
+                        "append_blob_committed_block_count": None,
+                        "is_append_blob_sealed": None,
+                        "page_blob_sequence_number": None,
+                        "server_encrypted": True,
+                        "copy": {
+                            "id": None,
+                            "source": None,
+                            "status": None,
+                            "progress": None,
+                            "completion_time": None,
+                            "status_description": None,
+                            "incremental_copy": None,
+                            "destination_snapshot": None,
+                        },
+                        "content_settings": {
+                            "content_type": "application/octet-stream",
+                            "content_encoding": None,
+                            "content_language": None,
+                            "content_md5": bytearray(b"1V"),
+                            "content_disposition": None,
+                            "cache_control": None,
+                        },
+                        "lease": {
+                            "status": "unlocked",
+                            "state": "available",
+                            "duration": None,
+                        },
+                        "blob_tier": "Hot",
+                        "rehydrate_priority": None,
+                        "blob_tier_change_time": None,
+                        "blob_tier_inferred": True,
+                        "deleted": None,
+                        "deleted_time": None,
+                        "remaining_retention_days": None,
+                        "creation_time": datetime.datetime(
+                            2022, 12, 9, 18, 26, 17, tzinfo=datetime.timezone.utc
+                        ),
+                        "archive_status": None,
+                        "encryption_key_sha256": None,
+                        "encryption_scope": None,
+                        "request_server_encrypted": None,
+                        "object_replication_source_properties": [],
+                        "object_replication_destination_policy": None,
+                        "last_accessed_on": None,
+                        "tag_count": None,
+                        "tags": None,
+                        "immutability_policy": {
+                            "expiry_time": None,
+                            "policy_mode": None,
+                        },
+                        "has_legal_hold": None,
+                        "has_versions_only": None,
+                    }
+                )
+            ]
+        )
 
     async def close(self):
         return None

@@ -77,4 +77,8 @@ async def test_blob_storage_list_flow(blob_storage_credentials):
         )
 
     blobs = await blob_storage_list_flow()
-    assert blobs == list(range(5))
+    assert isinstance(blobs, list)
+
+    blob = blobs[0]
+    assert isinstance(blob, dict)
+    assert blob["name"] == "test-blob"

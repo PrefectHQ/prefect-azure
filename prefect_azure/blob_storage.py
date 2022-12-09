@@ -159,6 +159,5 @@ async def blob_storage_list(
     async with blob_storage_credentials.get_container_client(
         container
     ) as container_client:
-        blobs = [blob async for blob in container_client.list_blobs()]
-
+        blobs = [dict(blob) async for blob in container_client.list_blobs()]
     return blobs
