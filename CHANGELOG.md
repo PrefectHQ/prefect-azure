@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `KeyError` when using `blob_storage_list` - [#62](https://github.com/PrefectHQ/prefect-azure/pull/62)
+
 ### Security
 
 ## 0.2.3
