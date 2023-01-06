@@ -1,6 +1,5 @@
 # prefect-azure
 
-Visit the full docs [here](https://PrefectHQ.github.io/prefect-azure) to see additional examples and the API reference.
 
 <p align="center">
     <a href="https://pypi.python.org/pypi/prefect-azure/" alt="PyPI version">
@@ -149,6 +148,49 @@ Visit [Prefect Deployments](https://docs.prefect.io/tutorials/deployments/) for 
 
 For more tips on how to use tasks and flows in a Collection, check out [Using Collections](https://orion-docs.prefect.io/collections/usage/)!
 
+## Blocks Catalog
+
+Below is a list of Blocks available for registration in
+`prefect-azure`.
+
+To register blocks in this module to
+[view and edit them](https://orion-docs.prefect.io/ui/blocks/)
+on Prefect Cloud:
+```bash
+prefect block register -m prefect_azure
+```
+Note, to use the `load` method on Blocks, you must already have a block document [saved through code](https://orion-docs.prefect.io/concepts/blocks/#saving-blocks) or [saved through the UI](https://orion-docs.prefect.io/ui/blocks/).
+### Credentials Module
+- **[AzureBlobStorageCredentials][prefect_azure.credentials.AzureBlobStorageCredentials]**
+- **[AzureCosmosDbCredentials][prefect_azure.credentials.AzureCosmosDbCredentials]**
+- **[AzureMlCredentials][prefect_azure.credentials.AzureMlCredentials]**
+- **[AzureContainerInstanceCredentials][prefect_azure.credentials.AzureContainerInstanceCredentials]**
+
+To load the AzureContainerInstanceCredentials:
+```python
+from prefect import flow
+from prefect_azure.credentials import AzureContainerInstanceCredentials
+
+@flow
+def my_flow():
+    my_block = AzureContainerInstanceCredentials.load("MY_BLOCK_NAME")
+
+my_flow()
+```
+### Container Instance Module
+- **[AzureContainerInstanceJob][prefect_azure.container_instance.AzureContainerInstanceJob]**
+
+To load the AzureContainerInstanceJob:
+```python
+from prefect import flow
+from prefect_azure.container_instance import AzureContainerInstanceJob
+
+@flow
+def my_flow():
+    my_block = AzureContainerInstanceJob.load("MY_BLOCK_NAME")
+
+my_flow()
+```
 ## Resources
 
 If you encounter and bugs while using `prefect-azure`, feel free to open an issue in the [prefect-azure](https://github.com/PrefectHQ/prefect-azure) repository.
