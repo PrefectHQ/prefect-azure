@@ -48,5 +48,6 @@ nav:
     - Home: index.md
     - Credentials: credentials.md
     - Blob Storage: blob_storage.md
+    - Cosmos DB: cosmos_db.md
     - ML Datastore: ml_datastore.md
     - Container Instance: container_instance.md
