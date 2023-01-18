@@ -90,7 +90,9 @@ class AzureBlobStorageCredentials(Block):
     _block_type_name = "Azure Blob Storage Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 
-    connection_string: SecretStr
+    connection_string: SecretStr = Field(
+        default=..., description="Includes the authorization information required."
+    )
 
     @_raise_help_msg("blob_storage")
     def get_client(self) -> "BlobServiceClient":
@@ -212,14 +214,16 @@ class AzureCosmosDbCredentials(Block):
         Load stored Azure Cosmos DB credentials:
         ```python
         from prefect_azure import AzureCosmosDbCredentials
-        azure_credentials_block = AzureCosmosDbCredentials.load("MY_BLOCK_NAME")
+        azure_credentials_block = AzureCosmosDbCredentials.load("BLOCK_NAME")
         ```
     """
 
     _block_type_name = "Azure Cosmos DB Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 
-    connection_string: SecretStr
+    connection_string: SecretStr = Field(
+        default=..., description="Includes the authorization information required."
+    )
 
     @_raise_help_msg("cosmos_db")
     def get_client(self) -> "CosmosClient":
@@ -329,19 +333,30 @@ class AzureMlCredentials(Block):
         Load stored AzureML credentials:
         ```python
         from prefect_azure import AzureMlCredentials
-        azure_ml_credentials_block = AzureMlCredentials.load("MY_BLOCK_NAME")
+        azure_ml_credentials_block = AzureMlCredentials.load("BLOCK_NAME")
         ```
     """
 
     _block_type_name = "AzureML Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 
-    tenant_id: str
-    service_principal_id: str
-    service_principal_password: SecretStr
-    subscription_id: str
-    resource_group: str
-    workspace_name: str
+    tenant_id: str = Field(
+        default=...,
+        description="The active directory tenant that the service identity belongs to.",
+    )
+    service_principal_id: str = Field(
+        default=..., description="The service principal ID."
+    )
+    service_principal_password: SecretStr = Field(
+        default=..., description="The service principal password/key."
+    )
+    subscription_id: str = Field(
+        default=..., description="The Azure subscription ID containing the workspace."
+    )
+    resource_group: str = Field(
+        default=..., description="The resource group containing the workspace."
+    )
+    workspace_name: str = Field(default=..., description="The existing workspace name.")
 
     @_raise_help_msg("ml_datastore")
     def get_workspace(self) -> "Workspace":
