@@ -443,6 +443,7 @@ class AzureContainerInstanceCredentials(Block):
                 "If any of `client_id`, `tenant_id`, or `client_secret` are provided, "
                 "all must be provided."
             )
+        return values
 
     def get_container_client(self, subscription_id: str):
         """
