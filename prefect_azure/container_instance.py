@@ -144,7 +144,13 @@ class AzureContainerInstanceJob(Infrastructure):
     type: Literal["container-instance-job"] = Field(
         default="container-instance-job", description="The slug for this task type."
     )
-    aci_credentials: AzureContainerInstanceCredentials
+    aci_credentials: AzureContainerInstanceCredentials = Field(
+        default_factory=AzureContainerInstanceCredentials,
+        description=(
+            "Credentials for Azure Container Instances; "
+            "if not provided will attempt to use DefaultAzureCredentials."
+        ),
+    )
     resource_group_name: str = Field(
         default=...,
         title="Azure Resource Group Name",

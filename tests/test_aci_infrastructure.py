@@ -7,7 +7,7 @@ import dateutil.parser
 import pytest
 from anyio.abc import TaskStatus
 from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
-from azure.identity import ClientSecretCredential
+from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.mgmt.containerinstance.models import (
     EnvironmentVariable,
     ImageRegistryCredential,
@@ -854,3 +854,27 @@ async def test_dns_config_used_if_provided(
     mock_container_group_constructor.assert_called_once()
     (_, kwargs) = mock_container_group_constructor.call_args
     assert kwargs.get("dns_config") == mock_dns_config
+
+
+def test_azure_container_instance_credentials_no_args():
+    credentials = AzureContainerInstanceCredentials()
+    assert credentials.tenant_id is None
+    assert credentials.client_id is None
+    assert credentials.client_secret is None
+    assert isinstance(credentials._create_credential(), DefaultAzureCredential)
+
+
+def test_azure_container_instance_credentials_random_kwargs():
+    credentials = AzureContainerInstanceCredentials(
+        credential_kwargs={"exclude_powershell_credential": True}
+    )
+    assert credentials.credential_kwargs == {"exclude_powershell_credential": True}
+
+
+def test_azure_container_instance_job_default_factory():
+    instance_job = AzureContainerInstanceJob(
+        resource_group_name="test_rg",
+        job_name="test_job",
+        subscription_id="test_sub_id",
+    )
+    assert isinstance(instance_job.aci_credentials, AzureContainerInstanceCredentials)

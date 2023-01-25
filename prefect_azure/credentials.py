@@ -1,9 +1,9 @@
 """Credential classes used to perform authenticated interactions with Azure"""
 
 import functools
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from azure.identity import ClientSecretCredential
+from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
 from azure.mgmt.resource import ResourceManagementClient
 from pydantic import Field, SecretStr
@@ -411,14 +411,22 @@ class AzureContainerInstanceCredentials(Block):
     _block_type_name = "Azure Container Instance Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 
-    client_id: str = Field(
-        default="...", title="Client ID", description="The service principal client ID."
+    client_id: Optional[str] = Field(
+        default=None, title="Client ID", description="The service principal client ID."
     )
-    tenant_id: str = Field(
-        default=..., title="Tenant ID", description="The service principal tenant ID."
+    tenant_id: Optional[str] = Field(
+        default=None, title="Tenant ID", description="The service principal tenant ID."
     )
-    client_secret: SecretStr = Field(
-        default=..., description="The service principal client secret."
+    client_secret: Optional[SecretStr] = Field(
+        default=None, description="The service principal client secret."
+    )
+    credential_kwargs: Dict[str, Any] = Field(
+        default_factory=dict,
+        title="Additional Credential Keyword Arguments",
+        description=(
+            "Additional keyword arguments to pass to "
+            "`ClientSecretCredential` or `DefaultAzureCredential`."
+        ),
     )
 
     def get_container_client(self, subscription_id: str):
@@ -463,8 +471,18 @@ class AzureContainerInstanceCredentials(Block):
             An initialized Azure `TokenCredential` ready to use with Azure SDK client
             classes.
         """
+        auth_args = (self.client_id, self.tenant_id, self.client_secret)
+        if auth_args == (None, None, None):
+            return DefaultAzureCredential(**self.credential_kwargs)
+
+        if not all(arg for arg in auth_args):
+            raise ValueError(
+                "If any of `client_id`, `tenant_id`, or `client_secret` are provided, "
+                "all must be provided."
+            )
         return ClientSecretCredential(
             tenant_id=self.tenant_id,
             client_id=self.client_id,
             client_secret=self.client_secret.get_secret_value(),
+            **self.credential_kwargs,
         )
