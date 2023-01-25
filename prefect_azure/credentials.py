@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
 from azure.mgmt.resource import ResourceManagementClient
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, root_validator
 
 try:
     from azure.cosmos import CosmosClient
@@ -429,6 +429,21 @@ class AzureContainerInstanceCredentials(Block):
         ),
     )
 
+    @root_validator
+    def validate_credential_kwargs(cls, values):
+        """
+        Validates that if any of `client_id`, `tenant_id`, or `client_secret` are
+        provided, all must be provided.
+        """
+        auth_args = ("client_id", "tenant_id", "client_secret")
+        has_any = any(values.get(key) is not None for key in auth_args)
+        has_all = all(values.get(key) is not None for key in auth_args)
+        if has_any and not has_all:
+            raise ValueError(
+                "If any of `client_id`, `tenant_id`, or `client_secret` are provided, "
+                "all must be provided."
+            )
+
     def get_container_client(self, subscription_id: str):
         """
         Creates an Azure Container Instances client initialized with data from
@@ -475,11 +490,6 @@ class AzureContainerInstanceCredentials(Block):
         if auth_args == (None, None, None):
             return DefaultAzureCredential(**self.credential_kwargs)
 
-        if not all(arg for arg in auth_args):
-            raise ValueError(
-                "If any of `client_id`, `tenant_id`, or `client_secret` are provided, "
-                "all must be provided."
-            )
         return ClientSecretCredential(
             tenant_id=self.tenant_id,
             client_id=self.client_id,

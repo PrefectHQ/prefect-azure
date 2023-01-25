@@ -864,6 +864,11 @@ def test_azure_container_instance_credentials_no_args():
     assert isinstance(credentials._create_credential(), DefaultAzureCredential)
 
 
+def test_azure_container_instance_credentials_insufficient_args():
+    with pytest.raises(ValueError, match="If any of `client_id`"):
+        AzureContainerInstanceCredentials(tenant_id="tenant_id")
+
+
 def test_azure_container_instance_credentials_random_kwargs():
     credentials = AzureContainerInstanceCredentials(
         credential_kwargs={"exclude_powershell_credential": True}
