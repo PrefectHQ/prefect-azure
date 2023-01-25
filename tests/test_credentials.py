@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 
+import pytest
 from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
 from conftest import CosmosClientMock
 from prefect import flow
@@ -45,6 +46,40 @@ def test_get_blob_client(blob_connection_string):
         return client
 
     client = test_flow()
+    assert isinstance(client, BlobClient)
+    client.container_name == "container"
+    client.blob_name == "blob"
+
+
+def test_get_service_client_either_error():
+    with pytest.raises(ValueError, match="either a connection string or"):
+        AzureBlobStorageCredentials().get_client()
+
+
+def test_get_service_client_both_error():
+    with pytest.raises(ValueError, match="not both"):
+        AzureBlobStorageCredentials(
+            connection_string="connection_string", account_url="account"
+        ).get_client()
+
+
+def test_get_service_client_no_conn_str():
+    client = AzureBlobStorageCredentials(account_url="account").get_client()
+    assert isinstance(client, BlobServiceClient)
+
+
+def test_get_blob_container_client_no_conn_str():
+    client = AzureBlobStorageCredentials(account_url="account").get_container_client(
+        "container"
+    )
+    assert isinstance(client, ContainerClient)
+    client.container_name == "container"
+
+
+def test_get_blob_client_no_conn_str():
+    client = AzureBlobStorageCredentials(account_url="account").get_blob_client(
+        "container", "blob"
+    )
     assert isinstance(client, BlobClient)
     client.container_name == "container"
     client.blob_name == "blob"
