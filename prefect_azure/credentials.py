@@ -412,13 +412,33 @@ class AzureContainerInstanceCredentials(Block):
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 
     client_id: Optional[str] = Field(
-        default=None, title="Client ID", description="The service principal client ID."
+        default=None,
+        title="Client ID",
+        description=(
+            "The service principal client ID. "
+            "If none of client_id, tenant_id, and client_secret are provided, "
+            "will use DefaultAzureCredential; else will need to provide all three to "
+            "use ClientSecretCredential."
+        ),
     )
     tenant_id: Optional[str] = Field(
-        default=None, title="Tenant ID", description="The service principal tenant ID."
+        default=None,
+        title="Tenant ID",
+        description=(
+            "The service principal tenant ID."
+            "If none of client_id, tenant_id, and client_secret are provided, "
+            "will use DefaultAzureCredential; else will need to provide all three to "
+            "use ClientSecretCredential."
+        ),
     )
     client_secret: Optional[SecretStr] = Field(
-        default=None, description="The service principal client secret."
+        default=None,
+        description=(
+            "The service principal client secret."
+            "If none of client_id, tenant_id, and client_secret are provided, "
+            "will use DefaultAzureCredential; else will need to provide all three to "
+            "use ClientSecretCredential."
+        ),
     )
     credential_kwargs: Dict[str, Any] = Field(
         default_factory=dict,
