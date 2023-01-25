@@ -63,21 +63,21 @@ def test_get_service_client_both_error():
         ).get_client()
 
 
-def test_get_service_client_no_conn_str():
-    client = AzureBlobStorageCredentials(account_url="account").get_client()
+def test_get_service_client_no_conn_str(account_url):
+    client = AzureBlobStorageCredentials(account_url=account_url).get_client()
     assert isinstance(client, BlobServiceClient)
 
 
-def test_get_blob_container_client_no_conn_str():
-    client = AzureBlobStorageCredentials(account_url="account").get_container_client(
+def test_get_blob_container_client_no_conn_str(account_url):
+    client = AzureBlobStorageCredentials(account_url=account_url).get_container_client(
         "container"
     )
     assert isinstance(client, ContainerClient)
     client.container_name == "container"
 
 
-def test_get_blob_client_no_conn_str():
-    client = AzureBlobStorageCredentials(account_url="account").get_blob_client(
+def test_get_blob_client_no_conn_str(account_url):
+    client = AzureBlobStorageCredentials(account_url=account_url).get_blob_client(
         "container", "blob"
     )
     assert isinstance(client, BlobClient)

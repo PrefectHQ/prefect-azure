@@ -146,6 +146,15 @@ def blob_connection_string():
     return "AccountName=account_name;AccountKey=account_key"
 
 
+@pytest.fixture
+def account_url(monkeypatch):
+    monkeypatch.setattr(
+        "azure.storage.blob._shared.base_client_async.AsyncStorageBearerTokenCredentialPolicy",  # noqa
+        MagicMock(),
+    )
+    return "account_url"
+
+
 class CosmosClientMock(MagicMock):
     def from_connection_string(connection_string):
         return CosmosClientMock()
