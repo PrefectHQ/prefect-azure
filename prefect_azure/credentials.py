@@ -89,6 +89,7 @@ class AzureBlobStorageCredentials(Block):
 
     _block_type_name = "Azure Blob Storage Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+    _documentation_url = "https://prefecthq.github.io/prefect-azure/credentials/#prefect_azure.credentials.AzureBlobStorageCredentials"  # noqa
 
     connection_string: Optional[SecretStr] = Field(
         default=None,
@@ -267,6 +268,7 @@ class AzureCosmosDbCredentials(Block):
 
     _block_type_name = "Azure Cosmos DB Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+    _documentation_url = "https://prefecthq.github.io/prefect-azure/credentials/#prefect_azure.credentials.AzureCosmosDbCredentials"  # noqa
 
     connection_string: SecretStr = Field(
         default=..., description="Includes the authorization information required."
@@ -386,6 +388,7 @@ class AzureMlCredentials(Block):
 
     _block_type_name = "AzureML Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+    _documentation_url = "https://prefecthq.github.io/prefect-azure/credentials/#prefect_azure.credentials.AzureMlCredentials"  # noqa
 
     tenant_id: str = Field(
         default=...,
@@ -457,6 +460,7 @@ class AzureContainerInstanceCredentials(Block):
 
     _block_type_name = "Azure Container Instance Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+    _documentation_url = "https://prefecthq.github.io/prefect-azure/credentials/#prefect_azure.credentials.AzureContainerInstanceCredentials"  # noqa
 
     client_id: Optional[str] = Field(
         default=None,
