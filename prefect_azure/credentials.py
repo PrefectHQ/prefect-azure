@@ -90,9 +90,35 @@ class AzureBlobStorageCredentials(Block):
     _block_type_name = "Azure Blob Storage Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
 
-    connection_string: SecretStr = Field(
-        default=..., description="Includes the authorization information required."
+    connection_string: Optional[SecretStr] = Field(
+        default=None,
+        description=(
+            "If account_url is not provided, " "the connection string to authenticate."
+        ),
     )
+    account_url: Optional[str] = Field(
+        default=None,
+        description=(
+            "If a connection string is not provided, "
+            "the URL to the Blob Storage account; will use "
+            "DefaultAzureCredential to authenticate."
+        ),
+    )
+
+    @root_validator
+    def check_connection_string_or_account_url(
+        cls, values: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Checks that either a connection string or account URL is provided, not both.
+        """
+        has_account_url = values.get("account_url") is not None
+        has_conn_str = values.get("connection_string") is not None
+        if not bool(has_account_url ^ has_conn_str):
+            raise ValueError(
+                "Must provide either a connection string or account URL, but not both."
+            )
+        return values
 
     @_raise_help_msg("blob_storage")
     def get_client(self) -> "BlobServiceClient":
@@ -121,6 +147,12 @@ class AzureBlobStorageCredentials(Block):
             asyncio.run(example_get_client_flow())
             ```
         """
+        if self.connection_string is None:
+            return BlobServiceClient(
+                account_url=self.account_url,
+                credential=DefaultAzureCredential(),
+            )
+
         return BlobServiceClient.from_connection_string(
             self.connection_string.get_secret_value()
         )
@@ -158,6 +190,14 @@ class AzureBlobStorageCredentials(Block):
             asyncio.run(example_get_blob_client_flow())
             ```
         """
+        if self.connection_string is None:
+            return BlobClient(
+                account_url=self.account_url,
+                container_name=container,
+                credential=DefaultAzureCredential(),
+                blob_name=blob,
+            )
+
         blob_client = BlobClient.from_connection_string(
             self.connection_string.get_secret_value(), container, blob
         )
@@ -195,6 +235,13 @@ class AzureBlobStorageCredentials(Block):
             asyncio.run(example_get_container_client_flow())
             ```
         """
+        if self.connection_string is None:
+            return ContainerClient(
+                account_url=self.account_url,
+                container_name=container,
+                credential=DefaultAzureCredential(),
+            )
+
         container_client = ContainerClient.from_connection_string(
             self.connection_string.get_secret_value(), container
         )
