@@ -2,7 +2,27 @@ from unittest.mock import MagicMock
 
 import pytest
 from azure.core.exceptions import ResourceExistsError
-from prefect.testing.utilities import AsyncMock
+from prefect.testing.utilities import AsyncMock, prefect_test_harness
+
+
+@pytest.fixture(scope="session", autouse=True)
+def prefect_db():
+    """
+    Sets up test harness for temporary DB during test runs.
+    """
+    with prefect_test_harness():
+        yield
+
+
+@pytest.fixture(autouse=True)
+def reset_object_registry():
+    """
+    Ensures each test has a clean object registry.
+    """
+    from prefect.context import PrefectObjectRegistry
+
+    with PrefectObjectRegistry():
+        yield
 
 
 class AsyncIter:
@@ -124,6 +144,15 @@ def datastore(monkeypatch):
 @pytest.fixture
 def blob_connection_string():
     return "AccountName=account_name;AccountKey=account_key"
+
+
+@pytest.fixture
+def account_url(monkeypatch):
+    monkeypatch.setattr(
+        "azure.storage.blob._shared.base_client_async.AsyncStorageBearerTokenCredentialPolicy",  # noqa
+        MagicMock(),
+    )
+    return "account_url"
 
 
 class CosmosClientMock(MagicMock):
