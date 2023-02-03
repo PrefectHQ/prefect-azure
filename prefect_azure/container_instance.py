@@ -140,11 +140,18 @@ class AzureContainerInstanceJob(Infrastructure):
     _block_type_name = "Azure Container Instance Job"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
     _description = "Run tasks using Azure Container Instances. Note this block is experimental. The interface may change without notice."  # noqa
+    _documentation_url = "https://prefecthq.github.io/prefect-azure/container_instance/#prefect_azure.container_instance.AzureContainerInstanceJob"  # noqa
 
     type: Literal["container-instance-job"] = Field(
         default="container-instance-job", description="The slug for this task type."
     )
-    aci_credentials: AzureContainerInstanceCredentials
+    aci_credentials: AzureContainerInstanceCredentials = Field(
+        default_factory=AzureContainerInstanceCredentials,
+        description=(
+            "Credentials for Azure Container Instances; "
+            "if not provided will attempt to use DefaultAzureCredentials."
+        ),
+    )
     resource_group_name: str = Field(
         default=...,
         title="Azure Resource Group Name",

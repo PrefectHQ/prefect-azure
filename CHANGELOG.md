@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `AzureContainerInstanceCredentials.credential_kwargs` - [#69](https://github.com/PrefectHQ/prefect-azure/pull/69)
+
 ### Changed
+
+- Made `AzureContainerInstanceCredentials` args, `tenant_id`, `client_id`, `client_secret` default to None - [#69](https://github.com/PrefectHQ/prefect-azure/pull/69)
+- `AzureContainerInstanceCredentials` is no longer required in `AzureContainerInstanceJob` - [#69](https://github.com/PrefectHQ/prefect-azure/pull/69)
 
 ### Deprecated
 
