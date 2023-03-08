@@ -525,8 +525,8 @@ class AzureContainerInstanceJob(Infrastructure):
             image_registry_credentials = (
             [
                 ImageRegistryCredential(
-                    server=self.image_registry.registry_url,
-                    identity=self.image_registry.identity,
+                    server=self.acr_managed_id.registry_url,
+                    identity=self.acr_managed_id.identity,
                 )
             ]
             if self.acr_managed_id
