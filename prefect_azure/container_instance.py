@@ -104,6 +104,30 @@ ENV_SECRETS = ["PREFECT_API_KEY"]
 # check their Azure account for orphaned container groups.
 CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS = 30
 
+class AzureContainerRegistryManagedIdentity():
+    """
+    Helper Class to allow Maanged Identity access to Azure Container registry.
+    Requires the user assigned maanged identity be available to compute running instance job.
+    Attributes:
+        registry_url: The URL to the registry such as registry.hub.docker.com. Generally, "http" or "https" can be
+            omitted.
+        identity: The Azure Managed identity resource ID for the private registry. Currently, Azure only support user assigned managed identities in this context.
+    """
+    _block_type_name = "Azure Container Registry Managed Identity"
+    _documentation_url = "https://docs.prefect.io/api-ref/prefect/infrastructure/#prefect-azure.container_instance.AzureContainerRegistryManagedIdentity"
+
+    registry_url: str = Field(
+        default=...,
+        description=(
+            'The URL to the registry. Generally, "http" or "https" can be omitted.'
+        ),
+    )
+    identity: str = Field(
+        default=...,
+        description=(
+            'The Azure Managed identity for the private registry. Currently, Azure only support user assigned managed identities in this context..'
+        ),
+    )
 
 class ContainerGroupProvisioningState(str, Enum):
     """
@@ -250,6 +274,8 @@ class AzureContainerInstanceJob(Infrastructure):
             "task definition."
         ),
     )
+    acr_managed_id: Optional[AzureContainerRegistryManagedIdentity] = None
+
     # Execution settings
     task_start_timeout_seconds: int = Field(
         default=240,
@@ -490,6 +516,20 @@ class AzureContainerInstanceJob(Infrastructure):
                 )
             ]
             if self.image_registry
+            else None
+        )
+
+        if image_registry_credentials:
+            None
+        else:
+            image_registry_credentials = (
+            [
+                ImageRegistryCredential(
+                    server=self.image_registry.registry_url,
+                    identity=self.image_registry.identity,
+                )
+            ]
+            if self.acr_managed_id
             else None
         )
 
