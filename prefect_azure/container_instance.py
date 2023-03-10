@@ -104,17 +104,23 @@ ENV_SECRETS = ["PREFECT_API_KEY"]
 # check their Azure account for orphaned container groups.
 CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS = 30
 
-class AzureContainerRegistryManagedIdentity():
+
+class AzureContainerRegistryManagedIdentity:
     """
     Helper Class to allow Maanged Identity access to Azure Container registry.
-    Requires the user assigned maanged identity be available to compute running instance job.
+    Requires the user assigned maanged identity be available to compute
+    running instance job.
+
     Attributes:
-        registry_url: The URL to the registry such as registry.hub.docker.com. Generally, "http" or "https" can be
-            omitted.
-        identity: The Azure Managed identity resource ID for the private registry. Currently, Azure only support user assigned managed identities in this context.
+        registry_url: The URL to the registry such as registry.hub.docker.com.
+        Generally, "http" or "https" can beomitted.
+        identity: The Azure Managed identity resource ID for the private
+        registry.
+        Currently, Azure only support user assigned managed identities in this context.
     """
+
     _block_type_name = "Azure Container Registry Managed Identity"
-    _documentation_url = "https://docs.prefect.io/api-ref/prefect/infrastructure/#prefect-azure.container_instance.AzureContainerRegistryManagedIdentity"
+    _documentation_url = "https://docs.prefect.io/api-ref/prefect/infrastructure/#prefect-azure.container_instance.AzureContainerRegistryManagedIdentity"  # noqa
 
     registry_url: str = Field(
         default=...,
@@ -125,9 +131,11 @@ class AzureContainerRegistryManagedIdentity():
     identity: str = Field(
         default=...,
         description=(
-            'The Azure Managed identity for the private registry. Currently, Azure only support user assigned managed identities in this context..'
+            "The Azure Managed identity for the private registry."
+            "Azure only support user assigned managed identities in this context."
         ),
     )
+
 
 class ContainerGroupProvisioningState(str, Enum):
     """
@@ -523,15 +531,15 @@ class AzureContainerInstanceJob(Infrastructure):
             None
         else:
             image_registry_credentials = (
-            [
-                ImageRegistryCredential(
-                    server=self.acr_managed_id.registry_url,
-                    identity=self.acr_managed_id.identity,
-                )
-            ]
-            if self.acr_managed_id
-            else None
-        )
+                [
+                    ImageRegistryCredential(
+                        server=self.acr_managed_id.registry_url,
+                        identity=self.acr_managed_id.identity,
+                    )
+                ]
+                if self.acr_managed_id
+                else None
+            )
 
         identity = (
             ContainerGroupIdentity(
