@@ -1,6 +1,6 @@
 """Tasks for interacting with Azure Blob Storage"""
 import uuid
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Union
 
 if TYPE_CHECKING:
     from azure.storage.blob import BlobProperties
@@ -123,12 +123,22 @@ async def blob_storage_upload(
 async def blob_storage_list(
     container: str,
     blob_storage_credentials: "AzureBlobStorageCredentials",
+    name_starts_with: str = None,
+    include: Union[str, List[str]] = None,
+    **kwargs
 ) -> List["BlobProperties"]:
     """
     List objects from a given Blob Storage container.
     Args:
         container: Name of the Blob Storage container to retrieve from.
         blob_storage_credentials: Credentials to use for authentication with Azure.
+        name_starts_with: Filters the results to return only blobs whose names
+            begin with the specified prefix.
+        include: Specifies one or more additional datasets to include in the response.
+            Options include: 'snapshots', 'metadata', 'uncommittedblobs', 'copy',
+            'deleted', 'deletedwithversions', 'tags', 'versions', 'immutabilitypolicy',
+            'legalhold'.
+        **kwargs: Addtional kwargs passed to `ContainerClient.list_blobs()`
     Returns:
         A `list` of `dict`s containing metadata about the blob.
     Example:
@@ -159,6 +169,11 @@ async def blob_storage_list(
     async with blob_storage_credentials.get_container_client(
         container
     ) as container_client:
-        blobs = [blob async for blob in container_client.list_blobs()]
+        blobs = [
+            blob
+            async for blob in container_client.list_blobs(
+                name_starts_with=name_starts_with, include=include, **kwargs
+            )
+        ]
 
     return blobs

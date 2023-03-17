@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Extended `blob_storage_list` kwargs to mimic underlying azure `ContainerClient.list_blobs()` signature
+
 ### Deprecated
 
 ### Removed
