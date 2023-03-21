@@ -77,4 +77,37 @@ async def test_blob_storage_list_flow(blob_storage_credentials):
         )
 
     blobs = await blob_storage_list_flow()
-    assert blobs == list(range(5))
+    assert blobs == [
+        {"name": "fakefolder", "metadata": None},
+        *[{"name": f"fakefolder/file{i}", "metadata": None} for i in range(4)],
+    ]
+
+
+async def test_blob_storage_list_flow_with_name(blob_storage_credentials):
+    @flow
+    async def blob_storage_list_flow():
+        return await blob_storage_list(
+            container="prefect",
+            blob_storage_credentials=blob_storage_credentials,
+            name_starts_with="fakefolder/",
+        )
+
+    blobs = await blob_storage_list_flow()
+    assert blobs == [
+        {"name": f"fakefolder/file{i}", "metadata": None} for i in range(4)
+    ]
+
+
+async def test_blob_storage_list_flow_with_include(blob_storage_credentials):
+    @flow
+    async def blob_storage_list_flow():
+        return await blob_storage_list(
+            container="prefect",
+            blob_storage_credentials=blob_storage_credentials,
+            include=["metadata"],
+        )
+
+    blobs = await blob_storage_list_flow()
+    assert len(blobs) == 5
+    for blob_data in blobs:
+        assert isinstance(blob_data["metadata"], dict)

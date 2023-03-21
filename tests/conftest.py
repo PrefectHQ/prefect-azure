@@ -62,8 +62,21 @@ class BlobStorageClientMethodsMock:
         mock_container[self.blob] = data
         return self.blob
 
-    def list_blobs(self):
-        return AsyncIter(range(5))
+    def list_blobs(self, name_starts_with=None, include=None, **kwargs):
+        sample_dicts = [
+            {"name": "fakefolder", "metadata": None},
+            *[{"name": f"fakefolder/file{i}", "metadata": None} for i in range(4)],
+        ]
+        if name_starts_with:
+            to_return = [
+                d for d in sample_dicts if d["name"].startswith(name_starts_with)
+            ]
+        else:
+            to_return = sample_dicts
+        if include:
+            for d in to_return:
+                d.update({"metadata": {"some_metadata": "true"}})
+        return AsyncIter(to_return)
 
     async def close(self):
         return None
