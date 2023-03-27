@@ -144,6 +144,7 @@ class ACRManagedIdentity(BaseModel):
 
     registry_url: str = Field(
         default=...,
+        title="Registry URL",
         description=(
             "The URL to the registry, such as myregistry.azurecr.io. Generally, 'http' "
             "or 'https' can be omitted."
