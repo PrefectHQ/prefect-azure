@@ -515,16 +515,8 @@ class AzureContainerInstanceJob(Infrastructure):
             self.resource_group_name
         )
 
-        image_registry_credentials = (
-            [
-                ImageRegistryCredential(
-                    server=self.image_registry.registry_url,
-                    username=self.image_registry.username,
-                    password=self.image_registry.password.get_secret_value(),
-                )
-            ]
-            if self.image_registry
-            else None
+        image_registry_credentials = self._create_image_registry_credentials(
+            self.image_registry
         )
 
         identity = (
@@ -563,6 +555,46 @@ class AzureContainerInstanceJob(Infrastructure):
             subnet_ids=subnet_ids,
             dns_config=dns_config,
         )
+
+    @staticmethod
+    def _create_image_registry_credentials(
+        image_registry: Union[
+            prefect.infrastructure.docker.DockerRegistry,
+            ACRManagedIdentity,
+            None,
+        ]
+    ):
+        """
+        Create image registry credentials based on the type of image_registry provided.
+
+        Args:
+            image_registry: An instance of a DockerRegistry or
+            ACRManagedIdentity object.
+
+        Returns:
+            A list containing an ImageRegistryCredential object if the input is a
+            `DockerRegistry` or `ACRManagedIdentity`, or None if the
+            input doesn't match any of the expected types.
+        """
+        if image_registry and isinstance(
+            image_registry, prefect.infrastructure.docker.DockerRegistry
+        ):
+            return [
+                ImageRegistryCredential(
+                    server=image_registry.registry_url,
+                    username=image_registry.username,
+                    password=image_registry.password.get_secret_value(),
+                )
+            ]
+        elif image_registry and isinstance(image_registry, ACRManagedIdentity):
+            return [
+                ImageRegistryCredential(
+                    server=image_registry.registry_url,
+                    identity=image_registry.identity,
+                )
+            ]
+        else:
+            return None
 
     def _wait_for_task_container_start(
         self, creation_status_poller: LROPoller[ContainerGroup]
