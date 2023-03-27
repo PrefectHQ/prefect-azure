@@ -152,7 +152,7 @@ class ACRManagedIdentity(BaseModel):
     identity: str = Field(
         default=...,
         description=(
-            "The user-assigned Azure Managed identity for the private registry."
+            "The user-assigned Azure managed identity for the private registry."
         ),
     )
 
