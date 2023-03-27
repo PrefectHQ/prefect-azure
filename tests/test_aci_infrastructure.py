@@ -22,6 +22,7 @@ from pydantic import SecretStr
 import prefect_azure.container_instance
 from prefect_azure import AzureContainerInstanceCredentials
 from prefect_azure.container_instance import (
+    ACRManagedIdentity,
     AzureContainerInstanceJob,
     AzureContainerInstanceJobResult,
     ContainerGroupProvisioningState,
@@ -664,6 +665,42 @@ def test_registry_credentials(container_instance_block, mock_aci_client, monkeyp
     assert registry_object.username == registry.username
     assert registry_object.password == registry.password.get_secret_value()
     assert registry_object.server == registry.registry_url
+
+
+def test_registry_with_managed_identity(
+    container_instance_block, mock_aci_client, monkeypatch
+):
+    mock_container_group_constructor = MagicMock()
+
+    monkeypatch.setattr(
+        prefect_azure.container_instance,
+        "ContainerGroup",
+        mock_container_group_constructor,
+    )
+
+    registry = ACRManagedIdentity(
+        registry_url="https://myregistry.azurecr.io", identity="my_managed_identity"
+    )
+
+    container_instance_block.image_registry = registry
+    container_instance_block.run()
+
+    mock_container_group_constructor.assert_called_once()
+
+    (_, kwargs) = mock_container_group_constructor.call_args
+    registry_arg: List[ImageRegistryCredential] = kwargs.get(
+        "image_registry_credentials"
+    )
+
+    # ensure the registry was used, passed as a list the way the Azure SDK expects it,
+    # and correctly converted to an Azure ImageRegistryCredential.
+    assert registry_arg is not None
+    assert isinstance(registry_arg, list)
+
+    registry_object = registry_arg[0]
+    assert isinstance(registry_object, ImageRegistryCredential)
+    assert registry_object.server == registry.registry_url
+    assert registry_object.identity == registry.identity
 
 
 def test_secure_environment_variables(
