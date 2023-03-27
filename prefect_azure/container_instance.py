@@ -85,7 +85,7 @@ from prefect.docker import get_prefect_image_name
 from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
-from pydantic import Field, SecretStr
+from pydantic import BaseModel, Field, SecretStr
 from typing_extensions import Literal
 
 from prefect_azure.credentials import AzureContainerInstanceCredentials
@@ -122,6 +122,27 @@ class ContainerRunState(str, Enum):
 
     RUNNING = "Running"
     TERMINATED = "Terminated"
+
+
+class ACRManagedIdentity(BaseModel):
+    """
+    Use a Managed Identity to access Azure Container registry. Requires the
+    user-assigned managed identity be available to the ACI container group.
+    """
+
+    registry_url: str = Field(
+        default=...,
+        description=(
+            "The URL to the registry, such as myregistry.azurecr.io. Generally, 'http' "
+            "or 'https' can be omitted."
+        ),
+    )
+    identity: str = Field(
+        default=...,
+        description=(
+            "The user-assigned Azure Managed identity for the private registry."
+        ),
+    )
 
 
 class AzureContainerInstanceJobResult(InfrastructureResult):
