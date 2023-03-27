@@ -218,7 +218,7 @@ class AzureContainerInstanceJob(Infrastructure):
         ]
     ] = Field(
         default=None,
-        Title="Container Registry (Optional)",
+        title="Image Registry (Optional)",
         description=(
             "To use any private container registry with a username and password, "
             "choose DockerRegistry. To use a private Azure Container Registry "
