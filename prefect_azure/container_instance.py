@@ -211,7 +211,20 @@ class AzureContainerInstanceJob(Infrastructure):
             "to the entrypoint as parameters."
         ),
     )
-    image_registry: Optional[prefect.infrastructure.docker.DockerRegistry] = None
+    image_registry: Optional[
+        Union[
+            prefect.infrastructure.docker.DockerRegistry,
+            ACRManagedIdentity,
+        ]
+    ] = Field(
+        default=None,
+        Title="Container Registry (Optional)",
+        description=(
+            "To use any private container registry with a username and password, "
+            "choose DockerRegistry. To use a private Azure Container Registry "
+            "with a managed identity, choose ACRManagedIdentity."
+        ),
+    )
     cpu: float = Field(
         title="CPU",
         default=ACI_DEFAULT_CPU,
