@@ -49,6 +49,18 @@ Examples:
         env={"PLANET": "earth"}
     )
     ```
+
+    Run a task that uses a private ACR registry with a managed identity
+    ```python
+    AzureContainerInstanceJob(
+        command=["echo", "hello $PLANET"],
+        image="my-registry.azurecr.io/my-image",
+        image_registry=ACRManagedIdentity(
+            registry_url="my-registry.azurecr.io",
+            identity="/my/managed/identity/123abc"
+        )
+    )
+    ```
 """
 import datetime
 import json
