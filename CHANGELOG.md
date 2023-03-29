@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added Azure Container Registry managed identity support to `AzureContainerInstanceJob`
+
 ### Changed
 
 - Extended `blob_storage_list` kwargs to mimic underlying azure `ContainerClient.list_blobs()` signature
