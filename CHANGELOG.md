@@ -9,11 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added Azure Container Registry managed identity support to `AzureContainerInstanceJob`
-
 ### Changed
-
-- Extended `blob_storage_list` kwargs to mimic underlying azure `ContainerClient.list_blobs()` signature
 
 ### Deprecated
 
@@ -23,9 +19,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## 0.2.5
+
+Released on March 29th, 2023.
+
+### Added
+
+- Added Azure Container Registry managed identity support to `AzureContainerInstanceJob` - [#78](https://github.com/PrefectHQ/prefect-azure/pull/78)
+
+### Changed
+
+- Extended `blob_storage_list` kwargs to mimic underlying azure `ContainerClient.list_blobs()` signature - [#77](https://github.com/PrefectHQ/prefect-azure/pull/77)
+
 ## 0.2.4
 
-Releaseed on February 3rd, 2023.
+Released on February 3rd, 2023.
 
 ### Added
 
