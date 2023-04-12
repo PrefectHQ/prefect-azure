@@ -49,7 +49,7 @@ ENV_SECRETS = ["PREFECT_API_KEY"]
 # check their Azure account for orphaned container groups.
 CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS = 30
 
-_default_arm_template = """  
+_default_arm_template = """
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#", 
   "contentVersion": "1.0.0.0",
@@ -88,7 +88,7 @@ _default_arm_template = """
             "name": "{{ name }}",
             "properties": {
               "image": "{{ image }}",
-              "command": {{ command }},
+              "command": "{{ command }}",
               "resources": {
                 "requests": {
                   "cpu": 1,
@@ -262,11 +262,12 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
         """
         Prepares the job configuration for a flow run.
         """
+        super().prepare_for_flow_run(flow_run, deployment, flow)
         self.template = (
             self.template.replace("{{ name }}", str(uuid.uuid4()))
             .replace("{{ image }}", self.image)
             .replace("{{ env }}", self._get_json_environment())
-            .replace("{{ command }}", json.dumps(self.command))
+            .replace("{{ command }}", self.command)
         )
 
     def _get_json_environment(self):
@@ -413,12 +414,12 @@ class AzureContainerWorker(BaseWorker):
 
         # Get the flow, so we can use its name in the container group name
         # to make it easier to identify and debug.
-        flow = prefect_client.read_flow(flow_run.flow_id)
+        flow = await prefect_client.read_flow(flow_run.flow_id)
         container_group_name = f"{flow.name}-{flow_run.id}"
 
-        self.logger.info(
+        self._logger.info(
             f"{self._log_prefix}: Preparing to run command {configuration.command} "
-            f"in container  {self.image})..."
+            f"in container  {configuration.image})..."
         )
 
         aci_client = configuration.aci_credentials.get_container_client(
@@ -444,9 +445,11 @@ class AzureContainerWorker(BaseWorker):
         )
 
         deployment = Deployment(properties=properties)
+        created_container_group: Union[ContainerGroup, None] = None
 
         try:
-            creation_status_poller = resource_client.deployments.begin_create_or_update(
+            creation_status_poller = await run_sync_in_worker_thread(
+                resource_client.deployments.begin_create_or_update,
                 resource_group_name=configuration.resource_group_name,
                 deployment_name=f"prefect-{container_group_name}",
                 parameters=deployment,
@@ -454,13 +457,14 @@ class AzureContainerWorker(BaseWorker):
 
             created_container_group = await run_sync_in_worker_thread(
                 self._wait_for_task_container_start,
-                configuration.resource_group_name,
+                aci_client,
+                configuration,
                 container_group_name,
                 creation_status_poller,
             )
 
             if self._provisioning_succeeded(created_container_group):
-                self.logger.info(f"{self._log_prefix}: Running command...")
+                self._logger.info(f"{self._log_prefix}: Running command...")
                 if task_status is not None:
                     task_status.started(value=container_group_name)
 
@@ -471,7 +475,9 @@ class AzureContainerWorker(BaseWorker):
                     container_group_name,
                     run_start_time,
                 )
-                self.logger.info(f"{self._log_prefix}: Completed command run.")
+
+                self._logger.info(f"{self._log_prefix}: Completed command run.")
+
             else:
                 raise RuntimeError(f"{self._log_prefix}: Container creation failed.")
 
@@ -504,7 +510,7 @@ class AzureContainerWorker(BaseWorker):
         # applications ~30 seconds to gracefully terminate before killing
         # a container group.
         if grace_seconds != CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS:
-            self.logger.warning(
+            self._logger.warning(
                 f"{self._log_prefix}: Kill grace period of {grace_seconds}s requested, "
                 f"but ACI does not support grace period configuration."
             )
@@ -545,7 +551,7 @@ class AzureContainerWorker(BaseWorker):
     def _wait_for_task_container_start(
         self,
         client: ContainerInstanceManagementClient,
-        resource_group_name: str,
+        configuration: AzureContainerJobConfiguration,
         container_group_name: str,
         creation_status_poller: LROPoller[DeploymentExtended],
     ) -> Optional[ContainerGroup]:
@@ -564,7 +570,7 @@ class AzureContainerWorker(BaseWorker):
             watched, or None if creation failed.
         """
         t0 = time.time()
-        timeout = self.task_start_timeout_seconds
+        timeout = configuration.task_start_timeout_seconds
 
         while not creation_status_poller.done():
             elapsed_time = time.time() - t0
@@ -576,7 +582,7 @@ class AzureContainerWorker(BaseWorker):
                         "container start."
                     )
                 )
-            time.sleep(self.task_watch_poll_interval)
+            time.sleep(configuration.task_watch_poll_interval)
 
         deployment = creation_status_poller.result()
 
@@ -584,7 +590,7 @@ class AzureContainerWorker(BaseWorker):
 
         if provisioning_succeeded:
             return self._get_container_group(
-                client, resource_group_name, container_group_name
+                client, configuration.resource_group_name, container_group_name
             )
         else:
             return None
@@ -629,7 +635,7 @@ class AzureContainerWorker(BaseWorker):
                     container_group.name,
                 )
             except ResourceNotFoundError:
-                self.logger.exception(
+                self._logger.exception(
                     f"{self._log_prefix}: Container group was deleted before flow run "
                     "completed, likely due to flow cancellation."
                 )
@@ -661,7 +667,7 @@ class AzureContainerWorker(BaseWorker):
         aci_client: ContainerInstanceManagementClient,
         container_group: ContainerGroup,
     ):
-        self.logger.info(f"{self._log_prefix}: Deleting container...")
+        self._logger.info(f"{self._log_prefix}: Deleting container...")
 
         deletion_status_poller = await run_sync_in_worker_thread(
             aci_client.container_groups.begin_delete,
@@ -686,7 +692,7 @@ class AzureContainerWorker(BaseWorker):
                 )
             await anyio.sleep(self.task_watch_poll_interval)
 
-        self.logger.info(f"{self._log_prefix}: Container deleted.")
+        self._logger.info(f"{self._log_prefix}: Container deleted.")
 
     def _get_container(self, container_group: ContainerGroup) -> Container:
         """
@@ -762,7 +768,7 @@ class AzureContainerWorker(BaseWorker):
             # results in an error, but we won't want to raise an exception and stop
             # monitoring the flow. Instead, log the error and carry on so we can try to
             # get all missed logs on the next check.
-            self.logger.warning(
+            self._logger.warning(
                 f"{self._log_prefix}: Unable to retrieve logs from container "
                 f"{container.name}. Trying again in {self.task_watch_poll_interval}s"
             )
@@ -806,7 +812,7 @@ class AzureContainerWorker(BaseWorker):
                     self._write_output_line(line)
                     last_written_time = line_time
             except dateutil.parser.ParserError as e:
-                self.logger.debug(
+                self._logger.debug(
                     (
                         f"{self._log_prefix}: Unable to parse timestamp from Azure "
                         "log line: %s"

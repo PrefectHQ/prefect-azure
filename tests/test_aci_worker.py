@@ -1,6 +1,6 @@
 import uuid
 from typing import Dict, List, Tuple, Union
-from unittest.mock import MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import dateutil.parser
 import pytest
@@ -29,9 +29,8 @@ from prefect_azure.workers.container_instance import (
     ContainerRunState,
 )
 
+
 # Helper functions
-
-
 def credential_values(
     credentials: AzureContainerInstanceCredentials,
 ) -> Tuple[str, str, str]:
@@ -40,7 +39,7 @@ def credential_values(
     credential block
 
     Args:
-        credential: The credential to extract values from
+        credentials: The credential to extract values from
 
     Returns:
         A tuple containing (client_id, client_secret, tenant_id) from
@@ -91,8 +90,21 @@ def aci_credentials():
     return credentials
 
 
+@pytest.fixture
+def aci_worker(monkeypatch):
+    mock_prefect_client = Mock()
+    mock_prefect_client.read_flow = AsyncMock()
+    mock_prefect_client.read_flow.return_value = FlowRun(name="test_flow")
+    monkeypatch.setattr(
+        prefect_azure.workers.container_instance,
+        "get_client",
+        Mock(return_value=mock_prefect_client),
+    )
+    return AzureContainerWorker(work_pool_name="test_pool")
+
+
 @pytest.fixture()
-def job_configuration(aci_credentials):
+def job_configuration(aci_credentials, worker_flow_run):
     """
     Returns a basic initialized ACI infrastructure block suitable for use
     in a variety of tests.
@@ -107,6 +119,7 @@ def job_configuration(aci_credentials):
         task_start_timeout_seconds=0.10,  # noqa
     )
 
+    container_instance_configuration.prepare_for_flow_run(worker_flow_run)
     return container_instance_configuration
 
 
@@ -176,10 +189,15 @@ def mock_resource_client(monkeypatch):
     return mock_resource_client
 
 
+@pytest.fixture
+def worker_flow_run():
+    return FlowRun(name="test-flow")
+
+
 # Tests
 
 
-def test_valid_command_validation(aci_credentials):
+def test_worker_valid_command_validation(aci_credentials):
     # ensure the validator allows valid commands to pass through
     command = "command arg1 arg2"
 
@@ -193,7 +211,7 @@ def test_valid_command_validation(aci_credentials):
     assert aci_job_config.command == command
 
 
-def test_invalid_command_validation(aci_credentials):
+def test_worker_invalid_command_validation(aci_credentials):
     # ensure invalid commands cause a validation error
     with pytest.raises(ValueError):
         AzureContainerJobConfiguration(
@@ -204,8 +222,8 @@ def test_invalid_command_validation(aci_credentials):
         )
 
 
-def test_container_client_creation(
-    aci_credentials, container_instance_block, monkeypatch
+async def test_worker_container_client_creation(
+    aci_worker, worker_flow_run, job_configuration, aci_credentials, monkeypatch
 ):
     # verify that the Azure Container Instances client and Azure Resource clients
     # are created correctly.
@@ -235,9 +253,9 @@ def test_container_client_creation(
     )
 
     subscription_id = "test_subscription"
-    container_instance_block.subscription_id = SecretStr(value=subscription_id)
+    job_configuration.subscription_id = SecretStr(value=subscription_id)
     with pytest.raises(RuntimeError):
-        container_instance_block.run()
+        await aci_worker.run(worker_flow_run, job_configuration)
 
     mock_resource_client_constructor.assert_called_once_with(
         credential=mock_azure_credential,
@@ -518,18 +536,20 @@ def test_subnets_included_when_present(container_instance_block, monkeypatch):
 
 def test_preview(aci_credentials):
     # ensures the preview generates the JSON expected
-    block_args = {
-        "resource_group_name": "test-group",
-        "memory": 1.0,
-        "cpu": 1.0,
-        "gpu_count": 1,
-        "gpu_sku": "V100",
-        "env": {"FAVORITE_ANIMAL": "cat"},
-    }
+    # block_args = {
+    #     "resource_group_name": "test-group",
+    #     "memory": 1.0,
+    #     "cpu": 1.0,
+    #     "gpu_count": 1,
+    #     "gpu_sku": "V100",
+    #     "env": {"FAVORITE_ANIMAL": "cat"},
+    # }
 
     raise NotImplementedError("This test needs to be updated to use the new ACI worker")
     # block = AzureContainerInstanceJob(
-    #     **block_args, aci_credentials=aci_credentials, subscription_id=SecretStr("test")
+    #     **block_args,
+    #     aci_credentials=aci_credentials,
+    #     subscription_id=SecretStr("test")
     # )
     #
     # preview = json.loads(block.preview())
