@@ -49,6 +49,18 @@ Examples:
         env={"PLANET": "earth"}
     )
     ```
+
+    Run a task that uses a private ACR registry with a managed identity
+    ```python
+    AzureContainerInstanceJob(
+        command=["echo", "hello $PLANET"],
+        image="my-registry.azurecr.io/my-image",
+        image_registry=ACRManagedIdentity(
+            registry_url="my-registry.azurecr.io",
+            identity="/my/managed/identity/123abc"
+        )
+    )
+    ```
 """
 import datetime
 import json
@@ -85,7 +97,7 @@ from prefect.docker import get_prefect_image_name
 from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
-from pydantic import Field, SecretStr
+from pydantic import BaseModel, Field, SecretStr
 from typing_extensions import Literal
 
 from prefect_azure.credentials import AzureContainerInstanceCredentials
@@ -124,6 +136,28 @@ class ContainerRunState(str, Enum):
     TERMINATED = "Terminated"
 
 
+class ACRManagedIdentity(BaseModel):
+    """
+    Use a Managed Identity to access Azure Container registry. Requires the
+    user-assigned managed identity be available to the ACI container group.
+    """
+
+    registry_url: str = Field(
+        default=...,
+        title="Registry URL",
+        description=(
+            "The URL to the registry, such as myregistry.azurecr.io. Generally, 'http' "
+            "or 'https' can be omitted."
+        ),
+    )
+    identity: str = Field(
+        default=...,
+        description=(
+            "The user-assigned Azure managed identity for the private registry."
+        ),
+    )
+
+
 class AzureContainerInstanceJobResult(InfrastructureResult):
     """
     The result of an `AzureContainerInstanceJob` run.
@@ -140,11 +174,18 @@ class AzureContainerInstanceJob(Infrastructure):
     _block_type_name = "Azure Container Instance Job"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
     _description = "Run tasks using Azure Container Instances. Note this block is experimental. The interface may change without notice."  # noqa
+    _documentation_url = "https://prefecthq.github.io/prefect-azure/container_instance/#prefect_azure.container_instance.AzureContainerInstanceJob"  # noqa
 
     type: Literal["container-instance-job"] = Field(
         default="container-instance-job", description="The slug for this task type."
     )
-    aci_credentials: AzureContainerInstanceCredentials
+    aci_credentials: AzureContainerInstanceCredentials = Field(
+        default_factory=AzureContainerInstanceCredentials,
+        description=(
+            "Credentials for Azure Container Instances; "
+            "if not provided will attempt to use DefaultAzureCredentials."
+        ),
+    )
     resource_group_name: str = Field(
         default=...,
         title="Azure Resource Group Name",
@@ -183,7 +224,20 @@ class AzureContainerInstanceJob(Infrastructure):
             "to the entrypoint as parameters."
         ),
     )
-    image_registry: Optional[prefect.infrastructure.docker.DockerRegistry] = None
+    image_registry: Optional[
+        Union[
+            prefect.infrastructure.docker.DockerRegistry,
+            ACRManagedIdentity,
+        ]
+    ] = Field(
+        default=None,
+        title="Image Registry (Optional)",
+        description=(
+            "To use any private container registry with a username and password, "
+            "choose DockerRegistry. To use a private Azure Container Registry "
+            "with a managed identity, choose ACRManagedIdentity."
+        ),
+    )
     cpu: float = Field(
         title="CPU",
         default=ACI_DEFAULT_CPU,
@@ -474,16 +528,8 @@ class AzureContainerInstanceJob(Infrastructure):
             self.resource_group_name
         )
 
-        image_registry_credentials = (
-            [
-                ImageRegistryCredential(
-                    server=self.image_registry.registry_url,
-                    username=self.image_registry.username,
-                    password=self.image_registry.password.get_secret_value(),
-                )
-            ]
-            if self.image_registry
-            else None
+        image_registry_credentials = self._create_image_registry_credentials(
+            self.image_registry
         )
 
         identity = (
@@ -522,6 +568,46 @@ class AzureContainerInstanceJob(Infrastructure):
             subnet_ids=subnet_ids,
             dns_config=dns_config,
         )
+
+    @staticmethod
+    def _create_image_registry_credentials(
+        image_registry: Union[
+            prefect.infrastructure.docker.DockerRegistry,
+            ACRManagedIdentity,
+            None,
+        ]
+    ):
+        """
+        Create image registry credentials based on the type of image_registry provided.
+
+        Args:
+            image_registry: An instance of a DockerRegistry or
+            ACRManagedIdentity object.
+
+        Returns:
+            A list containing an ImageRegistryCredential object if the input is a
+            `DockerRegistry` or `ACRManagedIdentity`, or None if the
+            input doesn't match any of the expected types.
+        """
+        if image_registry and isinstance(
+            image_registry, prefect.infrastructure.docker.DockerRegistry
+        ):
+            return [
+                ImageRegistryCredential(
+                    server=image_registry.registry_url,
+                    username=image_registry.username,
+                    password=image_registry.password.get_secret_value(),
+                )
+            ]
+        elif image_registry and isinstance(image_registry, ACRManagedIdentity):
+            return [
+                ImageRegistryCredential(
+                    server=image_registry.registry_url,
+                    identity=image_registry.identity,
+                )
+            ]
+        else:
+            return None
 
     def _wait_for_task_container_start(
         self, creation_status_poller: LROPoller[ContainerGroup]

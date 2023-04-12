@@ -1,12 +1,12 @@
 """Credential classes used to perform authenticated interactions with Azure"""
 
 import functools
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from azure.identity import ClientSecretCredential
+from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
 from azure.mgmt.resource import ResourceManagementClient
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, root_validator
 
 try:
     from azure.cosmos import CosmosClient
@@ -89,10 +89,37 @@ class AzureBlobStorageCredentials(Block):
 
     _block_type_name = "Azure Blob Storage Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+    _documentation_url = "https://prefecthq.github.io/prefect-azure/credentials/#prefect_azure.credentials.AzureBlobStorageCredentials"  # noqa
 
-    connection_string: SecretStr = Field(
-        default=..., description="Includes the authorization information required."
+    connection_string: Optional[SecretStr] = Field(
+        default=None,
+        description=(
+            "If account_url is not provided, " "the connection string to authenticate."
+        ),
     )
+    account_url: Optional[str] = Field(
+        default=None,
+        description=(
+            "If a connection string is not provided, "
+            "the URL to the Blob Storage account; will use "
+            "DefaultAzureCredential to authenticate."
+        ),
+    )
+
+    @root_validator
+    def check_connection_string_or_account_url(
+        cls, values: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Checks that either a connection string or account URL is provided, not both.
+        """
+        has_account_url = values.get("account_url") is not None
+        has_conn_str = values.get("connection_string") is not None
+        if not bool(has_account_url ^ has_conn_str):
+            raise ValueError(
+                "Must provide either a connection string or account URL, but not both."
+            )
+        return values
 
     @_raise_help_msg("blob_storage")
     def get_client(self) -> "BlobServiceClient":
@@ -121,6 +148,12 @@ class AzureBlobStorageCredentials(Block):
             asyncio.run(example_get_client_flow())
             ```
         """
+        if self.connection_string is None:
+            return BlobServiceClient(
+                account_url=self.account_url,
+                credential=DefaultAzureCredential(),
+            )
+
         return BlobServiceClient.from_connection_string(
             self.connection_string.get_secret_value()
         )
@@ -158,6 +191,14 @@ class AzureBlobStorageCredentials(Block):
             asyncio.run(example_get_blob_client_flow())
             ```
         """
+        if self.connection_string is None:
+            return BlobClient(
+                account_url=self.account_url,
+                container_name=container,
+                credential=DefaultAzureCredential(),
+                blob_name=blob,
+            )
+
         blob_client = BlobClient.from_connection_string(
             self.connection_string.get_secret_value(), container, blob
         )
@@ -195,6 +236,13 @@ class AzureBlobStorageCredentials(Block):
             asyncio.run(example_get_container_client_flow())
             ```
         """
+        if self.connection_string is None:
+            return ContainerClient(
+                account_url=self.account_url,
+                container_name=container,
+                credential=DefaultAzureCredential(),
+            )
+
         container_client = ContainerClient.from_connection_string(
             self.connection_string.get_secret_value(), container
         )
@@ -220,6 +268,7 @@ class AzureCosmosDbCredentials(Block):
 
     _block_type_name = "Azure Cosmos DB Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+    _documentation_url = "https://prefecthq.github.io/prefect-azure/credentials/#prefect_azure.credentials.AzureCosmosDbCredentials"  # noqa
 
     connection_string: SecretStr = Field(
         default=..., description="Includes the authorization information required."
@@ -339,6 +388,7 @@ class AzureMlCredentials(Block):
 
     _block_type_name = "AzureML Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+    _documentation_url = "https://prefecthq.github.io/prefect-azure/credentials/#prefect_azure.credentials.AzureMlCredentials"  # noqa
 
     tenant_id: str = Field(
         default=...,
@@ -410,16 +460,61 @@ class AzureContainerInstanceCredentials(Block):
 
     _block_type_name = "Azure Container Instance Credentials"
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+    _documentation_url = "https://prefecthq.github.io/prefect-azure/credentials/#prefect_azure.credentials.AzureContainerInstanceCredentials"  # noqa
 
-    client_id: str = Field(
-        default="...", title="Client ID", description="The service principal client ID."
+    client_id: Optional[str] = Field(
+        default=None,
+        title="Client ID",
+        description=(
+            "The service principal client ID. "
+            "If none of client_id, tenant_id, and client_secret are provided, "
+            "will use DefaultAzureCredential; else will need to provide all three to "
+            "use ClientSecretCredential."
+        ),
     )
-    tenant_id: str = Field(
-        default=..., title="Tenant ID", description="The service principal tenant ID."
+    tenant_id: Optional[str] = Field(
+        default=None,
+        title="Tenant ID",
+        description=(
+            "The service principal tenant ID."
+            "If none of client_id, tenant_id, and client_secret are provided, "
+            "will use DefaultAzureCredential; else will need to provide all three to "
+            "use ClientSecretCredential."
+        ),
     )
-    client_secret: SecretStr = Field(
-        default=..., description="The service principal client secret."
+    client_secret: Optional[SecretStr] = Field(
+        default=None,
+        description=(
+            "The service principal client secret."
+            "If none of client_id, tenant_id, and client_secret are provided, "
+            "will use DefaultAzureCredential; else will need to provide all three to "
+            "use ClientSecretCredential."
+        ),
     )
+    credential_kwargs: Dict[str, Any] = Field(
+        default_factory=dict,
+        title="Additional Credential Keyword Arguments",
+        description=(
+            "Additional keyword arguments to pass to "
+            "`ClientSecretCredential` or `DefaultAzureCredential`."
+        ),
+    )
+
+    @root_validator
+    def validate_credential_kwargs(cls, values):
+        """
+        Validates that if any of `client_id`, `tenant_id`, or `client_secret` are
+        provided, all must be provided.
+        """
+        auth_args = ("client_id", "tenant_id", "client_secret")
+        has_any = any(values.get(key) is not None for key in auth_args)
+        has_all = all(values.get(key) is not None for key in auth_args)
+        if has_any and not has_all:
+            raise ValueError(
+                "If any of `client_id`, `tenant_id`, or `client_secret` are provided, "
+                "all must be provided."
+            )
+        return values
 
     def get_container_client(self, subscription_id: str):
         """
@@ -463,8 +558,13 @@ class AzureContainerInstanceCredentials(Block):
             An initialized Azure `TokenCredential` ready to use with Azure SDK client
             classes.
         """
+        auth_args = (self.client_id, self.tenant_id, self.client_secret)
+        if auth_args == (None, None, None):
+            return DefaultAzureCredential(**self.credential_kwargs)
+
         return ClientSecretCredential(
             tenant_id=self.tenant_id,
             client_id=self.client_id,
             client_secret=self.client_secret.get_secret_value(),
+            **self.credential_kwargs,
         )

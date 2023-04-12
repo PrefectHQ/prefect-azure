@@ -19,6 +19,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## 0.2.5
+
+Released on March 29th, 2023.
+
+### Added
+
+- Added Azure Container Registry managed identity support to `AzureContainerInstanceJob` - [#78](https://github.com/PrefectHQ/prefect-azure/pull/78)
+
+### Changed
+
+- Extended `blob_storage_list` kwargs to mimic underlying azure `ContainerClient.list_blobs()` signature - [#77](https://github.com/PrefectHQ/prefect-azure/pull/77)
+
+## 0.2.4
+
+Released on February 3rd, 2023.
+
+### Added
+
+- Added `AzureContainerInstanceCredentials.credential_kwargs` - [#69](https://github.com/PrefectHQ/prefect-azure/pull/69)
+
+### Changed
+
+- Made `AzureContainerInstanceCredentials` args, `tenant_id`, `client_id`, `client_secret` default to None - [#69](https://github.com/PrefectHQ/prefect-azure/pull/69)
+- `AzureContainerInstanceCredentials` is no longer required in `AzureContainerInstanceJob` - [#69](https://github.com/PrefectHQ/prefect-azure/pull/69)
+
+
 ## 0.2.3
 
 Released on December 2nd, 2022.
@@ -31,10 +57,6 @@ Released on December 2nd, 2022.
 ### Changed
 
 - Updated the Container Instance Job block to treat `PREFECT_API_KEY` as a secure environment variable - [#57](https://github.com/PrefectHQ/prefect-azure/pull/57)
-
-### Deprecated
-
-### Removed
 
 ### Fixed
 

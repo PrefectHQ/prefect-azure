@@ -2,7 +2,27 @@ from unittest.mock import MagicMock
 
 import pytest
 from azure.core.exceptions import ResourceExistsError
-from prefect.testing.utilities import AsyncMock
+from prefect.testing.utilities import AsyncMock, prefect_test_harness
+
+
+@pytest.fixture(scope="session", autouse=True)
+def prefect_db():
+    """
+    Sets up test harness for temporary DB during test runs.
+    """
+    with prefect_test_harness():
+        yield
+
+
+@pytest.fixture(autouse=True)
+def reset_object_registry():
+    """
+    Ensures each test has a clean object registry.
+    """
+    from prefect.context import PrefectObjectRegistry
+
+    with PrefectObjectRegistry():
+        yield
 
 
 class AsyncIter:
@@ -42,8 +62,21 @@ class BlobStorageClientMethodsMock:
         mock_container[self.blob] = data
         return self.blob
 
-    def list_blobs(self):
-        return AsyncIter(range(5))
+    def list_blobs(self, name_starts_with=None, include=None, **kwargs):
+        sample_dicts = [
+            {"name": "fakefolder", "metadata": None},
+            *[{"name": f"fakefolder/file{i}", "metadata": None} for i in range(4)],
+        ]
+        if name_starts_with:
+            to_return = [
+                d for d in sample_dicts if d["name"].startswith(name_starts_with)
+            ]
+        else:
+            to_return = sample_dicts
+        if include:
+            for d in to_return:
+                d.update({"metadata": {"some_metadata": "true"}})
+        return AsyncIter(to_return)
 
     async def close(self):
         return None
@@ -124,6 +157,15 @@ def datastore(monkeypatch):
 @pytest.fixture
 def blob_connection_string():
     return "AccountName=account_name;AccountKey=account_key"
+
+
+@pytest.fixture
+def account_url(monkeypatch):
+    monkeypatch.setattr(
+        "azure.storage.blob._shared.base_client_async.AsyncStorageBearerTokenCredentialPolicy",  # noqa
+        MagicMock(),
+    )
+    return "account_url"
 
 
 class CosmosClientMock(MagicMock):

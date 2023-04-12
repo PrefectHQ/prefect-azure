@@ -7,7 +7,7 @@ import dateutil.parser
 import pytest
 from anyio.abc import TaskStatus
 from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
-from azure.identity import ClientSecretCredential
+from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.mgmt.containerinstance.models import (
     EnvironmentVariable,
     ImageRegistryCredential,
@@ -22,6 +22,7 @@ from pydantic import SecretStr
 import prefect_azure.container_instance
 from prefect_azure import AzureContainerInstanceCredentials
 from prefect_azure.container_instance import (
+    ACRManagedIdentity,
     AzureContainerInstanceJob,
     AzureContainerInstanceJobResult,
     ContainerGroupProvisioningState,
@@ -666,6 +667,42 @@ def test_registry_credentials(container_instance_block, mock_aci_client, monkeyp
     assert registry_object.server == registry.registry_url
 
 
+def test_registry_with_managed_identity(
+    container_instance_block, mock_aci_client, monkeypatch
+):
+    mock_container_group_constructor = MagicMock()
+
+    monkeypatch.setattr(
+        prefect_azure.container_instance,
+        "ContainerGroup",
+        mock_container_group_constructor,
+    )
+
+    registry = ACRManagedIdentity(
+        registry_url="https://myregistry.azurecr.io", identity="my_managed_identity"
+    )
+
+    container_instance_block.image_registry = registry
+    container_instance_block.run()
+
+    mock_container_group_constructor.assert_called_once()
+
+    (_, kwargs) = mock_container_group_constructor.call_args
+    registry_arg: List[ImageRegistryCredential] = kwargs.get(
+        "image_registry_credentials"
+    )
+
+    # ensure the registry was used, passed as a list the way the Azure SDK expects it,
+    # and correctly converted to an Azure ImageRegistryCredential.
+    assert registry_arg is not None
+    assert isinstance(registry_arg, list)
+
+    registry_object = registry_arg[0]
+    assert isinstance(registry_object, ImageRegistryCredential)
+    assert registry_object.server == registry.registry_url
+    assert registry_object.identity == registry.identity
+
+
 def test_secure_environment_variables(
     container_instance_block, mock_aci_client, monkeypatch
 ):
@@ -854,3 +891,32 @@ async def test_dns_config_used_if_provided(
     mock_container_group_constructor.assert_called_once()
     (_, kwargs) = mock_container_group_constructor.call_args
     assert kwargs.get("dns_config") == mock_dns_config
+
+
+def test_azure_container_instance_credentials_no_args():
+    credentials = AzureContainerInstanceCredentials()
+    assert credentials.tenant_id is None
+    assert credentials.client_id is None
+    assert credentials.client_secret is None
+    assert isinstance(credentials._create_credential(), DefaultAzureCredential)
+
+
+def test_azure_container_instance_credentials_insufficient_args():
+    with pytest.raises(ValueError, match="If any of `client_id`"):
+        AzureContainerInstanceCredentials(tenant_id="tenant_id")
+
+
+def test_azure_container_instance_credentials_random_kwargs():
+    credentials = AzureContainerInstanceCredentials(
+        credential_kwargs={"exclude_powershell_credential": True}
+    )
+    assert credentials.credential_kwargs == {"exclude_powershell_credential": True}
+
+
+def test_azure_container_instance_job_default_factory():
+    instance_job = AzureContainerInstanceJob(
+        resource_group_name="test_rg",
+        job_name="test_job",
+        subscription_id="test_sub_id",
+    )
+    assert isinstance(instance_job.aci_credentials, AzureContainerInstanceCredentials)
