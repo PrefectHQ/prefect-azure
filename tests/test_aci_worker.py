@@ -65,11 +65,10 @@ def create_mock_container_group(state: str, exit_code: Union[int, None]):
         A mock container group.
     """
     container_group = Mock()
-    containers = MagicMock()
     container = Mock()
     container.instance_view.current_state.state = state
     container.instance_view.current_state.exit_code = exit_code
-    containers.__getitem__.return_value = container
+    containers = [container]
     container_group.containers = containers
     # Azure assigns all provisioned container groups a stringified
     # UUID name.
@@ -77,16 +76,48 @@ def create_mock_container_group(state: str, exit_code: Union[int, None]):
     return container_group
 
 
+@pytest.fixture()
+def running_worker_container_group():
+    """
+    A fixture that returns a mock container group simulating a
+    a container group that is currently running a flow run.
+    """
+    container_group = create_mock_container_group(state="Running", exit_code=None)
+    container_group.provisioning_state = ContainerGroupProvisioningState.SUCCEEDED
+    return container_group
+
+
+@pytest.fixture()
+def completed_worker_container_group():
+    """
+    A fixture that returns a mock container group simulating a
+    a container group that successfully completed its flow run.
+    """
+    container_group = create_mock_container_group(state="Terminated", exit_code=0)
+    container_group.provisioning_state = ContainerGroupProvisioningState.SUCCEEDED
+
+    return container_group
+
+
 # Fixtures
 @pytest.fixture
-def aci_credentials():
+def aci_credentials(monkeypatch):
     client_id = "test_client_id"
     client_secret = "test_client_secret"
     tenant_id = "test_tenant_id"
 
+    mock_credential = Mock(wraps=ClientSecretCredential, return_value=Mock())
+
+    monkeypatch.setattr(
+        prefect_azure.credentials,
+        "ClientSecretCredential",
+        mock_credential,
+    )
+
     credentials = AzureContainerInstanceCredentials(
         client_id=client_id, client_secret=client_secret, tenant_id=tenant_id
     )
+
     return credentials
 
 
@@ -116,7 +147,7 @@ def job_configuration(aci_credentials, worker_flow_run):
         subscription_id=SecretStr("sub_id"),
         name=None,
         task_watch_poll_interval=0.05,
-        task_start_timeout_seconds=0.10,  # noqa
+        stream_output=False,
     )
 
     container_instance_configuration.prepare_for_flow_run(worker_flow_run)
@@ -153,21 +184,6 @@ def mock_aci_client(monkeypatch, mock_resource_client):
         Mock(return_value=aci_client),
     )
     return aci_client
-
-
-@pytest.fixture()
-def mock_successful_container_group():
-    """
-    A fixture that returns a mock container group that mimics a successfully
-    provisioned container group returned from Azure.
-    """
-
-    return create_mock_container_group(state="Terminated", exit_code=0)
-
-
-@pytest.fixture()
-def mock_running_container_group():
-    return create_mock_container_group(state="Running", exit_code=None)
 
 
 @pytest.fixture()
@@ -268,21 +284,30 @@ async def test_worker_container_client_creation(
 
 
 @pytest.mark.usefixtures("mock_aci_client")
-def test_credentials_are_used(container_instance_block, mock_aci_client, monkeypatch):
-    credentials = container_instance_block.aci_credentials
-    (client_id, client_secret, tenant_id) = credential_values(credentials)
+async def test_worker_credentials_are_used(
+    aci_worker,
+    worker_flow_run,
+    job_configuration,
+    aci_credentials,
+    mock_aci_client,
+    mock_resource_client,
+    monkeypatch,
+):
+    (client_id, client_secret, tenant_id) = credential_values(aci_credentials)
 
     mock_client_secret = Mock(name="Mock client secret", return_value=client_secret)
-    mock_credential = Mock(wraps=ClientSecretCredential)
+    mock_credential = Mock(wraps=ClientSecretCredential, return_value=Mock())
 
     monkeypatch.setattr(
-        credentials.client_secret, "get_secret_value", mock_client_secret
+        aci_credentials.client_secret, "get_secret_value", mock_client_secret
     )
     monkeypatch.setattr(
         prefect_azure.credentials, "ClientSecretCredential", mock_credential
     )
+    job_configuration.aci_credentials = aci_credentials
 
-    container_instance_block.run()
+    with pytest.raises(RuntimeError):
+        await aci_worker.run(worker_flow_run, job_configuration)
 
     mock_client_secret.assert_called_once()
     mock_credential.assert_called_once_with(
@@ -290,29 +315,70 @@ def test_credentials_are_used(container_instance_block, mock_aci_client, monkeyp
     )
 
 
-def test_container_creation_call(mock_aci_client, container_instance_block):
-    # ensure the block always tries to call the Azure SDK to create the container
-    container_instance_block.run()
-    mock_aci_client.container_groups.begin_create_or_update.assert_called_once()
-
-
-def test_entrypoint_used_if_provided(
-    container_instance_block, mock_aci_client, monkeypatch
+async def test_aci_worker_deployment_call(
+    mock_aci_client,
+    mock_resource_client,
+    completed_worker_container_group,
+    aci_worker,
+    worker_flow_run,
+    job_configuration,
+    monkeypatch,
 ):
-    mock_container = Mock()
-    mock_container.name = "TestContainer"
-    mock_container_constructor = Mock(return_value=mock_container)
+    # simulate a successful deployment of a container group to Azure
     monkeypatch.setattr(
-        prefect_azure.container_instance, "Container", mock_container_constructor
+        aci_worker,
+        "_get_container_group",
+        Mock(return_value=completed_worker_container_group),
     )
 
-    entrypoint = "/test/entrypoint.sh"
-    container_instance_block.entrypoint = entrypoint
-    container_instance_block.run()
+    mock_poller = Mock()
+    # the deployment poller should return a successful deployment
+    mock_poller.done = Mock(return_value=True)
+    mock_poller_result = MagicMock()
+    mock_poller_result.properties.provisioning_state = (
+        ContainerGroupProvisioningState.SUCCEEDED
+    )
+    mock_poller.result = Mock(return_value=mock_poller_result)
 
-    mock_container_constructor.assert_called_once()
-    (_, kwargs) = mock_container_constructor.call_args
-    assert kwargs.get("command")[0] == entrypoint
+    mock_resource_client.deployments.begin_create_or_update = Mock(
+        return_value=mock_poller
+    )
+
+    # ensure the worker always tries to call the Azure deployments SDK
+    # to create the container
+    await aci_worker.run(worker_flow_run, job_configuration)
+    mock_resource_client.deployments.begin_create_or_update.assert_called_once()
+
+
+async def test_worker_uses_entrypoint_if_provided(
+    aci_worker,
+    worker_flow_run,
+    job_configuration,
+    mock_aci_client,
+    mock_resource_client,
+    monkeypatch,
+):
+    mock_deployment_call = Mock()
+    mock_resource_client.deployments.begin_create_or_update = mock_deployment_call
+
+    entrypoint = "/test/entrypoint.sh"
+    job_configuration.entrypoint = entrypoint
+
+    # We haven't mocked out the container group creation, so this should fail
+    # and that's ok. We just want to ensure the entrypoint is used.
+    with pytest.raises(RuntimeError):
+        await aci_worker.run(worker_flow_run, job_configuration)
+
+    mock_deployment_call.assert_called_once()
+    (_, kwargs) = mock_deployment_call.call_args
+
+    deployment_parameters = kwargs.get("parameters").properties
+    deployment_arm_template = deployment_parameters.template
+    # We're only interested in the first resource, which is the container group
+    # we're trying to create.
+    deployment_resources = deployment_arm_template["resources"][0]
+    called_command: str = kwargs.get("command")
+    assert called_command.startswith(entrypoint)
 
 
 def test_runs_without_entrypoint(

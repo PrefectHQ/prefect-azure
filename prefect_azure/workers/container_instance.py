@@ -3,6 +3,7 @@ import json
 import sys
 import time
 import uuid
+from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
@@ -12,6 +13,7 @@ from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 from azure.core.polling import LROPoller
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
 from azure.mgmt.containerinstance.models import Container, ContainerGroup, Logs
+from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.resource.resources.models import (
     Deployment,
     DeploymentExtended,
@@ -34,6 +36,9 @@ from prefect.workers.base import (
 from pydantic import Field, SecretStr
 
 from prefect_azure.credentials import AzureContainerInstanceCredentials
+
+# import aio Azure container instance client
+
 
 ACI_DEFAULT_CPU = 1.0
 ACI_DEFAULT_MEMORY = 1.0
@@ -125,6 +130,26 @@ class ContainerRunState(str, Enum):
 
     RUNNING = "Running"
     TERMINATED = "Terminated"
+
+
+@dataclass
+class _AzureContainerFlowRunIdentifier:
+    """
+    A small helper class to store the information needed to look up and cancel
+    the container for a given flow run.
+
+    Args:
+        - subscription_id (str): The ID of the Azure subscription in which the
+            container group is running.
+        - resource_group_name (str): The name of the Azure resource group in which
+            the container group is running.
+        - container_group_name (str): The name of the container group running the
+            flow run.
+    """
+
+    subscription_id: SecretStr
+    resource_group_name: str
+    container_group_name: str
 
 
 class AzureContainerJobConfiguration(BaseJobConfiguration):
@@ -438,41 +463,31 @@ class AzureContainerWorker(BaseWorker):
                 f"{configuration.entrypoint} {configuration.command}"
             )
 
-        properties = DeploymentProperties(
-            mode=DeploymentMode.INCREMENTAL,
-            template=json.loads(configuration.template),
-            parameters={"name": {"value": container_group_name}},
-        )
-
-        deployment = Deployment(properties=properties)
         created_container_group: Union[ContainerGroup, None] = None
-
         try:
-            creation_status_poller = await run_sync_in_worker_thread(
-                resource_client.deployments.begin_create_or_update,
-                resource_group_name=configuration.resource_group_name,
-                deployment_name=f"prefect-{container_group_name}",
-                parameters=deployment,
-            )
+            self._logger.info(f"{self._log_prefix}: Creating container group...")
 
-            created_container_group = await run_sync_in_worker_thread(
-                self._wait_for_task_container_start,
+            created_container_group = await self._provision_container_group(
                 aci_client,
+                resource_client,
                 configuration,
                 container_group_name,
-                creation_status_poller,
             )
 
             if self._provisioning_succeeded(created_container_group):
                 self._logger.info(f"{self._log_prefix}: Running command...")
                 if task_status is not None:
-                    task_status.started(value=container_group_name)
+                    identifier = _AzureContainerFlowRunIdentifier(
+                        resource_group_name=configuration.resource_group_name,
+                        container_group_name=container_group_name,
+                    )
+                    task_status.started(value=identifier)
 
                 status_code = await run_sync_in_worker_thread(
                     self._watch_task_and_get_exit_code,
                     aci_client,
                     configuration,
-                    container_group_name,
+                    created_container_group,
                     run_start_time,
                 )
 
@@ -484,24 +499,23 @@ class AzureContainerWorker(BaseWorker):
         finally:
             if created_container_group:
                 await self._wait_for_container_group_deletion(
-                    aci_client, created_container_group
+                    aci_client, configuration, created_container_group
                 )
 
         return AzureContainerWorkerResult(
             identifier=created_container_group.name, status_code=status_code
         )
 
-    async def kill(
+    async def kill_infrastructure(
         self,
-        configuration: AzureContainerJobConfiguration,
-        container_group_name: str,
+        identifier: _AzureContainerFlowRunIdentifier,
         grace_seconds: int = CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS,
     ):
         """
         Kill a flow running in an ACI container group.
 
         Args:
-            container_group_name: The container group name yielded by
+            identifier: The container group identification data yielded by
                 `AzureContainerInstanceJob.run`.
             grace_seconds: The number of seconds to wait for the container group to
                 terminate.
@@ -516,20 +530,20 @@ class AzureContainerWorker(BaseWorker):
             )
 
         aci_client = self.aci_credentials.get_container_client(
-            self.subscription_id.get_secret_value()
+            identifier.subscription_id.get_secret_value()
         )
 
         # get the container group to check that it still exists
         try:
             container_group = aci_client.container_groups.get(
-                resource_group_name=configuration.resource_group_name,
-                container_group_name=container_group_name,
+                resource_group_name=identifier.resource_group_name,
+                container_group_name=identifier,
             )
         except ResourceNotFoundError as exc:
-            # the container group no longer exists, so there's nothing to cancel
+            # the container group no longer exists, so there's nsothing to cancel
             raise InfrastructureNotFound(
-                f"Cannot stop ACI job: container group {container_group_name} "
-                "no longer exists."
+                f"Cannot stop ACI job: container group "
+                f"{identifier.container_group_name} no longer exists."
             ) from exc
 
         # get the container state to check if the container has terminated
@@ -538,9 +552,11 @@ class AzureContainerWorker(BaseWorker):
 
         # the container group needs to be deleted regardless of whether the container
         # already terminated
-        await self._wait_for_container_group_deletion(aci_client, container_group)
+        await self._wait_for_container_group_deletion(
+            aci_client, identifier, container_group
+        )
 
-        # if the container had already terminated, raise an exception to let the agent
+        # if the container has already terminated, raise an exception to let the agent
         # know the flow was not cancelled
         if container_state == ContainerRunState.TERMINATED:
             raise InfrastructureNotAvailable(
@@ -586,7 +602,10 @@ class AzureContainerWorker(BaseWorker):
 
         deployment = creation_status_poller.result()
 
-        provisioning_succeeded = deployment.properties.provisioning_state == "Succeeded"
+        provisioning_succeeded = (
+            deployment.properties.provisioning_state
+            == ContainerGroupProvisioningState.SUCCEEDED
+        )
 
         if provisioning_succeeded:
             return self._get_container_group(
@@ -594,6 +613,37 @@ class AzureContainerWorker(BaseWorker):
             )
         else:
             return None
+
+    async def _provision_container_group(
+        self,
+        aci_client: ContainerInstanceManagementClient,
+        resource_client: ResourceManagementClient,
+        configuration: AzureContainerJobConfiguration,
+        container_group_name: str,
+    ):
+        properties = DeploymentProperties(
+            mode=DeploymentMode.INCREMENTAL,
+            template=json.loads(configuration.template),
+            parameters={"name": {"value": container_group_name}},
+        )
+        deployment = Deployment(properties=properties)
+
+        creation_status_poller = await run_sync_in_worker_thread(
+            resource_client.deployments.begin_create_or_update,
+            resource_group_name=configuration.resource_group_name,
+            deployment_name=f"prefect-{container_group_name}",
+            parameters=deployment,
+        )
+
+        created_container_group = await run_sync_in_worker_thread(
+            self._wait_for_task_container_start,
+            aci_client,
+            configuration,
+            container_group_name,
+            creation_status_poller,
+        )
+
+        return created_container_group
 
     def _watch_task_and_get_exit_code(
         self,
@@ -618,7 +668,7 @@ class AzureContainerWorker(BaseWorker):
 
         # get any logs the container has already generated
         last_log_time = run_start_time
-        if self.stream_output:
+        if configuration.stream_output:
             last_log_time = self._get_and_stream_output(
                 client, container_group, last_log_time
             )
@@ -653,25 +703,28 @@ class AzureContainerWorker(BaseWorker):
                 # trying to read logs from a terminated container raises an exception
                 break
 
-            if self.stream_output:
+            if configuration.stream_output:
                 last_log_time = self._get_and_stream_output(
                     client, container_group, last_log_time
                 )
 
-            time.sleep(self.task_watch_poll_interval)
+            time.sleep(configuration.task_watch_poll_interval)
 
         return status_code
 
     async def _wait_for_container_group_deletion(
         self,
         aci_client: ContainerInstanceManagementClient,
+        configuration: Union[
+            AzureContainerJobConfiguration, _AzureContainerFlowRunIdentifier
+        ],
         container_group: ContainerGroup,
     ):
         self._logger.info(f"{self._log_prefix}: Deleting container...")
 
         deletion_status_poller = await run_sync_in_worker_thread(
             aci_client.container_groups.begin_delete,
-            resource_group_name=self.resource_group_name,
+            resource_group_name=configuration.resource_group_name,
             container_group_name=container_group.name,
         )
 
