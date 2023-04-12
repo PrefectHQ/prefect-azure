@@ -77,6 +77,26 @@ def create_mock_container_group(state: str, exit_code: Union[int, None]):
     return container_group
 
 
+def create_job_configuration(aci_credentials, worker_flow_run, run_prep=True):
+    """
+    Returns a basic initialized ACI infrastructure block suitable for use
+    in a variety of tests.
+    """
+    container_instance_configuration = AzureContainerJobConfiguration(
+        command="test",
+        aci_credentials=aci_credentials,
+        resource_group_name="test_group",
+        subscription_id=SecretStr("sub_id"),
+        name=None,
+        task_watch_poll_interval=0.05,
+        stream_output=False,
+    )
+
+    if run_prep:
+        container_instance_configuration.prepare_for_flow_run(worker_flow_run)
+    return container_instance_configuration
+
+
 @pytest.fixture()
 def running_worker_container_group():
     """
@@ -141,18 +161,17 @@ def job_configuration(aci_credentials, worker_flow_run):
     Returns a basic initialized ACI infrastructure block suitable for use
     in a variety of tests.
     """
-    container_instance_configuration = AzureContainerJobConfiguration(
-        command="test",
-        aci_credentials=aci_credentials,
-        resource_group_name="test_group",
-        subscription_id=SecretStr("sub_id"),
-        name=None,
-        task_watch_poll_interval=0.05,
-        stream_output=False,
-    )
+    return create_job_configuration(aci_credentials, worker_flow_run)
 
-    container_instance_configuration.prepare_for_flow_run(worker_flow_run)
-    return container_instance_configuration
+
+@pytest.fixture()
+def raw_job_configuration(aci_credentials, worker_flow_run):
+    """
+    Returns a basic job configuration suitable for use in a variety of tests.
+    ``prepare_for_flow_run`` has not called on the returned configuration, so you
+    will need to call it yourself before using the job configuration.
+    """
+    return create_job_configuration(aci_credentials, worker_flow_run, run_prep=False)
 
 
 @pytest.fixture()
@@ -288,6 +307,7 @@ async def test_worker_container_client_creation(
 async def test_worker_credentials_are_used(
     aci_worker,
     worker_flow_run,
+    job_configuration,
     aci_credentials,
     mock_aci_client,
     mock_resource_client,
@@ -304,18 +324,6 @@ async def test_worker_credentials_are_used(
     monkeypatch.setattr(
         prefect_azure.credentials, "ClientSecretCredential", mock_credential
     )
-
-    job_configuration = AzureContainerJobConfiguration(
-        command="test",
-        aci_credentials=aci_credentials,
-        resource_group_name="test_group",
-        subscription_id=SecretStr("sub_id"),
-        name=None,
-        task_watch_poll_interval=0.05,
-        stream_output=False,
-        entrypoint=DEFAULT_CONTAINER_ENTRYPOINT,
-    )
-    job_configuration.prepare_for_flow_run(worker_flow_run)
 
     with pytest.raises(RuntimeError):
         await aci_worker.run(worker_flow_run, job_configuration)
@@ -364,19 +372,22 @@ async def test_aci_worker_deployment_call(
 async def test_worker_uses_entrypoint_if_provided(
     aci_worker,
     worker_flow_run,
-    job_configuration,
+    raw_job_configuration,
     mock_aci_client,
     mock_resource_client,
     monkeypatch,
 ):
+    job_configuration = raw_job_configuration
+
     mock_deployment_call = Mock()
     mock_resource_client.deployments.begin_create_or_update = mock_deployment_call
 
     entrypoint = "/test/entrypoint.sh"
     job_configuration.entrypoint = entrypoint
+    job_configuration.prepare_for_flow_run(worker_flow_run)
 
     # We haven't mocked out the container group creation, so this should fail
-    # and that's ok. We just want to ensure the entrypoint is used.
+    # and that's ok. We just want to ensure the entrypoint is used correctly.
     with pytest.raises(RuntimeError):
         await aci_worker.run(worker_flow_run, job_configuration)
 
@@ -398,7 +409,7 @@ async def test_worker_uses_entrypoint_if_provided(
 
 
 def test_runs_without_entrypoint(
-    container_instance_block, mock_aci_client, monkeypatch
+    aci_worker, unprepared_job_configuration, mock_aci_client, monkeypatch
 ):
     mock_container = Mock()
     mock_container.name = "TestContainer"
@@ -407,8 +418,8 @@ def test_runs_without_entrypoint(
         prefect_azure.container_instance, "Container", mock_container_constructor
     )
 
-    default_command = container_instance_block.command
-    container_instance_block.entrypoint = None
+    default_command = job_configuration.command
+    job_configuration.entrypoint = None
     container_instance_block.run()
 
     mock_container_constructor.assert_called_once()
