@@ -288,6 +288,14 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
         Prepares the job configuration for a flow run.
         """
         super().prepare_for_flow_run(flow_run, deployment, flow)
+
+        # Add the entrypoint if provided. Creating an ACI container with a
+        # command overrides the container's built-in entrypoint. Prefect base images
+        # use entrypoint.sh as the entrypoint, so we need to add it back in to avoid
+        # breaking EXTRA_PIP_PACKAGES installation on container startup.
+        if self.entrypoint:
+            self.command = f"{self.entrypoint} {self.command}"
+
         self.template = (
             self.template.replace("{{ name }}", str(uuid.uuid4()))
             .replace("{{ image }}", self.image)
@@ -453,15 +461,6 @@ class AzureContainerWorker(BaseWorker):
         resource_client = configuration.aci_credentials.get_resource_client(
             configuration.subscription_id.get_secret_value()
         )
-
-        # Add the entrypoint if provided. Creating an ACI container with a
-        # command overrides the container's built-in entrypoint. Prefect base images
-        # use entrypoint.sh as the entrypoint, so we need to add it back in to avoid
-        # breaking EXTRA_PIP_PACKAGES installation on container startup.
-        if configuration.entrypoint:
-            configuration.command = (
-                f"{configuration.entrypoint} {configuration.command}"
-            )
 
         created_container_group: Union[ContainerGroup, None] = None
         try:
@@ -881,6 +880,7 @@ class AzureContainerWorker(BaseWorker):
         Generates a dictionary of all environment variables to send to the
         ACI container.
         """
+
         return {**self._base_environment(), **self.env}
 
     @property
