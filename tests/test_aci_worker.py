@@ -27,6 +27,7 @@ from prefect_azure.workers.container_instance import (
     AzureContainerWorkerResult,
     ContainerGroupProvisioningState,
     ContainerRunState,
+    DEFAULT_CONTAINER_ENTRYPOINT,
 )
 
 
@@ -287,7 +288,6 @@ async def test_worker_container_client_creation(
 async def test_worker_credentials_are_used(
     aci_worker,
     worker_flow_run,
-    job_configuration,
     aci_credentials,
     mock_aci_client,
     mock_resource_client,
@@ -304,7 +304,18 @@ async def test_worker_credentials_are_used(
     monkeypatch.setattr(
         prefect_azure.credentials, "ClientSecretCredential", mock_credential
     )
-    job_configuration.aci_credentials = aci_credentials
+
+    job_configuration = AzureContainerJobConfiguration(
+        command="test",
+        aci_credentials=aci_credentials,
+        resource_group_name="test_group",
+        subscription_id=SecretStr("sub_id"),
+        name=None,
+        task_watch_poll_interval=0.05,
+        stream_output=False,
+        entrypoint=DEFAULT_CONTAINER_ENTRYPOINT,
+    )
+    job_configuration.prepare_for_flow_run(worker_flow_run)
 
     with pytest.raises(RuntimeError):
         await aci_worker.run(worker_flow_run, job_configuration)
@@ -377,7 +388,12 @@ async def test_worker_uses_entrypoint_if_provided(
     # We're only interested in the first resource, which is the container group
     # we're trying to create.
     deployment_resources = deployment_arm_template["resources"][0]
-    called_command: str = kwargs.get("command")
+    deployment_properties = deployment_resources["properties"]
+    deployment_containers = deployment_properties["containers"]
+
+    assert len(deployment_containers) == 1
+
+    called_command = deployment_containers[0]["properties"]["command"]
     assert called_command.startswith(entrypoint)
 
 
