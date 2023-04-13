@@ -13,7 +13,9 @@ from azure.mgmt.containerinstance.models import (
     UserAssignedIdentities,
 )
 from azure.mgmt.resource import ResourceManagementClient
+
 from prefect.client.schemas import FlowRun
+from prefect.server.schemas.core import Flow
 from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.infrastructure.docker import DockerRegistry
 from prefect.settings import get_current_settings
@@ -28,6 +30,7 @@ from prefect_azure.workers.container_instance import (
     ContainerGroupProvisioningState,
     ContainerRunState,
     DEFAULT_CONTAINER_ENTRYPOINT,
+    _AzureContainerFlowRunIdentifier,  # noqa
 )
 
 
@@ -97,6 +100,18 @@ def create_job_configuration(aci_credentials, worker_flow_run, run_prep=True):
     return container_instance_configuration
 
 
+def get_command_from_deployment_parameters(parameters):
+    deployment_arm_template = parameters.template
+    # We're only interested in the first resource, because our ACI
+    # flow run container groups only have a single container by default.
+    deployment_resources = deployment_arm_template["resources"][0]
+    deployment_properties = deployment_resources["properties"]
+    deployment_containers = deployment_properties["containers"]
+
+    command = deployment_containers[0]["properties"]["command"]
+    return command
+
+
 @pytest.fixture()
 def running_worker_container_group():
     """
@@ -143,10 +158,7 @@ def aci_credentials(monkeypatch):
 
 
 @pytest.fixture
-def aci_worker(monkeypatch):
-    mock_prefect_client = Mock()
-    mock_prefect_client.read_flow = AsyncMock()
-    mock_prefect_client.read_flow.return_value = FlowRun(name="test_flow")
+def aci_worker(mock_prefect_client, monkeypatch):
     monkeypatch.setattr(
         prefect_azure.workers.container_instance,
         "get_client",
@@ -207,6 +219,24 @@ def mock_aci_client(monkeypatch, mock_resource_client):
 
 
 @pytest.fixture()
+def mock_prefect_client(monkeypatch, worker_flow):
+    """
+    A fixture that provides a mock Prefect client
+    """
+    mock_client = Mock()
+    mock_client.read_flow = AsyncMock()
+    mock_client.read_flow.return_value = worker_flow
+
+    monkeypatch.setattr(
+        prefect_azure.workers.container_instance,
+        "get_client",
+        Mock(return_value=mock_client),
+    )
+
+    return mock_client
+
+
+@pytest.fixture()
 def mock_resource_client(monkeypatch):
     mock_resource_client = MagicMock(spec=ResourceManagementClient)
 
@@ -226,8 +256,13 @@ def mock_resource_client(monkeypatch):
 
 
 @pytest.fixture
-def worker_flow_run():
-    return FlowRun(name="test-flow")
+def worker_flow():
+    return Flow(id=uuid.uuid4(), name="test-flow")
+
+
+@pytest.fixture
+def worker_flow_run(worker_flow):
+    return FlowRun(id=uuid.uuid4(), flow_id=worker_flow.id, name="test-flow-run")
 
 
 # Tests
@@ -369,21 +404,37 @@ async def test_aci_worker_deployment_call(
     mock_resource_client.deployments.begin_create_or_update.assert_called_once()
 
 
-async def test_worker_uses_entrypoint_if_provided(
+@pytest.mark.parametrize(
+    "entrypoint, job_command, expected_template_command",
+    [
+        # If no entrypoint is provided, just use the command
+        (None, "command arg1 arg2", "command arg1 arg2"),
+        # entrypoint and command should be combined if both are provided
+        (
+            "/test/entrypoint.sh",
+            "command arg1 arg2",
+            "/test/entrypoint.sh command arg1 arg2",
+        ),
+    ],
+)
+async def test_worker_uses_entrypoint_correctly_in_template(
     aci_worker,
     worker_flow_run,
     raw_job_configuration,
     mock_aci_client,
     mock_resource_client,
     monkeypatch,
+    entrypoint,
+    job_command,
+    expected_template_command,
 ):
     job_configuration = raw_job_configuration
 
     mock_deployment_call = Mock()
     mock_resource_client.deployments.begin_create_or_update = mock_deployment_call
 
-    entrypoint = "/test/entrypoint.sh"
     job_configuration.entrypoint = entrypoint
+    job_configuration.command = job_command
     job_configuration.prepare_for_flow_run(worker_flow_run)
 
     # We haven't mocked out the container group creation, so this should fail
@@ -395,166 +446,172 @@ async def test_worker_uses_entrypoint_if_provided(
     (_, kwargs) = mock_deployment_call.call_args
 
     deployment_parameters = kwargs.get("parameters").properties
-    deployment_arm_template = deployment_parameters.template
-    # We're only interested in the first resource, which is the container group
-    # we're trying to create.
-    deployment_resources = deployment_arm_template["resources"][0]
-    deployment_properties = deployment_resources["properties"]
-    deployment_containers = deployment_properties["containers"]
-
-    assert len(deployment_containers) == 1
-
-    called_command = deployment_containers[0]["properties"]["command"]
-    assert called_command.startswith(entrypoint)
+    called_command = get_command_from_deployment_parameters(deployment_parameters)
+    assert called_command == expected_template_command
 
 
-def test_runs_without_entrypoint(
-    aci_worker, unprepared_job_configuration, mock_aci_client, monkeypatch
-):
-    mock_container = Mock()
-    mock_container.name = "TestContainer"
-    mock_container_constructor = Mock(return_value=mock_container)
-    monkeypatch.setattr(
-        prefect_azure.container_instance, "Container", mock_container_constructor
-    )
-
-    default_command = job_configuration.command
-    job_configuration.entrypoint = None
-    container_instance_block.run()
-
-    mock_container_constructor.assert_called_once()
-    (_, kwargs) = mock_container_constructor.call_args
-    assert kwargs.get("command")[0] == " ".join(default_command)
-
-
-def test_delete_after_group_creation_failure(
-    job_configuration, mock_aci_client, monkeypatch
+async def test_delete_after_group_creation_failure(
+    aci_worker, worker_flow_run, job_configuration, mock_aci_client, monkeypatch
 ):
     # if provisioning failed, the container group should be deleted
     mock_container_group = Mock()
     mock_container_group.provisioning_state.return_value = (
         ContainerGroupProvisioningState.FAILED
     )
-    container_worker = AzureContainerWorker()
 
     monkeypatch.setattr(
-        container_worker, "_wait_for_task_container_start", mock_container_group
+        aci_worker, "_wait_for_task_container_start", mock_container_group
     )
-    with pytest.raises(RuntimeError, match="Container creation failed"):
-        container_worker.run(FlowRun(name="Test"), configuration=job_configuration)
+
+    with pytest.raises(RuntimeError):
+        await aci_worker.run(worker_flow_run, configuration=job_configuration)
+
     mock_aci_client.container_groups.begin_delete.assert_called_once()
 
 
-def test_no_delete_if_no_container_group(
-    container_instance_block, mock_aci_client, monkeypatch
+async def test_no_delete_if_no_container_group_exists(
+    aci_worker, worker_flow_run, job_configuration, mock_aci_client, monkeypatch
 ):
     # if provisioning failed because the ACI client returned nothing,
     # we should not attempt to delete the container group because we don't
     # have enough data to try
     monkeypatch.setattr(
-        container_instance_block,
+        aci_worker,
         "_wait_for_task_container_start",
         Mock(return_value=None),
     )
+
     with pytest.raises(RuntimeError, match="Container creation failed"):
-        container_instance_block.run()
+        await aci_worker.run(worker_flow_run, job_configuration)
+
     mock_aci_client.container_groups.begin_delete.assert_not_called()
 
 
-def test_delete_after_group_creation_success(
-    container_instance_block, mock_aci_client, monkeypatch
+async def test_delete_after_group_creation_success(
+    aci_worker,
+    worker_flow_run,
+    job_configuration,
+    mock_aci_client,
+    monkeypatch,
+    running_worker_container_group,
 ):
     # if provisioning was successful, the container group should eventually be deleted
-    container_instance_block.run()
+    monkeypatch.setattr(
+        aci_worker,
+        "_wait_for_task_container_start",
+        Mock(return_value=running_worker_container_group),
+    )
+
+    await aci_worker.run(worker_flow_run, job_configuration)
     mock_aci_client.container_groups.begin_delete.assert_called_once()
 
 
-def test_delete_after_after_exception(
-    container_instance_block, mock_aci_client, monkeypatch
+async def test_delete_after_after_exception(
+    aci_worker,
+    worker_flow_run,
+    job_configuration,
+    mock_aci_client,
+    mock_resource_client,
+    monkeypatch,
 ):
-    # if an exception was thrown while waiting for container group provisioning,
-    # the group should be deleted
-    mock_aci_client.container_groups.begin_create_or_update.side_effect = (
+    # If an exception was thrown while waiting for container group provisioning,
+    # we should still attempt to delete the container group. This is to ensure
+    # that we don't leave orphaned container groups in the event of an error.
+    mock_resource_client.deployments.begin_create_or_update.side_effect = (
         HttpResponseError(message="it broke")
     )
 
     with pytest.raises(HttpResponseError):
-        container_instance_block.run()
+        await aci_worker.run(worker_flow_run, job_configuration)
 
-    mock_aci_client.container_groups.begin_create_or_update.assert_called_once()
+    mock_aci_client.container_groups.begin_delete.assert_called_once()
 
 
 @pytest.mark.usefixtures("mock_aci_client")
-def test_task_status_started_on_provisioning_success(
-    container_instance_block, mock_successful_container_group, monkeypatch
+async def test_task_status_started_on_provisioning_success(
+    aci_worker,
+    worker_flow_run,
+    job_configuration,
+    running_worker_container_group,
+    mock_prefect_client,
+    monkeypatch,
 ):
-    monkeypatch.setattr(
-        container_instance_block, "_provisioning_succeeded", Mock(return_value=True)
-    )
+    monkeypatch.setattr(aci_worker, "_provisioning_succeeded", Mock(return_value=True))
 
     monkeypatch.setattr(
-        container_instance_block,
+        aci_worker,
         "_wait_for_task_container_start",
-        Mock(return_value=mock_successful_container_group),
+        Mock(return_value=running_worker_container_group),
     )
 
     task_status = Mock(spec=TaskStatus)
-    container_instance_block.run(task_status=task_status)
+    await aci_worker.run(worker_flow_run, job_configuration, task_status=task_status)
 
-    task_status.started.assert_called_once_with(
-        value=mock_successful_container_group.name
+    flow = await mock_prefect_client.read_flow(worker_flow_run.flow_id)
+
+    container_group_name = f"{flow.name}-{worker_flow_run.id}"
+
+    identifier = _AzureContainerFlowRunIdentifier(
+        subscription_id=job_configuration.subscription_id,
+        resource_group_name=job_configuration.resource_group_name,
+        container_group_name=container_group_name,
     )
+
+    task_status.started.assert_called_once_with(value=identifier)
 
 
 @pytest.mark.usefixtures("mock_aci_client")
-def test_task_status_not_started_on_provisioning_failure(
-    container_instance_block, mock_successful_container_group, monkeypatch
+async def test_task_status_not_started_on_provisioning_failure(
+    aci_worker, worker_flow_run, job_configuration, monkeypatch
 ):
-    monkeypatch.setattr(
-        container_instance_block, "_provisioning_succeeded", Mock(return_value=False)
-    )
+    monkeypatch.setattr(aci_worker, "_provisioning_succeeded", Mock(return_value=False))
 
     task_status = Mock(spec=TaskStatus)
     with pytest.raises(RuntimeError, match="Container creation failed"):
-        container_instance_block.run(task_status=task_status)
+        await aci_worker.run(worker_flow_run, job_configuration, task_status)
     task_status.started.assert_not_called()
 
 
-def test_provisioning_timeout_throws_exception(
-    mock_aci_client, container_instance_block
+async def test_provisioning_timeout_throws_exception(
+    aci_worker,
+    worker_flow_run,
+    job_configuration,
+    mock_aci_client,
+    mock_resource_client,
 ):
     mock_poller = Mock()
     mock_poller.done.return_value = False
-    mock_aci_client.container_groups.begin_create_or_update.side_effect = (
-        lambda *args: mock_poller
+    mock_resource_client.deployments.begin_create_or_update.side_effect = (
+        lambda *args, **kwargs: mock_poller
     )
 
     # avoid delaying test runs
-    container_instance_block.task_watch_poll_interval = 0.09
-    container_instance_block.task_start_timeout_seconds = 0.10
+    job_configuration.task_watch_poll_interval = 0.09
+    job_configuration.task_start_timeout_seconds = 0.10
 
     with pytest.raises(RuntimeError, match="Timed out after"):
-        container_instance_block.run()
+        await aci_worker.run(worker_flow_run, job_configuration)
 
 
-def test_watch_for_container_termination(
+async def test_watch_for_container_termination(
+    aci_worker,
+    worker_flow_run,
+    job_configuration,
     mock_aci_client,
-    mock_running_container_group,
-    mock_successful_container_group,
-    container_instance_block,
+    mock_resource_client,
     monkeypatch,
+    running_worker_container_group,
+    completed_worker_container_group,
 ):
-    monkeypatch.setattr(
-        container_instance_block, "_provisioning_succeeded", Mock(return_value=True)
-    )
+    monkeypatch.setattr(aci_worker, "_provisioning_succeeded", Mock(return_value=True))
 
     monkeypatch.setattr(
-        container_instance_block,
+        aci_worker,
         "_wait_for_task_container_start",
-        Mock(return_value=mock_running_container_group),
+        Mock(return_value=running_worker_container_group),
     )
 
-    # make the block wait a few times before we give it a successful result
+    # make the worker wait a few times before we give it a successful result
     # so we can make sure the watcher actually watches instead of skipping
     # the timeout
     run_count = 0
@@ -563,14 +620,14 @@ def test_watch_for_container_termination(
         nonlocal run_count
         run_count += 1
         if run_count < 5:
-            return mock_running_container_group
+            return running_worker_container_group
         else:
-            return mock_successful_container_group
+            return completed_worker_container_group
 
     mock_aci_client.container_groups.get.side_effect = get_container_group
 
-    container_instance_block.task_watch_poll_interval = 0.02
-    result = container_instance_block.run()
+    job_configuration.task_watch_poll_interval = 0.02
+    result = await aci_worker.run(worker_flow_run, job_configuration)
 
     # ensure the watcher was watching
     assert run_count == 5
@@ -579,27 +636,27 @@ def test_watch_for_container_termination(
     assert isinstance(result, AzureContainerWorkerResult)
 
 
-def test_watch_for_quick_termination(
+async def test_quick_termination_handling(
+    aci_worker,
+    worker_flow_run,
+    job_configuration,
     mock_aci_client,
-    mock_successful_container_group,
-    container_instance_block,
+    completed_worker_container_group,
     monkeypatch,
 ):
     # ensure that everything works as expected in the case where the container has
     # already finished its flow run by the time the poller picked up the container
     # group's successful provisioning status.
 
-    monkeypatch.setattr(
-        container_instance_block, "_provisioning_succeeded", Mock(return_value=True)
-    )
+    monkeypatch.setattr(aci_worker, "_provisioning_succeeded", Mock(return_value=True))
 
     monkeypatch.setattr(
-        container_instance_block,
+        aci_worker,
         "_wait_for_task_container_start",
-        Mock(return_value=mock_successful_container_group),
+        Mock(return_value=completed_worker_container_group),
     )
 
-    result = container_instance_block.run()
+    result = await aci_worker.run(worker_flow_run, job_configuration)
 
     # ensure the watcher didn't need to call to check status since the run
     # already completed.
@@ -608,59 +665,62 @@ def test_watch_for_quick_termination(
     assert isinstance(result, AzureContainerWorkerResult)
 
 
-@pytest.mark.usefixtures("mock_aci_client")
-def test_subnets_included_when_present(container_instance_block, monkeypatch):
-    mock_container_group_cls = MagicMock()
-
-    monkeypatch.setattr(
-        prefect_azure.container_instance, "ContainerGroup", mock_container_group_cls
-    )
-    subnet_ids = ["subnet1", "subnet2", "subnet3"]
-    container_instance_block.subnet_ids = subnet_ids
-    container_instance_block.run()
-    mock_container_group_cls.assert_called_once()
-
-    (_, kwargs) = mock_container_group_cls.call_args
-    subnet_args = kwargs.get("subnet_ids")
-    assert len(subnet_args) == len(subnet_ids)
-    for subnet_id in subnet_ids:
-        assert subnet_id in subnet_ids
-
-
-def test_preview(aci_credentials):
-    # ensures the preview generates the JSON expected
-    # block_args = {
-    #     "resource_group_name": "test-group",
-    #     "memory": 1.0,
-    #     "cpu": 1.0,
-    #     "gpu_count": 1,
-    #     "gpu_sku": "V100",
-    #     "env": {"FAVORITE_ANIMAL": "cat"},
-    # }
-
-    raise NotImplementedError("This test needs to be updated to use the new ACI worker")
-    # block = AzureContainerInstanceJob(
-    #     **block_args,
-    #     aci_credentials=aci_credentials,
-    #     subscription_id=SecretStr("test")
-    # )
-    #
-    # preview = json.loads(block.preview())
-    #
-    # for (k, v) in block_args.items():
-    #     if k == "env":
-    #         for (k2, v2) in block_args["env"].items():
-    #             assert preview[k][k2] == block_args["env"][k2]
-    #
-    #     else:
-    #         assert preview[k] == block_args[k]
+# TODO: decide whether to test things that will be optional in the user's JSON ARM
+#  template
+#  @pytest.mark.usefixtures("mock_aci_client")
+#  def test_subnets_included_when_present(container_instance_block, monkeypatch):
+#  mock_container_group_cls = MagicMock()
+#
+#     monkeypatch.setattr(
+#         prefect_azure.container_instance, "ContainerGroup", mock_container_group_cls
+#     )
+#     subnet_ids = ["subnet1", "subnet2", "subnet3"]
+#     container_instance_block.subnet_ids = subnet_ids
+#     container_instance_block.run()
+#     mock_container_group_cls.assert_called_once()
+#
+#     (_, kwargs) = mock_container_group_cls.call_args
+#     subnet_args = kwargs.get("subnet_ids")
+#     assert len(subnet_args) == len(subnet_ids)
+#     for subnet_id in subnet_ids:
+#         assert subnet_id in subnet_ids
 
 
-def test_output_streaming(
-    container_instance_block,
+# def test_preview(aci_credentials):
+#     # ensures the preview generates the JSON expected
+#     block_args = {
+#         "resource_group_name": "test-group",
+#         "memory": 1.0,
+#         "cpu": 1.0,
+#         "gpu_count": 1,
+#         "gpu_sku": "V100",
+#         "env": {"FAVORITE_ANIMAL": "cat"},
+#     }
+#
+#     block = AzureContainerInstanceJob(
+#         **block_args,
+#         aci_credentials=aci_credentials,
+#         subscription_id=SecretStr("test")
+#     )
+#
+#     preview = json.loads(block.preview())
+#
+#     for (k, v) in block_args.items():
+#         if k == "env":
+#             for (k2, v2) in block_args["env"].items():
+#                 assert preview[k][k2] == block_args["env"][k2]
+#
+#         else:
+#             assert preview[k] == block_args[k]
+
+
+async def test_output_streaming(
+    aci_worker,
+    worker_flow_run,
+    job_configuration,
     mock_aci_client,
-    mock_running_container_group,
-    mock_successful_container_group,
+    running_worker_container_group,
+    completed_worker_container_group,
     monkeypatch,
 ):
     # override datetime.now to ensure run start time is before log line timestamps
@@ -709,32 +769,30 @@ def test_output_streaming(
         nonlocal run_count
         run_count += 1
         if run_count < 4:
-            return mock_running_container_group
+            return running_worker_container_group
         else:
-            return mock_successful_container_group
+            return completed_worker_container_group
 
     mock_aci_client.container_groups.get.side_effect = get_container_group
 
     mock_log_call = Mock(side_effect=get_logs)
     monkeypatch.setattr(mock_aci_client.containers, "list_logs", mock_log_call)
 
-    mock_write_call = Mock(wraps=container_instance_block._write_output_line)
-    monkeypatch.setattr(container_instance_block, "_write_output_line", mock_write_call)
+    mock_write_call = Mock(wraps=aci_worker._write_output_line)
+    monkeypatch.setattr(aci_worker, "_write_output_line", mock_write_call)
+
+    monkeypatch.setattr(aci_worker, "_provisioning_succeeded", Mock(return_value=True))
 
     monkeypatch.setattr(
-        container_instance_block, "_provisioning_succeeded", Mock(return_value=True)
-    )
-
-    monkeypatch.setattr(
-        container_instance_block,
+        aci_worker,
         "_wait_for_task_container_start",
-        Mock(return_value=mock_running_container_group),
+        Mock(return_value=running_worker_container_group),
     )
 
-    container_instance_block.stream_output = True
-    container_instance_block.name = "streaming test"
-    container_instance_block.task_watch_poll_interval = 0.02
-    container_instance_block.run()
+    job_configuration.stream_output = True
+    job_configuration.name = "streaming test"
+    job_configuration.task_watch_poll_interval = 0.02
+    await aci_worker.run(worker_flow_run, job_configuration)
 
     # 6 lines should be written because of the nine test log lines, two overlap
     # and should not be written twice, and one has a broken timestamp so should

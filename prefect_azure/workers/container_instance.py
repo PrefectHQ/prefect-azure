@@ -477,6 +477,7 @@ class AzureContainerWorker(BaseWorker):
                 self._logger.info(f"{self._log_prefix}: Running command...")
                 if task_status is not None:
                     identifier = _AzureContainerFlowRunIdentifier(
+                        subscription_id=configuration.subscription_id,
                         resource_group_name=configuration.resource_group_name,
                         container_group_name=container_group_name,
                     )
@@ -496,10 +497,9 @@ class AzureContainerWorker(BaseWorker):
                 raise RuntimeError(f"{self._log_prefix}: Container creation failed.")
 
         finally:
-            if created_container_group:
-                await self._wait_for_container_group_deletion(
-                    aci_client, configuration, created_container_group
-                )
+            await self._wait_for_container_group_deletion(
+                aci_client, configuration, container_group_name
+            )
 
         return AzureContainerWorkerResult(
             identifier=created_container_group.name, status_code=status_code
@@ -669,7 +669,10 @@ class AzureContainerWorker(BaseWorker):
         last_log_time = run_start_time
         if configuration.stream_output:
             last_log_time = self._get_and_stream_output(
-                client, container_group, last_log_time
+                client=client,
+                configuration=configuration,
+                container_group=container_group,
+                last_log_time=last_log_time,
             )
 
         # set exit code if flow run already finished:
@@ -704,7 +707,10 @@ class AzureContainerWorker(BaseWorker):
 
             if configuration.stream_output:
                 last_log_time = self._get_and_stream_output(
-                    client, container_group, last_log_time
+                    client=client,
+                    configuration=configuration,
+                    container_group=container_group,
+                    last_log_time=last_log_time,
                 )
 
             time.sleep(configuration.task_watch_poll_interval)
@@ -717,14 +723,14 @@ class AzureContainerWorker(BaseWorker):
         configuration: Union[
             AzureContainerJobConfiguration, _AzureContainerFlowRunIdentifier
         ],
-        container_group: ContainerGroup,
+        container_group_name: str,
     ):
         self._logger.info(f"{self._log_prefix}: Deleting container...")
 
         deletion_status_poller = await run_sync_in_worker_thread(
             aci_client.container_groups.begin_delete,
             resource_group_name=configuration.resource_group_name,
-            container_group_name=container_group.name,
+            container_group_name=container_group_name,
         )
 
         t0 = time.time()
@@ -737,7 +743,7 @@ class AzureContainerWorker(BaseWorker):
                 raise RuntimeError(
                     (
                         f"Timed out after {elapsed_time}s while waiting for deletion of"
-                        f" container group {container_group.name}. To verify the group "
+                        f" container group {container_group_name}. To verify the group "
                         "has been deleted, check the Azure Portal or run "
                         f"az container show --name {container_group.name} --resource-group {self.resource_group_name}"  # noqa
                     )
@@ -769,6 +775,7 @@ class AzureContainerWorker(BaseWorker):
     def _get_and_stream_output(
         self,
         client: ContainerInstanceManagementClient,
+        configuration: AzureContainerJobConfiguration,
         container_group: ContainerGroup,
         last_log_time: datetime.datetime,
     ) -> datetime.datetime:
@@ -784,12 +791,15 @@ class AzureContainerWorker(BaseWorker):
         Returns:
             The time of the most recent output line written by this call.
         """
-        logs = self._get_logs(client, container_group)
+        logs = self._get_logs(
+            client=client, configuration=configuration, container_group=container_group
+        )
         return self._stream_output(logs, last_log_time)
 
     def _get_logs(
         self,
         client: ContainerInstanceManagementClient,
+        configuration: AzureContainerJobConfiguration,
         container_group: ContainerGroup,
         max_lines: int = 100,
     ) -> str:
@@ -809,7 +819,7 @@ class AzureContainerWorker(BaseWorker):
         logs: Union[Logs, None] = None
         try:
             logs = client.containers.list_logs(
-                resource_group_name=self.resource_group_name,
+                resource_group_name=configuration.resource_group_name,
                 container_group_name=container_group.name,
                 container_name=container.name,
                 tail=max_lines,
