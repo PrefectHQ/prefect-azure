@@ -316,7 +316,6 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
         # breaking EXTRA_PIP_PACKAGES installation on container startup.
         if self.entrypoint:
             self.command = f"{self.entrypoint} {self.command}"
-        )
 
     def _get_json_environment(self):
         env = {**self._base_environment(), **self.env}
