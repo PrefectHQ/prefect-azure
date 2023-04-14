@@ -804,7 +804,7 @@ async def test_output_streaming(
 def test_block_accessible_in_module_toplevel():
     # will raise an exception and fail the test if `AzureContainerInstanceJob`
     # is not accessible directly from `prefect_azure`
-    from prefect_azure import AzureContainerInstanceJob  # noqa
+    from prefect_azure import AzureContainerWorker  # noqa
 
 
 def test_registry_credentials(container_instance_block, mock_aci_client, monkeypatch):
