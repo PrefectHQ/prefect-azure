@@ -1,6 +1,6 @@
 import uuid
 from typing import Dict, List, Tuple, Union
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import MagicMock, Mock
 
 import dateutil.parser
 import pytest
@@ -19,6 +19,7 @@ from prefect.server.schemas.core import Flow
 from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.infrastructure.docker import DockerRegistry
 from prefect.settings import get_current_settings
+from prefect.testing.utilities import AsyncMock
 from pydantic import SecretStr
 
 import prefect_azure.container_instance
