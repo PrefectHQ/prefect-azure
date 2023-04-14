@@ -73,9 +73,30 @@ _default_arm_template = """
         "description": "Location for all resources."
       }
     },
-    "name": {
+    "container_group_name": {
         "type": "string",
-        "defaultValue": "cool-container-group",
+        "defaultValue": "[uniqueString(resourceGroup().id)]",
+        "metadata": {
+          "description": "The name of the container group to create."
+      }
+    },
+    "container_name": {
+        "type": "string",
+        "defaultValue": "[uniqueString(resourceGroup().id)]",
+        "metadata": {
+            "description": "The name of the container to create."
+        }
+    },
+    "command": {
+        "type": "string",
+        "defaultValue": "{{ command }}",
+        "metadata": {
+          "description": "The command to run after starting the container."
+      }
+    },
+    "env": {
+        "type": "string",
+        "defaultValue": "{{ env }}",
         "metadata": {
           "description": "Container group name."
       }
@@ -85,22 +106,22 @@ _default_arm_template = """
     {
       "type": "Microsoft.ContainerInstance/containerGroups",
       "apiVersion": "2021-09-01",
-      "name": "[parameters('name')]",
+      "name": "[parameters('container_group_name')]",
       "location": "[parameters('location')]",
       "properties": {
         "containers": [
           {
-            "name": "{{ name }}",
+            "name": "[parameters('container_name')]",
             "properties": {
-              "image": "{{ image }}",
-              "command": "{{ command }}",
+              "image": "[parameters('image')]",
+              "command": "[parameters('command')]",
               "resources": {
                 "requests": {
                   "cpu": 1,
                   "memoryInGB": 0.5
                 } 
               },
-              "environmentVariables": {{ env }}
+              "environmentVariables": [parameters('env')],
             }
           }
         ],
@@ -295,12 +316,6 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
         # breaking EXTRA_PIP_PACKAGES installation on container startup.
         if self.entrypoint:
             self.command = f"{self.entrypoint} {self.command}"
-
-        self.template = (
-            self.template.replace("{{ name }}", str(uuid.uuid4()))
-            .replace("{{ image }}", self.image)
-            .replace("{{ env }}", self._get_json_environment())
-            .replace("{{ command }}", self.command)
         )
 
     def _get_json_environment(self):
@@ -623,7 +638,7 @@ class AzureContainerWorker(BaseWorker):
         properties = DeploymentProperties(
             mode=DeploymentMode.INCREMENTAL,
             template=json.loads(configuration.template),
-            parameters={"name": {"value": container_group_name}},
+            parameters={"container_group_name": {"value": container_group_name}},
         )
         deployment = Deployment(properties=properties)
 
