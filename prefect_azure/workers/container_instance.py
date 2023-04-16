@@ -119,7 +119,7 @@ _default_arm_template = """
                 "requests": {
                   "cpu": 1,
                   "memoryInGB": 0.5
-                } 
+                }
               },
               "environmentVariables": [parameters('env')],
             }
