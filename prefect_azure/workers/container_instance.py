@@ -93,13 +93,6 @@ _default_arm_template = """
         "metadata": {
           "description": "The command to run after starting the container."
       }
-    },
-    "env": {
-        "type": "string",
-        "defaultValue": "{{ env }}",
-        "metadata": {
-          "description": "Container group name."
-      }
     }
   },
   "resources": [
@@ -121,7 +114,7 @@ _default_arm_template = """
                   "memoryInGB": 0.5
                 }
               },
-              "environmentVariables": [parameters('env')],
+              "environmentVariables": [],
             }
           }
         ],
@@ -132,6 +125,78 @@ _default_arm_template = """
   ]
 }
 """  # noqa
+
+
+def _get_default_arm_template(self):
+    return {
+        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",  # noqa
+        "contentVersion": "1.0.0.0",
+        "metadata": {
+            "_generator": {
+                "name": "bicep",
+                "version": "0.5.6.12127",
+                "templateHash": "17016281914347876853"
+            }
+        },
+        "parameters": {
+            "location": {
+                "type": "string",
+                "defaultValue": "[resourceGroup().location]",
+                "metadata": {
+                    "description": "Location for all resources."
+                }
+            },
+            "container_group_name": {
+                "type": "string",
+                "defaultValue": "[uniqueString(resourceGroup().id)]",
+                "metadata": {
+                    "description": "The name of the container group to create."
+                }
+            },
+            "container_name": {
+                "type": "string",
+                "defaultValue": "[uniqueString(resourceGroup().id)]",
+                "metadata": {
+                    "description": "The name of the container to create."
+                }
+            },
+            "command": {
+                "type": "string",
+                "defaultValue": "{{ command }}",
+                "metadata": {
+                    "description": "The command to run after starting the container."
+                }
+            },
+        },
+        "resources": [
+            {
+                "type": "Microsoft.ContainerInstance/containerGroups",
+                "apiVersion": "2021-09-01",
+                "name": "[parameters('container_group_name')]",
+                "location": "[parameters('location')]",
+                "properties": {
+                    "containers": [
+                        {
+                            "name": "[parameters('container_name')]",
+                            "properties": {
+                                "image": "[parameters('image')]",
+                                "command": "[parameters('command')]",
+                                "resources": {
+                                    "requests": {
+                                        "cpu": "{{ cpu }}",
+                                        "memoryInGB": "{{ memory }}",
+                                    }
+                                },
+                                "environmentVariables": [],
+                            }
+                        }
+                    ],
+                    "osType": "Linux",
+                    "restartPolicy": "Never"
+                }
+            }
+        ]
+    }
 
 
 class ContainerGroupProvisioningState(str, Enum):
@@ -290,8 +355,8 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
             "the state of an Azure Container Instances task."
         ),
     )
-    template: str = Field(
-        default=_default_arm_template,
+    arm_template: str = Field(
+        default_factory=_get_default_arm_template,
         description=(
             "The ARM template to use for the ACI task. This template should be a "
             "valid Azure Resource Manager template. The template should contain "
@@ -327,6 +392,7 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
             for key, value in env.items()
         ]
         return json.dumps(azure_env)
+
 
 
 class AzureContainerVariables(BaseVariables):
@@ -433,6 +499,14 @@ class AzureContainerVariables(BaseVariables):
         description=(
             "The number of seconds to wait between Azure API calls while monitoring "
             "the state of an Azure Container Instances task."
+        ),
+    )
+    arm_template: Dict[str, Union[str, object]] = Field(
+        default=_default_arm_template,
+        description=(
+            "The ARM template to use for the ACI task. This template should be a "
+            "valid Azure Resource Manager template. The template should contain "
+            "the following parameters: `name`, `image`, `command`, and `env`. "
         ),
     )
 
@@ -636,7 +710,7 @@ class AzureContainerWorker(BaseWorker):
     ):
         properties = DeploymentProperties(
             mode=DeploymentMode.INCREMENTAL,
-            template=json.loads(configuration.template),
+            template=json.loads(configuration.arm_template),
             parameters={"container_group_name": {"value": container_group_name}},
         )
         deployment = Deployment(properties=properties)

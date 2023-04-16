@@ -102,7 +102,7 @@ def create_job_configuration(aci_credentials, worker_flow_run, run_prep=True):
 
 
 def get_command_from_deployment_parameters(parameters):
-    deployment_arm_template = parameters.template
+    deployment_arm_template = parameters.arm_template
     # We're only interested in the first resource, because our ACI
     # flow run container groups only have a single container by default.
     deployment_resources = deployment_arm_template["resources"][0]
