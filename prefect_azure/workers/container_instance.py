@@ -157,130 +157,24 @@ class _AzureContainerFlowRunIdentifier:
 
 
 class AzureContainerJobConfiguration(BaseJobConfiguration):
-    image: Optional[str] = Field(
-        default_factory=get_prefect_image_name,
-        description=(
-            "The image to use for the Prefect container in the task. This value "
-            "defaults to a Prefect base image matching your local versions."
-        ),
-    )
-    resource_group_name: str = Field(
-        default=...,
-        title="Azure Resource Group Name",
-        description=(
-            "The name of the Azure Resource Group in which to run Prefect ACI tasks."
-        ),
-    )
-    subscription_id: SecretStr = Field(
-        default=...,
-        title="Azure Subscription ID",
-        description="The ID of the Azure subscription to create containers under.",
-    )
-    identities: Optional[List[str]] = Field(
-        title="Identities",
-        default=None,
-        description=(
-            "A list of user-assigned identities to associate with the container group. "
-            "The identities should be an ARM resource IDs in the form: "
-            "'/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}'."  # noqa
-        ),
-    )
-
-    entrypoint: Optional[str] = Field(
-        default=DEFAULT_CONTAINER_ENTRYPOINT,
-        description=(
-            "The entrypoint of the container you wish you run. This value "
-            "defaults to the entrypoint used by Prefect images and should only be "
-            "changed when using a custom image that is not based on an official "
-            "Prefect image. Any commands set on deployments will be passed "
-            "to the entrypoint as parameters."
-        ),
-    )
-    cpu: float = Field(
-        title="CPU",
-        default=ACI_DEFAULT_CPU,
-        description=(
-            "The number of virtual CPUs to assign to the task container. "
-            f"If not provided, a default value of {ACI_DEFAULT_CPU} will be used."
-        ),
-    )
-    gpu_count: Optional[int] = Field(
-        title="GPU Count",
-        default=None,
-        description=(
-            "The number of GPUs to assign to the task container. "
-            "If not provided, no GPU will be used."
-        ),
-    )
-    gpu_sku: Optional[str] = Field(
-        title="GPU SKU",
-        default=None,
-        description=(
-            "The Azure GPU SKU to use. See the ACI documentation for a list of "
-            "GPU SKUs available in each Azure region."
-        ),
-    )
-    memory: float = Field(
-        default=ACI_DEFAULT_MEMORY,
-        description=(
-            "The amount of memory in gigabytes to provide to the ACI task. Valid "
-            "amounts are specified in the Azure documentation. If not provided, a "
-            f"default value of  {ACI_DEFAULT_MEMORY} will be used unless present "
-            "on the task definition."
-        ),
-    )
-    subnet_ids: Optional[List[str]] = Field(
-        default=None,
-        title="Subnet IDs",
-        description="A list of Azure subnet IDs the container should be connected to.",
-    )
-    dns_servers: Optional[List[str]] = Field(
-        default=None,
-        title="DNS Servers",
-        description="A list of custom DNS Servers the container should use.",
-    )
-    stream_output: Optional[bool] = Field(
-        default=None,
-        description=(
-            "If `True`, logs will be streamed from the Prefect container to the local "
-            "console."
-        ),
-    )
-    env: Dict[str, Optional[str]] = Field(
-        title="Environment Variables",
-        default_factory=dict,
-        description=(
-            "Environment variables to provide to the task run. These variables are set "
-            "on the Prefect container at task runtime. These will not be set on the "
-            "task definition."
-        ),
-    )
-    aci_credentials: AzureContainerInstanceCredentials = Field(
-        description="The credentials to use to authenticate with Azure.",
-    )
+    image: Optional[str] = Field()
+    resource_group_name: str = Field(default=...)
+    subscription_id: SecretStr = Field(default=...)
+    identities: Optional[List[str]] = Field(default=None)
+    entrypoint: Optional[str] = Field(default=DEFAULT_CONTAINER_ENTRYPOINT)
+    cpu: float = Field(default=ACI_DEFAULT_CPU)
+    gpu_count: Optional[int] = Field(default=None)
+    gpu_sku: Optional[str] = Field(default=None)
+    memory: float = Field(default=ACI_DEFAULT_MEMORY)
+    subnet_ids: Optional[List[str]] = Field(default=None)
+    dns_servers: Optional[List[str]] = Field(default=None)
+    stream_output: Optional[bool] = Field(default=None)
+    env: Dict[str, Optional[str]] = Field()
+    aci_credentials: AzureContainerInstanceCredentials = Field()
     # Execution settings
-    task_start_timeout_seconds: int = Field(
-        default=240,
-        description=(
-            "The amount of time to watch for the start of the ACI container. "
-            "before marking it as failed."
-        ),
-    )
-    task_watch_poll_interval: float = Field(
-        default=5.0,
-        description=(
-            "The number of seconds to wait between Azure API calls while monitoring "
-            "the state of an Azure Container Instances task."
-        ),
-    )
-    arm_template: Dict[str, Any] = Field(
-        template=_get_default_arm_template(),
-        description=(
-            "The ARM template to use for the ACI task. This template should be a "
-            "valid Azure Resource Manager template. The template should contain "
-            "the following parameters: `name`, `image`, `command`, and `env`. "
-        ),
-    )
+    task_start_timeout_seconds: int = Field(default=240)
+    task_watch_poll_interval: float = Field(default=5.0)
+    arm_template: Dict[str, Any] = Field(template=_get_default_arm_template())
 
     def prepare_for_flow_run(
         self,
