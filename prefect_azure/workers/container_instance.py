@@ -1,11 +1,9 @@
 import datetime
-import json
 import sys
 import time
-import uuid
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import anyio
 import dateutil.parser
@@ -54,78 +52,6 @@ ENV_SECRETS = ["PREFECT_API_KEY"]
 # check their Azure account for orphaned container groups.
 CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS = 30
 
-_default_arm_template = """
-{
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#", 
-  "contentVersion": "1.0.0.0",
-  "metadata": {
-    "_generator": {
-      "name": "bicep",
-      "version": "0.5.6.12127",
-      "templateHash": "17016281914347876853"
-    }
-  },
-  "parameters": {
-    "location": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().location]",
-      "metadata": {
-        "description": "Location for all resources."
-      }
-    },
-    "container_group_name": {
-        "type": "string",
-        "defaultValue": "[uniqueString(resourceGroup().id)]",
-        "metadata": {
-          "description": "The name of the container group to create."
-      }
-    },
-    "container_name": {
-        "type": "string",
-        "defaultValue": "[uniqueString(resourceGroup().id)]",
-        "metadata": {
-            "description": "The name of the container to create."
-        }
-    },
-    "command": {
-        "type": "string",
-        "defaultValue": "{{ command }}",
-        "metadata": {
-          "description": "The command to run after starting the container."
-      }
-    }
-  },
-  "resources": [
-    {
-      "type": "Microsoft.ContainerInstance/containerGroups",
-      "apiVersion": "2021-09-01",
-      "name": "[parameters('container_group_name')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "containers": [
-          {
-            "name": "[parameters('container_name')]",
-            "properties": {
-              "image": "[parameters('image')]",
-              "command": "[parameters('command')]",
-              "resources": {
-                "requests": {
-                  "cpu": 1,
-                  "memoryInGB": 0.5
-                }
-              },
-              "environmentVariables": [],
-            }
-          }
-        ],
-        "osType": "Linux",
-        "restartPolicy": "Never"
-      }
-    }
-  ]
-}
-"""  # noqa
-
 
 def _get_default_arm_template():
     return {
@@ -135,37 +61,26 @@ def _get_default_arm_template():
             "_generator": {
                 "name": "bicep",
                 "version": "0.5.6.12127",
-                "templateHash": "17016281914347876853"
+                "templateHash": "17016281914347876853",
             }
         },
         "parameters": {
             "location": {
                 "type": "string",
                 "defaultValue": "[resourceGroup().location]",
-                "metadata": {
-                    "description": "Location for all resources."
-                }
+                "metadata": {"description": "Location for all resources."},
             },
             "container_group_name": {
                 "type": "string",
                 "defaultValue": "[uniqueString(resourceGroup().id)]",
                 "metadata": {
                     "description": "The name of the container group to create."
-                }
+                },
             },
             "container_name": {
                 "type": "string",
                 "defaultValue": "[uniqueString(resourceGroup().id)]",
-                "metadata": {
-                    "description": "The name of the container to create."
-                }
-            },
-            "command": {
-                "type": "string",
-                "defaultValue": "{{ command }}",
-                "metadata": {
-                    "description": "The command to run after starting the container."
-                }
+                "metadata": {"description": "The name of the container to create."},
             },
         },
         "resources": [
@@ -179,8 +94,8 @@ def _get_default_arm_template():
                         {
                             "name": "[parameters('container_name')]",
                             "properties": {
-                                "image": "[parameters('image')]",
-                                "command": "[parameters('command')]",
+                                "image": "{{ image }}",
+                                "command": "{{ command }}",
                                 "resources": {
                                     "requests": {
                                         "cpu": "{{ cpu }}",
@@ -188,14 +103,14 @@ def _get_default_arm_template():
                                     }
                                 },
                                 "environmentVariables": [],
-                            }
+                            },
                         }
                     ],
                     "osType": "Linux",
-                    "restartPolicy": "Never"
-                }
+                    "restartPolicy": "Never",
+                },
             }
-        ]
+        ],
     }
 
 
@@ -231,11 +146,14 @@ class _AzureContainerFlowRunIdentifier:
             the container group is running.
         - container_group_name (str): The name of the container group running the
             flow run.
+        - polling_interval (int, optional): The number of seconds to wait between
+            polling for container group state. Defaults to 5 seconds.
     """
 
     subscription_id: SecretStr
     resource_group_name: str
     container_group_name: str
+    polling_interval: int = 5
 
 
 class AzureContainerJobConfiguration(BaseJobConfiguration):
@@ -355,8 +273,8 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
             "the state of an Azure Container Instances task."
         ),
     )
-    arm_template: str = Field(
-        default_factory=_get_default_arm_template,
+    arm_template: Dict[str, Any] = Field(
+        template=_get_default_arm_template(),
         description=(
             "The ARM template to use for the ACI task. This template should be a "
             "valid Azure Resource Manager template. The template should contain "
@@ -375,14 +293,26 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
         """
         super().prepare_for_flow_run(flow_run, deployment, flow)
 
+        # expectations:
+        # - the first resource in the template is the container group
+        # - the container group has a single container
+        container_group = self.arm_template["resources"][0]
+        container = container_group["properties"]["containers"][0]
+
+        # set the container's environment variables
+        container["properties"]["environmentVariables"] = self._get_arm_environment()
+
         # Add the entrypoint if provided. Creating an ACI container with a
         # command overrides the container's built-in entrypoint. Prefect base images
         # use entrypoint.sh as the entrypoint, so we need to add it back in to avoid
         # breaking EXTRA_PIP_PACKAGES installation on container startup.
         if self.entrypoint:
-            self.command = f"{self.entrypoint} {self.command}"
+            container["properties"]["command"] = f"{self.entrypoint} {self.command}"
 
-    def _get_json_environment(self):
+    def _get_arm_environment(self):
+        """
+        Returns the environment variables to pass to the ARM template.
+        """
         env = {**self._base_environment(), **self.env}
 
         azure_env = [
@@ -391,8 +321,7 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
             else {"name": key, "value": value}
             for key, value in env.items()
         ]
-        return json.dumps(azure_env)
-
+        return azure_env
 
 
 class AzureContainerVariables(BaseVariables):
@@ -501,8 +430,8 @@ class AzureContainerVariables(BaseVariables):
             "the state of an Azure Container Instances task."
         ),
     )
-    arm_template: Dict[str, Union[str, object]] = Field(
-        default=_default_arm_template,
+    arm_template: Dict[str, Any] = Field(
+        default=_get_default_arm_template(),
         description=(
             "The ARM template to use for the ACI task. This template should be a "
             "valid Azure Resource Manager template. The template should contain "
@@ -710,7 +639,7 @@ class AzureContainerWorker(BaseWorker):
     ):
         properties = DeploymentProperties(
             mode=DeploymentMode.INCREMENTAL,
-            template=json.loads(configuration.arm_template),
+            template=configuration.arm_template,
             parameters={"container_group_name": {"value": container_group_name}},
         )
         deployment = Deployment(properties=properties)
@@ -833,13 +762,14 @@ class AzureContainerWorker(BaseWorker):
                         f"Timed out after {elapsed_time}s while waiting for deletion of"
                         f" container group {container_group_name}. To verify the group "
                         "has been deleted, check the Azure Portal or run "
-                        f"az container show --name {container_group.name} --resource-group {self.resource_group_name}"  # noqa
+                        f"az container show --name {container_group.name} --resource-group {configuration.resource_group_name}"  # noqa
                     )
                 )
-            await anyio.sleep(self.task_watch_poll_interval)
+            await anyio.sleep(configuration.poll_interval)
 
         self._logger.info(f"{self._log_prefix}: Container deleted.")
 
+    @staticmethod
     def _get_container(self, container_group: ContainerGroup) -> Container:
         """
         Extracts the job container from a container group.
