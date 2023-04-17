@@ -324,14 +324,6 @@ class AzureContainerVariables(BaseVariables):
             "the state of an Azure Container Instances task."
         ),
     )
-    arm_template: Dict[str, Any] = Field(
-        default=_get_default_arm_template(),
-        description=(
-            "The ARM template to use for the ACI task. This template should be a "
-            "valid Azure Resource Manager template. The template should contain "
-            "the following parameters: `name`, `image`, `command`, and `env`. "
-        ),
-    )
 
 
 class AzureContainerWorkerResult(BaseWorkerResult):
