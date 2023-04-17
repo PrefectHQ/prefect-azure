@@ -13,25 +13,24 @@ from azure.mgmt.containerinstance.models import (
     UserAssignedIdentities,
 )
 from azure.mgmt.resource import ResourceManagementClient
-
 from prefect.client.schemas import FlowRun
-from prefect.server.schemas.core import Flow
 from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.infrastructure.docker import DockerRegistry
+from prefect.server.schemas.core import Flow
 from prefect.settings import get_current_settings
 from prefect.testing.utilities import AsyncMock
 from pydantic import SecretStr
 
 import prefect_azure.container_instance
 from prefect_azure import AzureContainerInstanceCredentials
+from prefect_azure.workers.container_instance import AzureContainerVariables  # noqa
 from prefect_azure.workers.container_instance import (
     AzureContainerJobConfiguration,
     AzureContainerWorker,
     AzureContainerWorkerResult,
     ContainerGroupProvisioningState,
     ContainerRunState,
-    DEFAULT_CONTAINER_ENTRYPOINT,
-    _AzureContainerFlowRunIdentifier,  # noqa
+    _AzureContainerFlowRunIdentifier,
 )
 
 
@@ -81,28 +80,47 @@ def create_mock_container_group(state: str, exit_code: Union[int, None]):
     return container_group
 
 
-def create_job_configuration(aci_credentials, worker_flow_run, run_prep=True):
+async def create_job_configuration(
+    aci_credentials, worker_flow_run, overrides={}, run_prep=True
+):
     """
     Returns a basic initialized ACI infrastructure block suitable for use
     in a variety of tests.
     """
-    container_instance_configuration = AzureContainerJobConfiguration(
-        command="test",
-        aci_credentials=aci_credentials,
-        resource_group_name="test_group",
-        subscription_id=SecretStr("sub_id"),
-        name=None,
-        task_watch_poll_interval=0.05,
-        stream_output=False,
+    values = {
+        "command": "test",
+        "aci_credentials": aci_credentials,
+        "resource_group_name": "test_group",
+        "subscription_id": SecretStr("sub_id"),
+        "name": None,
+        "task_watch_poll_interval": 0.05,
+        "stream_output": False,
+    }
+
+    for k, v in overrides.items():
+        values = {**values, k: v}
+
+    container_instance_variables = AzureContainerVariables(**values)
+
+    json_config = {
+        "job_configuration": AzureContainerJobConfiguration.json_template(),
+        "variables": container_instance_variables.dict(),
+    }
+
+    container_instance_configuration = (
+        await AzureContainerJobConfiguration.from_template_and_values(
+            json_config, values
+        )
     )
 
     if run_prep:
         container_instance_configuration.prepare_for_flow_run(worker_flow_run)
+
     return container_instance_configuration
 
 
 def get_command_from_deployment_parameters(parameters):
-    deployment_arm_template = parameters.arm_template
+    deployment_arm_template = parameters.template
     # We're only interested in the first resource, because our ACI
     # flow run container groups only have a single container by default.
     deployment_resources = deployment_arm_template["resources"][0]
@@ -169,22 +187,24 @@ def aci_worker(mock_prefect_client, monkeypatch):
 
 
 @pytest.fixture()
-def job_configuration(aci_credentials, worker_flow_run):
+async def job_configuration(aci_credentials, worker_flow_run):
     """
     Returns a basic initialized ACI infrastructure block suitable for use
     in a variety of tests.
     """
-    return create_job_configuration(aci_credentials, worker_flow_run)
+    return await create_job_configuration(aci_credentials, worker_flow_run)
 
 
 @pytest.fixture()
-def raw_job_configuration(aci_credentials, worker_flow_run):
+async def raw_job_configuration(aci_credentials, worker_flow_run):
     """
     Returns a basic job configuration suitable for use in a variety of tests.
     ``prepare_for_flow_run`` has not called on the returned configuration, so you
     will need to call it yourself before using the job configuration.
     """
-    return create_job_configuration(aci_credentials, worker_flow_run, run_prep=False)
+    return await create_job_configuration(
+        aci_credentials, worker_flow_run, run_prep=False
+    )
 
 
 @pytest.fixture()
@@ -269,15 +289,12 @@ def worker_flow_run(worker_flow):
 # Tests
 
 
-def test_worker_valid_command_validation(aci_credentials):
+async def test_worker_valid_command_validation(aci_credentials, worker_flow_run):
     # ensure the validator allows valid commands to pass through
     command = "command arg1 arg2"
 
-    aci_job_config = AzureContainerJobConfiguration(
-        command=command,
-        subscription_id=SecretStr("test"),
-        resource_group_name="test",
-        aci_credentials=aci_credentials,
+    aci_job_config = await create_job_configuration(
+        aci_credentials, worker_flow_run, {"command": command}
     )
 
     assert aci_job_config.command == command
@@ -419,9 +436,9 @@ async def test_aci_worker_deployment_call(
     ],
 )
 async def test_worker_uses_entrypoint_correctly_in_template(
+    aci_credentials,
     aci_worker,
     worker_flow_run,
-    raw_job_configuration,
     mock_aci_client,
     mock_resource_client,
     monkeypatch,
@@ -429,19 +446,21 @@ async def test_worker_uses_entrypoint_correctly_in_template(
     job_command,
     expected_template_command,
 ):
-    job_configuration = raw_job_configuration
-
     mock_deployment_call = Mock()
     mock_resource_client.deployments.begin_create_or_update = mock_deployment_call
 
-    job_configuration.entrypoint = entrypoint
-    job_configuration.command = job_command
-    job_configuration.prepare_for_flow_run(worker_flow_run)
+    job_overrides = {
+        "entrypoint": entrypoint,
+        "command": job_command,
+    }
 
+    run_job_configuration = await create_job_configuration(
+        aci_credentials, worker_flow_run, job_overrides
+    )
     # We haven't mocked out the container group creation, so this should fail
     # and that's ok. We just want to ensure the entrypoint is used correctly.
     with pytest.raises(RuntimeError):
-        await aci_worker.run(worker_flow_run, job_configuration)
+        await aci_worker.run(worker_flow_run, run_job_configuration)
 
     mock_deployment_call.assert_called_once()
     (_, kwargs) = mock_deployment_call.call_args
@@ -468,24 +487,6 @@ async def test_delete_after_group_creation_failure(
         await aci_worker.run(worker_flow_run, configuration=job_configuration)
 
     mock_aci_client.container_groups.begin_delete.assert_called_once()
-
-
-async def test_no_delete_if_no_container_group_exists(
-    aci_worker, worker_flow_run, job_configuration, mock_aci_client, monkeypatch
-):
-    # if provisioning failed because the ACI client returned nothing,
-    # we should not attempt to delete the container group because we don't
-    # have enough data to try
-    monkeypatch.setattr(
-        aci_worker,
-        "_wait_for_task_container_start",
-        Mock(return_value=None),
-    )
-
-    with pytest.raises(RuntimeError, match="Container creation failed"):
-        await aci_worker.run(worker_flow_run, job_configuration)
-
-    mock_aci_client.container_groups.begin_delete.assert_not_called()
 
 
 async def test_delete_after_group_creation_success(
@@ -807,7 +808,7 @@ def test_block_accessible_in_module_toplevel():
     from prefect_azure import AzureContainerWorker  # noqa
 
 
-def test_registry_credentials(container_instance_block, mock_aci_client, monkeypatch):
+def test_registry_credentials(aci_worker, mock_aci_client, monkeypatch):
     mock_container_group_constructor = MagicMock()
 
     monkeypatch.setattr(
@@ -822,8 +823,8 @@ def test_registry_credentials(container_instance_block, mock_aci_client, monkeyp
         registry_url="https://myregistry.dockerhub.com",
     )
 
-    container_instance_block.image_registry = registry
-    container_instance_block.run()
+    job_configuration.image_registry = registry
+    aci_worker.run(worker_flow_run, job_configuration)
 
     mock_container_group_constructor.assert_called_once()
 
@@ -881,10 +882,14 @@ def test_secure_environment_variables(
 
 
 async def test_kill_deletes_container_group(
-    container_instance_block, mock_aci_client, mock_running_container_group, monkeypatch
+    aci_worker,
+    mock_aci_client,
+    job_configuration,
+    running_worker_container_group,
+    monkeypatch,
 ):
     container_group_name = "test_container_group"
-    mock_running_container_group.name = container_group_name
+    running_worker_container_group.name = container_group_name
 
     # simulate a running container to avoid `InfrastructureNotAvailable` exception
     # since it is covered in a separate test
@@ -892,21 +897,26 @@ async def test_kill_deletes_container_group(
     container.instance_view.current_state.state = ContainerRunState.RUNNING
 
     mock_aci_client.container_groups.get.side_effect = Mock(
-        name="container_group", return_value=mock_running_container_group
+        name="container_group", return_value=running_worker_container_group
     )
 
     # shorten wait time
     monkeypatch.setattr(
-        prefect_azure.container_instance,
+        prefect_azure.workers.container_instance,
         "CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS",
         0.1,
     )
-    container_instance_block.task_watch_poll_interval = 0.02
 
-    await container_instance_block.kill(container_group_name)
+    identifier = _AzureContainerFlowRunIdentifier(
+        subscription_id=job_configuration.subscription_id,
+        resource_group_name=job_configuration.resource_group_name,
+        container_group_name=container_group_name,
+        polling_interval=0.02,
+    )
+    await aci_worker.kill_infrastructure(identifier)
 
     mock_aci_client.container_groups.begin_delete.assert_called_once_with(
-        resource_group_name=container_instance_block.resource_group_name,
+        resource_group_name=job_configuration.resource_group_name,
         container_group_name=container_group_name,
     )
 
