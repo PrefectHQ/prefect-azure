@@ -127,7 +127,7 @@ _default_arm_template = """
 """  # noqa
 
 
-def _get_default_arm_template(self):
+def _get_default_arm_template():
     return {
         "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",  # noqa
         "contentVersion": "1.0.0.0",
