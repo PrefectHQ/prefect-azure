@@ -133,29 +133,6 @@ class ContainerRunState(str, Enum):
     TERMINATED = "Terminated"
 
 
-@dataclass
-class _AzureContainerFlowRunIdentifier:
-    """
-    A small helper class to store the information needed to look up and cancel
-    the container for a given flow run.
-
-    Args:
-        - subscription_id (str): The ID of the Azure subscription in which the
-            container group is running.
-        - resource_group_name (str): The name of the Azure resource group in which
-            the container group is running.
-        - container_group_name (str): The name of the container group running the
-            flow run.
-        - polling_interval (int, optional): The number of seconds to wait between
-            polling for container group state. Defaults to 5 seconds.
-    """
-
-    subscription_id: SecretStr
-    resource_group_name: str
-    container_group_name: str
-    polling_interval: int = 5
-
-
 class AzureContainerJobConfiguration(BaseJobConfiguration):
     image: Optional[str] = Field()
     resource_group_name: str = Field(default=...)
@@ -375,15 +352,13 @@ class AzureContainerWorker(BaseWorker):
                 configuration,
                 container_group_name,
             )
+            # Both the flow ID and container group name will be needed to
+            # cancel the flow run if needed.
+            identifier = f"{flow_run.id}:{container_group_name}"
 
             if self._provisioning_succeeded(created_container_group):
                 self._logger.info(f"{self._log_prefix}: Running command...")
                 if task_status is not None:
-                    identifier = _AzureContainerFlowRunIdentifier(
-                        subscription_id=configuration.subscription_id,
-                        resource_group_name=configuration.resource_group_name,
-                        container_group_name=container_group_name,
-                    )
                     task_status.started(value=identifier)
 
                 status_code = await run_sync_in_worker_thread(
@@ -410,21 +385,27 @@ class AzureContainerWorker(BaseWorker):
 
     async def kill_infrastructure(
         self,
-        identifier: _AzureContainerFlowRunIdentifier,
+        infrastructure_pid: str,
         grace_seconds: int = CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS,
     ):
         """
         Kill a flow running in an ACI container group.
 
         Args:
-            identifier: The container group identification data yielded by
+            infrastructure_pid: The container group identification data yielded by
                 `AzureContainerInstanceJob.run`.
             grace_seconds: The number of seconds to wait for the container group to
                 terminate.
         """
-        # ACI does not provide a way to specify grace period, but it gives
+        # Note: ACI does not provide a way to specify grace period, but it gives
         # applications ~30 seconds to gracefully terminate before killing
         # a container group.
+        prefect_client = get_client()
+        (flow_run_id, container_group_name) = infrastructure_pid.split(":")
+
+        flow_run = prefect_client.read_flow_run(flow_run_id)
+        configuration: AzureContainerJobConfiguration = await self._get_configuration(flow_run)  # noqa
+
         if grace_seconds != CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS:
             self._logger.warning(
                 f"{self._log_prefix}: Kill grace period of {grace_seconds}s requested, "
@@ -432,20 +413,20 @@ class AzureContainerWorker(BaseWorker):
             )
 
         aci_client = self.aci_credentials.get_container_client(
-            identifier.subscription_id.get_secret_value()
+            configuration.subscription_id.get_secret_value()
         )
 
         # get the container group to check that it still exists
         try:
             container_group = aci_client.container_groups.get(
-                resource_group_name=identifier.resource_group_name,
-                container_group_name=identifier,
+                resource_group_name=configuration.resource_group_name,
+                container_group_name=container_group_name,
             )
         except ResourceNotFoundError as exc:
-            # the container group no longer exists, so there's nsothing to cancel
+            # the container group no longer exists, so there's sothing to cancel
             raise InfrastructureNotFound(
                 f"Cannot stop ACI job: container group "
-                f"{identifier.container_group_name} no longer exists."
+                f"{container_group_name} no longer exists."
             ) from exc
 
         # get the container state to check if the container has terminated
@@ -455,7 +436,7 @@ class AzureContainerWorker(BaseWorker):
         # the container group needs to be deleted regardless of whether the container
         # already terminated
         await self._wait_for_container_group_deletion(
-            aci_client, identifier, container_group
+            aci_client, configuration, container_group
         )
 
         # if the container has already terminated, raise an exception to let the agent
@@ -623,9 +604,7 @@ class AzureContainerWorker(BaseWorker):
     async def _wait_for_container_group_deletion(
         self,
         aci_client: ContainerInstanceManagementClient,
-        configuration: Union[
-            AzureContainerJobConfiguration, _AzureContainerFlowRunIdentifier
-        ],
+        configuration: AzureContainerJobConfiguration,
         container_group_name: str,
     ):
         self._logger.info(f"{self._log_prefix}: Deleting container...")
@@ -648,7 +627,7 @@ class AzureContainerWorker(BaseWorker):
                         f"Timed out after {elapsed_time}s while waiting for deletion of"
                         f" container group {container_group_name}. To verify the group "
                         "has been deleted, check the Azure Portal or run "
-                        f"az container show --name {container_group.name} --resource-group {configuration.resource_group_name}"  # noqa
+                        f"az container show --name {container_group_name} --resource-group {configuration.resource_group_name}"  # noqa
                     )
                 )
             await anyio.sleep(configuration.poll_interval)
