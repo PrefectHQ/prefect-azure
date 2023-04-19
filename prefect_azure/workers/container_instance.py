@@ -641,7 +641,6 @@ class AzureContainerWorker(BaseWorker):
 
         self._logger.info(f"{self._log_prefix}: Container deleted.")
 
-    @staticmethod
     def _get_container(self, container_group: ContainerGroup) -> Container:
         """
         Extracts the job container from a container group.
