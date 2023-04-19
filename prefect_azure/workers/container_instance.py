@@ -172,12 +172,18 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
         # set the container's environment variables
         container["properties"]["environmentVariables"] = self._get_arm_environment()
 
+        # convert the command from a string to a list, because that's what ACI expects
+        if self.command:
+            container["properties"]["command"] = self.command.split(" ")
+
         # Add the entrypoint if provided. Creating an ACI container with a
         # command overrides the container's built-in entrypoint. Prefect base images
-        # use entrypoint.sh as the entrypoint, so we need to add it back in to avoid
-        # breaking EXTRA_PIP_PACKAGES installation on container startup.
+        # use entrypoint.sh as the entrypoint, so we need to add to the beginning of
+        # the command list to avoid breaking EXTRA_PIP_PACKAGES installation on
+        # container startup.
         if self.entrypoint:
-            container["properties"]["command"] = f"{self.entrypoint} {self.command}"
+            container["properties"]["command"].insert(0, self.entrypoint)
+
 
     def _get_arm_environment(self):
         """
