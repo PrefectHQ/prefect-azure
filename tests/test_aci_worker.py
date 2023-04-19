@@ -1,23 +1,19 @@
 import uuid
-from typing import Dict, List, Tuple, Union
+from typing import List, Tuple, Union
 from unittest.mock import MagicMock, Mock
 
 import dateutil.parser
 import pytest
 from anyio.abc import TaskStatus
-from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
+from azure.core.exceptions import HttpResponseError
 from azure.identity import ClientSecretCredential
 from azure.mgmt.containerinstance.models import (
-    EnvironmentVariable,
     ImageRegistryCredential,
-    UserAssignedIdentities,
 )
 from azure.mgmt.resource import ResourceManagementClient
 from prefect.client.schemas import FlowRun
-from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.infrastructure.docker import DockerRegistry
 from prefect.server.schemas.core import Flow
-from prefect.settings import get_current_settings
 from prefect.testing.utilities import AsyncMock
 from pydantic import SecretStr
 
@@ -30,7 +26,6 @@ from prefect_azure.workers.container_instance import (
     AzureContainerWorkerResult,
     ContainerGroupProvisioningState,
     ContainerRunState,
-    _AzureContainerFlowRunIdentifier,
 )
 
 
@@ -553,11 +548,7 @@ async def test_task_status_started_on_provisioning_success(
 
     container_group_name = f"{flow.name}-{worker_flow_run.id}"
 
-    identifier = _AzureContainerFlowRunIdentifier(
-        subscription_id=job_configuration.subscription_id,
-        resource_group_name=job_configuration.resource_group_name,
-        container_group_name=container_group_name,
-    )
+    identifier = f"{worker_flow_run.id}:{container_group_name}"
 
     task_status.started.assert_called_once_with(value=identifier)
 
@@ -794,4 +785,3 @@ def test_registry_credentials(aci_worker, mock_aci_client, monkeypatch):
     assert registry_object.username == registry.username
     assert registry_object.password == registry.password.get_secret_value()
     assert registry_object.server == registry.registry_url
-

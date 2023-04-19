@@ -1,7 +1,6 @@
 import datetime
 import sys
 import time
-from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
@@ -404,7 +403,9 @@ class AzureContainerWorker(BaseWorker):
         (flow_run_id, container_group_name) = infrastructure_pid.split(":")
 
         flow_run = prefect_client.read_flow_run(flow_run_id)
-        configuration: AzureContainerJobConfiguration = await self._get_configuration(flow_run)  # noqa
+        configuration: AzureContainerJobConfiguration = await self._get_configuration(
+            flow_run
+        )  # noqa
 
         if grace_seconds != CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS:
             self._logger.warning(
