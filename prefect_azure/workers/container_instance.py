@@ -391,7 +391,7 @@ class AzureContainerWorker(BaseWorker):
     async def kill_infrastructure(
         self,
         infrastructure_pid: str,
-        grace_seconds: int = CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS,
+        configuration: AzureContainerJobConfiguration,
     ):
         """
         Kill a flow running in an ACI container group.
@@ -405,21 +405,9 @@ class AzureContainerWorker(BaseWorker):
         # Note: ACI does not provide a way to specify grace period, but it gives
         # applications ~30 seconds to gracefully terminate before killing
         # a container group.
-        prefect_client = get_client()
         (flow_run_id, container_group_name) = infrastructure_pid.split(":")
 
-        flow_run = prefect_client.read_flow_run(flow_run_id)
-        configuration: AzureContainerJobConfiguration = await self._get_configuration(
-            flow_run
-        )  # noqa
-
-        if grace_seconds != CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS:
-            self._logger.warning(
-                f"{self._log_prefix}: Kill grace period of {grace_seconds}s requested, "
-                f"but ACI does not support grace period configuration."
-            )
-
-        aci_client = self.aci_credentials.get_container_client(
+        aci_client = configuration.aci_credentials.get_container_client(
             configuration.subscription_id.get_secret_value()
         )
 
@@ -443,7 +431,7 @@ class AzureContainerWorker(BaseWorker):
         # the container group needs to be deleted regardless of whether the container
         # already terminated
         await self._wait_for_container_group_deletion(
-            aci_client, configuration, container_group
+            aci_client, configuration, container_group_name
         )
 
         # if the container has already terminated, raise an exception to let the agent
