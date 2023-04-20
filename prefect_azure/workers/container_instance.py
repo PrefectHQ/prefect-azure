@@ -11,7 +11,67 @@ To start an ACI worker, run the following command:
 ```bash
 prefect worker start --pool 'my-work-pool' --type azure-container-instance
 ```
-"""
+
+Replace `my-work-pool` with the name of the work pool you want the worker
+to poll for flow runs.
+
+!!! example "Using a custom ARM template"
+    To facilitate easy customization, the Azure Container worker provisions a
+    containing group using an ARM template. The default ARM template is represented
+    in YAML as follows:
+    ```yaml
+    ---
+    arm_template:
+      "$schema": https://schema.management.azure.com/schemas/2022-09-01/deploymentTemplate.json#
+      contentVersion: 1.0.0.0
+      parameters:
+        location:
+          type: string
+          defaultValue: "[resourceGroup().location]"
+          metadata:
+            description: Location for all resources.
+        container_group_name:
+          type: string
+          defaultValue: "[uniqueString(resourceGroup().id)]"
+          metadata:
+            description: The name of the container group to create.
+        container_name:
+          type: string
+          defaultValue: "[uniqueString(resourceGroup().id)]"
+          metadata:
+            description: The name of the container to create.
+      resources:
+      - type: Microsoft.ContainerInstance/containerGroups
+        apiVersion: '2022-09-01'
+        name: "[parameters('container_group_name')]"
+        location: "[parameters('location')]"
+        properties:
+          containers:
+          - name: "[parameters('container_name')]"
+            properties:
+              image: rpeden/my-aci-flow:latest
+              command: "{{ command }}"
+              resources:
+                requests:
+                  cpu: "{{ cpu }}"
+                  memoryInGB: "{{ memory }}"
+              environmentVariables: []
+          osType: Linux
+          restartPolicy: Never
+    ```
+
+    Each values enclosed in `{{ }}` is a placeholder that will be replaced with
+    a value at runtime. The values that can be used a placeholders are defined
+    by the `variables` schema defined in the base job template.
+
+    The default job manifest and available variables can be customized on a work pool
+    by work pool basis. These customizations can be made via the Prefect UI when
+    creating or editing a work pool.
+
+    Using an ARM template makes the worker flexible; you're not limited to using the
+    features the worker provides out of the box. Instead, you can modify the ARM
+    template to use any features available in Azure Container Instances.
+"""  # noqa
 import datetime
 import sys
 import time

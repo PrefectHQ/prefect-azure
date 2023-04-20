@@ -149,6 +149,23 @@ Visit [Prefect Deployments](https://docs.prefect.io/tutorials/deployments/) for 
 
 For more tips on how to use tasks and flows in a Collection, check out [Using Collections](https://orion-docs.prefect.io/collections/usage/)!
 
+## Azure Container Instance Worker
+The Azure Container Instance worker is an excellent way to run 
+[Prefect projects](https://docs.prefect.io/latest/concepts/projects/) on Azure. 
+
+To get started, create an Azure Container Instances typed work pool:
+```
+prefect work-pool create -t azure-container-instance my-aci-work-pool
+```
+
+Then, run a worker that pulls jobs from the work pool:
+```
+prefect worker start -n my-aci-worker -p my-aci-work-pool
+```
+
+The worker should automatically read the work pool's type and start an 
+Azure Container Instance worker.
+
 ## Resources
 
 If you encounter and bugs while using `prefect-azure`, feel free to open an issue in the [prefect-azure](https://github.com/PrefectHQ/prefect-azure) repository.
