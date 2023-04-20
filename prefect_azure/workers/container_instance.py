@@ -184,7 +184,6 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
         if self.entrypoint:
             container["properties"]["command"].insert(0, self.entrypoint)
 
-
     def _get_arm_environment(self):
         """
         Returns the environment variables to pass to the ARM template.

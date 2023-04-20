@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Dict
 from unittest.mock import MagicMock, Mock
 
 import dateutil.parser
@@ -14,6 +14,7 @@ from azure.mgmt.resource import ResourceManagementClient
 from prefect.client.schemas import FlowRun
 from prefect.infrastructure.docker import DockerRegistry
 from prefect.server.schemas.core import Flow
+from prefect.settings import get_current_settings
 from prefect.testing.utilities import AsyncMock
 from pydantic import SecretStr
 
@@ -84,6 +85,7 @@ async def create_job_configuration(
     """
     values = {
         "command": "test",
+        "env": {},
         "aci_credentials": aci_credentials,
         "resource_group_name": "test_group",
         "subscription_id": SecretStr("sub_id"),
@@ -749,6 +751,43 @@ def test_block_accessible_in_module_toplevel():
     # is not accessible directly from `prefect_azure`
     from prefect_azure import AzureContainerWorker  # noqa
 
+def test_secure_environment_variables(
+    raw_job_configuration, worker_flow_run, monkeypatch
+):
+    config = raw_job_configuration
+    # setup environment containing an API key we want to keep secret
+    base_env: Dict[str, str] = get_current_settings().to_environment_variables(
+        exclude_unset=True
+    )
+    base_env["PREFECT_API_KEY"] = "my-api-key"
+
+    # base_env_call = Mock(return_value=base_env)
+    # monkeypatch.setattr(raw_job_configuration, "_base_environment", base_env_call)
+    config.env = base_env
+    config.prepare_for_flow_run(worker_flow_run)
+
+    container_group = config.arm_template["resources"][0]
+    container = container_group["properties"]["containers"][0]
+
+    # get the container's environment variables
+    container_env = container["properties"]["environmentVariables"]
+
+    api_key_aci_env_variable: List[Dict] = list(
+        filter(lambda v: v["name"] == "PREFECT_API_KEY", container_env)
+    )
+
+    # ensure the env variable made it into the list of env variables set in the
+    # ACI container
+    assert len(api_key_aci_env_variable) == 1
+    api_key_entry = api_key_aci_env_variable[0]
+
+    expected = {
+        "name": "PREFECT_API_KEY",
+        "secureValue": "my-api-key",
+    }
+
+    assert api_key_entry == expected
+
 
 def test_registry_credentials(aci_worker, mock_aci_client, monkeypatch):
     mock_container_group_constructor = MagicMock()
@@ -785,3 +824,6 @@ def test_registry_credentials(aci_worker, mock_aci_client, monkeypatch):
     assert registry_object.username == registry.username
     assert registry_object.password == registry.password.get_secret_value()
     assert registry_object.server == registry.registry_url
+
+
+
