@@ -71,7 +71,7 @@ to poll for flow runs.
     Using an ARM template makes the worker flexible; you're not limited to using the
     features the worker provides out of the box. Instead, you can modify the ARM
     template to use any features available in Azure Container Instances.
-"""
+"""  # noqa
 import datetime
 import sys
 import time
