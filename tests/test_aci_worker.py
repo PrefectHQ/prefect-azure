@@ -173,7 +173,7 @@ def aci_credentials(monkeypatch):
 
 
 @pytest.fixture
-def aci_worker(mock_prefect_client, monkeypatch):
+async def aci_worker(mock_prefect_client, monkeypatch):
     monkeypatch.setattr(
         prefect_azure.workers.container_instance,
         "get_client",
@@ -340,8 +340,15 @@ async def test_worker_container_client_creation(
 
     subscription_id = "test_subscription"
     job_configuration.subscription_id = SecretStr(value=subscription_id)
-    with pytest.raises(RuntimeError):
-        await aci_worker.run(worker_flow_run, job_configuration)
+
+    async with aci_worker:
+        # Using mock Azure clients to avoid making real calls to Azure
+        # during testing means that the client will raise an exception
+        # unless we mock multiple client responses. Since we're only
+        # mocking what's needed for this test, we expect the worker to
+        # raise an exception when it tries to proceed further.
+        with pytest.raises(RuntimeError):
+            await aci_worker.run(worker_flow_run, job_configuration)
 
     mock_resource_client_constructor.assert_called_once_with(
         credential=mock_azure_credential,
@@ -375,8 +382,14 @@ async def test_worker_credentials_are_used(
         prefect_azure.credentials, "ClientSecretCredential", mock_credential
     )
 
-    with pytest.raises(RuntimeError):
-        await aci_worker.run(worker_flow_run, job_configuration)
+    async with aci_worker:
+        # Using mock Azure clients to avoid making real calls to Azure
+        # during testing means that the client will raise an exception
+        # unless we mock multiple client responses. Since we're only
+        # mocking what's needed for this test, we expect the worker to
+        # raise an exception when it tries to proceed further.
+        with pytest.raises(RuntimeError):
+            await aci_worker.run(worker_flow_run, job_configuration)
 
     mock_client_secret.assert_called_once()
     mock_credential.assert_called_once_with(
@@ -418,7 +431,9 @@ async def test_aci_worker_deployment_call(
 
     # ensure the worker always tries to call the Azure deployments SDK
     # to create the container
-    await aci_worker.run(worker_flow_run, job_configuration)
+    async with aci_worker:
+        await aci_worker.run(worker_flow_run, job_configuration)
+
     mock_resource_client.deployments.begin_create_or_update.assert_called_once()
 
 
@@ -457,10 +472,12 @@ async def test_worker_uses_entrypoint_correctly_in_template(
     run_job_configuration = await create_job_configuration(
         aci_credentials, worker_flow_run, job_overrides
     )
-    # We haven't mocked out the container group creation, so this should fail
-    # and that's ok. We just want to ensure the entrypoint is used correctly.
-    with pytest.raises(RuntimeError):
-        await aci_worker.run(worker_flow_run, run_job_configuration)
+
+    async with aci_worker:
+        # We haven't mocked out the container group creation, so this should fail
+        # and that's expected. We just want to ensure the entrypoint is used correctly.
+        with pytest.raises(RuntimeError):
+            await aci_worker.run(worker_flow_run, run_job_configuration)
 
     mock_deployment_call.assert_called_once()
     (_, kwargs) = mock_deployment_call.call_args
@@ -483,8 +500,12 @@ async def test_delete_after_group_creation_failure(
         aci_worker, "_wait_for_task_container_start", mock_container_group
     )
 
-    with pytest.raises(RuntimeError):
-        await aci_worker.run(worker_flow_run, configuration=job_configuration)
+    async with aci_worker:
+        # We expect the worker to raise an exception when creating the container group
+        # fails. We also expect the `finally` block to be called and the container group
+        # to be deleted.
+        with pytest.raises(RuntimeError):
+            await aci_worker.run(worker_flow_run, configuration=job_configuration)
 
     mock_aci_client.container_groups.begin_delete.assert_called_once()
 
@@ -504,7 +525,9 @@ async def test_delete_after_group_creation_success(
         Mock(return_value=running_worker_container_group),
     )
 
-    await aci_worker.run(worker_flow_run, job_configuration)
+    async with aci_worker:
+        await aci_worker.run(worker_flow_run, job_configuration)
+
     mock_aci_client.container_groups.begin_delete.assert_called_once()
 
 
@@ -523,8 +546,9 @@ async def test_delete_after_after_exception(
         HttpResponseError(message="it broke")
     )
 
-    with pytest.raises(HttpResponseError):
-        await aci_worker.run(worker_flow_run, job_configuration)
+    async with aci_worker:
+        with pytest.raises(HttpResponseError):
+            await aci_worker.run(worker_flow_run, job_configuration)
 
     mock_aci_client.container_groups.begin_delete.assert_called_once()
 
@@ -547,7 +571,11 @@ async def test_task_status_started_on_provisioning_success(
     )
 
     task_status = Mock(spec=TaskStatus)
-    await aci_worker.run(worker_flow_run, job_configuration, task_status=task_status)
+
+    async with aci_worker:
+        await aci_worker.run(
+            worker_flow_run, job_configuration, task_status=task_status
+        )
 
     flow = await mock_prefect_client.read_flow(worker_flow_run.flow_id)
 
@@ -565,8 +593,12 @@ async def test_task_status_not_started_on_provisioning_failure(
     monkeypatch.setattr(aci_worker, "_provisioning_succeeded", Mock(return_value=False))
 
     task_status = Mock(spec=TaskStatus)
-    with pytest.raises(RuntimeError, match="Container creation failed"):
-        await aci_worker.run(worker_flow_run, job_configuration, task_status)
+
+    async with aci_worker:
+        # we expect the worker to raise an exception if provisioning fails
+        with pytest.raises(RuntimeError, match="Container creation failed"):
+            await aci_worker.run(worker_flow_run, job_configuration, task_status)
+
     task_status.started.assert_not_called()
 
 
@@ -587,8 +619,9 @@ async def test_provisioning_timeout_throws_exception(
     job_configuration.task_watch_poll_interval = 0.09
     job_configuration.task_start_timeout_seconds = 0.10
 
-    with pytest.raises(RuntimeError, match="Timed out after"):
-        await aci_worker.run(worker_flow_run, job_configuration)
+    async with aci_worker:
+        with pytest.raises(RuntimeError, match="Timed out after"):
+            await aci_worker.run(worker_flow_run, job_configuration)
 
 
 async def test_watch_for_container_termination(
@@ -625,7 +658,9 @@ async def test_watch_for_container_termination(
     mock_aci_client.container_groups.get.side_effect = get_container_group
 
     job_configuration.task_watch_poll_interval = 0.02
-    result = await aci_worker.run(worker_flow_run, job_configuration)
+
+    async with aci_worker:
+        result = await aci_worker.run(worker_flow_run, job_configuration)
 
     # ensure the watcher was watching
     assert run_count == 5
@@ -654,7 +689,8 @@ async def test_quick_termination_handling(
         Mock(return_value=completed_worker_container_group),
     )
 
-    result = await aci_worker.run(worker_flow_run, job_configuration)
+    async with aci_worker:
+        result = await aci_worker.run(worker_flow_run, job_configuration)
 
     # ensure the watcher didn't need to call to check status since the run
     # already completed.
@@ -743,7 +779,9 @@ async def test_output_streaming(
     job_configuration.stream_output = True
     job_configuration.name = "streaming test"
     job_configuration.task_watch_poll_interval = 0.02
-    await aci_worker.run(worker_flow_run, job_configuration)
+
+    async with aci_worker:
+        await aci_worker.run(worker_flow_run, job_configuration)
 
     # 6 lines should be written because of the nine test log lines, two overlap
     # and should not be written twice, and one has a broken timestamp so should
@@ -824,7 +862,6 @@ def test_add_docker_registry_credentials(
 def test_add_acr_registry_identity(
     raw_job_configuration, worker_flow_run, mock_aci_client, monkeypatch
 ):
-
     registry = ACRManagedIdentity(
         registry_url="https://myregistry.azurecr.io",
         identity="my-identity",
@@ -859,10 +896,13 @@ async def test_provisioning_container_group(
     mock_deployments.begin_create_or_update = mock_provisioning_call
 
     monkeypatch.setattr(mock_resource_client, "deployments", mock_deployments)
-    # we want to ensure that the provisioning call is made; we don't care about
-    # the rest of the run
-    with pytest.raises(RuntimeError):
-        await aci_worker.run(worker_flow_run, job_configuration)
+
+    async with aci_worker:
+        # We want to ensure that the provisioning call, is made; we don't care about
+        # the rest of the run, so an exception is expected since we haven't mocked
+        # ACI client responses.
+        with pytest.raises(RuntimeError):
+            await aci_worker.run(worker_flow_run, job_configuration)
 
     mock_provisioning_call.assert_called_once()
 
