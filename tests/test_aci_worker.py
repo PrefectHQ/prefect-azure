@@ -861,3 +861,31 @@ async def test_provisioning_container_group(
         await aci_worker.run(worker_flow_run, job_configuration)
 
     mock_provisioning_call.assert_called_once()
+
+
+def test_job_configuration_creation():
+    config = AzureContainerJobConfiguration(
+        resource_group_name="my-resource-group",
+        subscription_id="my-subscription-id",
+        aci_credentials=AzureContainerInstanceCredentials(
+            tenant_id="my-tenant-id",
+            client_id="my-client-id",
+            client_secret="my-client-secret",
+        ),
+        arm_template=prefect_azure.workers.container_instance._get_default_arm_template(),
+        image="my-image",
+        cpu=1,
+        memory=1,
+        env={"TEST": "VALUE"}
+    )
+
+    assert config.image == "my-image"
+    assert config.cpu == 1
+    assert config.memory == 1
+    assert config.env == {"TEST": "VALUE"}
+    assert config.resource_group_name == "my-resource-group"
+    assert config.subscription_id.get_secret_value() == "my-subscription-id"
+    assert config.aci_credentials.tenant_id == "my-tenant-id"
+    assert config.aci_credentials.client_id == "my-client-id"
+    assert config.aci_credentials.client_secret.get_secret_value() == "my-client-secret"
+    assert type(config.arm_template) == dict
