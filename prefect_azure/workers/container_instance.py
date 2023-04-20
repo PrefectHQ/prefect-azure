@@ -271,9 +271,9 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
         self.arm_template["resources"][0]["properties"]["identity"] = {
             "type": "UserAssigned",
             "userAssignedIdentities": {
-                # note: For user-assigned identities, the key is the resource ID of the identity
-                # and the value is an empty object. See:
-                # https://docs.microsoft.com/en-us/azure/templates/microsoft.containerinstance/containergroups?tabs=bicep#identity-object
+                # note: For user-assigned identities, the key is the resource ID
+                # of the identity and the value is an empty object. See:
+                # https://docs.microsoft.com/en-us/azure/templates/microsoft.containerinstance/containergroups?tabs=bicep#identity-object # noqa
                 identity: {}
                 for identity in identities
             },
