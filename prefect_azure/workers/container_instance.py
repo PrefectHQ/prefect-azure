@@ -456,12 +456,8 @@ class AzureContainerWorker(BaseWorker):
         Args:
             infrastructure_pid: The container group identification data yielded by
                 `AzureContainerInstanceJob.run`.
-            grace_seconds: The number of seconds to wait for the container group to
-                terminate.
+            configuration: The job configuration.
         """
-        # Note: ACI does not provide a way to specify grace period, but it gives
-        # applications ~30 seconds to gracefully terminate before killing
-        # a container group.
         (flow_run_id, container_group_name) = infrastructure_pid.split(":")
 
         aci_client = configuration.aci_credentials.get_container_client(

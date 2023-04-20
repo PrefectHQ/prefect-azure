@@ -396,9 +396,14 @@ async def test_aci_worker_deployment_call(
     monkeypatch.setattr(
         aci_worker,
         "_get_container_group",
-        Mock(return_value=completed_worker_container_group),
+        Mock(return_value=running_worker_container_group),
     )
 
+    monkeypatch.setattr(
+        aci_worker,
+        "_wait_for_task_container_start",
+        Mock(return_value=running_worker_container_group),
+    )
     mock_poller = Mock()
     # the deployment poller should return a successful deployment
     mock_poller.done = Mock(return_value=True)
