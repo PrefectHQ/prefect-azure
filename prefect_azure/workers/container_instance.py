@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import anyio
 import dateutil.parser
+import prefect
 from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 from azure.core.polling import LROPoller
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
@@ -32,6 +33,7 @@ from prefect.workers.base import (
 )
 from pydantic import Field, SecretStr
 
+from prefect_azure.container_instance import ACRManagedIdentity
 from prefect_azure.credentials import AzureContainerInstanceCredentials
 
 # import aio Azure container instance client
@@ -54,7 +56,7 @@ CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS = 30
 
 def _get_default_arm_template():
     return {
-        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",  # noqa
+        "$schema": "https://schema.management.azure.com/schemas/2022-09-01/deploymentTemplate.json#",  # noqa
         "contentVersion": "1.0.0.0",
         "metadata": {
             "_generator": {
@@ -138,6 +140,12 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
     subscription_id: SecretStr = Field(default=...)
     identities: Optional[List[str]] = Field(default=None)
     entrypoint: Optional[str] = Field(default=DEFAULT_CONTAINER_ENTRYPOINT)
+    image_registry: Optional[
+        Union[
+            prefect.infrastructure.docker.DockerRegistry,
+            ACRManagedIdentity,
+        ]
+    ]
     cpu: float = Field(default=ACI_DEFAULT_CPU)
     gpu_count: Optional[int] = Field(default=None)
     gpu_sku: Optional[str] = Field(default=None)
@@ -183,6 +191,43 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
         # container startup.
         if self.entrypoint:
             container["properties"]["command"].insert(0, self.entrypoint)
+
+        if self.image_registry:
+            self._add_image_registry_credentials(self.image_registry)
+
+
+    def _add_image_registry_credentials(
+        self,
+        image_registry: Union[
+            prefect.infrastructure.docker.DockerRegistry,
+            ACRManagedIdentity,
+            None,
+        ]
+    ):
+        """
+        Create image registry credentials based on the type of image_registry provided.
+
+        Args:
+            image_registry: An instance of a DockerRegistry or
+            ACRManagedIdentity object.
+        """
+        if image_registry and isinstance(
+                image_registry, prefect.infrastructure.docker.DockerRegistry
+        ):
+            self.arm_template["resources"][0]["properties"]["imageRegistryCredentials"] = [
+                {
+                    "server": image_registry.registry_url,
+                    "username": image_registry.username,
+                    "password": image_registry.password.get_secret_value(),
+                }
+            ]
+        elif image_registry and isinstance(image_registry, ACRManagedIdentity):
+            self.arm_template["resources"][0]["properties"]["imageRegistryCredentials"] = [
+                {
+                    "server": image_registry.registry_url,
+                    "identity": image_registry.identity
+                }
+            ]
 
     def _get_arm_environment(self):
         """
@@ -236,6 +281,20 @@ class AzureContainerVariables(BaseVariables):
             "changed when using a custom image that is not based on an official "
             "Prefect image. Any commands set on deployments will be passed "
             "to the entrypoint as parameters."
+        ),
+    )
+    image_registry: Optional[
+        Union[
+            prefect.infrastructure.docker.DockerRegistry,
+            ACRManagedIdentity,
+        ]
+    ] = Field(
+        default=None,
+        title="Image Registry (Optional)",
+        description=(
+            "To use any private container registry with a username and password, "
+            "choose DockerRegistry. To use a private Azure Container Registry "
+            "with a managed identity, choose ACRManagedIdentity."
         ),
     )
     cpu: float = Field(

@@ -20,6 +20,7 @@ from pydantic import SecretStr
 
 import prefect_azure.container_instance
 from prefect_azure import AzureContainerInstanceCredentials
+from prefect_azure.container_instance import ACRManagedIdentity
 from prefect_azure.workers.container_instance import AzureContainerVariables  # noqa
 from prefect_azure.workers.container_instance import (
     AzureContainerJobConfiguration,
@@ -91,7 +92,7 @@ async def create_job_configuration(
         "subscription_id": SecretStr("sub_id"),
         "name": None,
         "task_watch_poll_interval": 0.05,
-        "stream_output": False,
+        "stream_output": True,
     }
 
     for k, v in overrides.items():
@@ -423,12 +424,12 @@ async def test_aci_worker_deployment_call(
     "entrypoint, job_command, expected_template_command",
     [
         # If no entrypoint is provided, just use the command
-        (None, "command arg1 arg2", "command arg1 arg2"),
+        (None, "command arg1 arg2", ["command", "arg1", "arg2"]),
         # entrypoint and command should be combined if both are provided
         (
             "/test/entrypoint.sh",
             "command arg1 arg2",
-            "/test/entrypoint.sh command arg1 arg2",
+            ["/test/entrypoint.sh", "command", "arg1", "arg2"],
         ),
     ],
 )
@@ -789,41 +790,43 @@ def test_secure_environment_variables(
     assert api_key_entry == expected
 
 
-def test_registry_credentials(aci_worker, mock_aci_client, monkeypatch):
-    mock_container_group_constructor = MagicMock()
-
-    monkeypatch.setattr(
-        prefect_azure.container_instance,
-        "ContainerGroup",
-        mock_container_group_constructor,
-    )
-
+def test_add_docker_registry_credentials(
+    raw_job_configuration, worker_flow_run, mock_aci_client, monkeypatch
+):
     registry = DockerRegistry(
         username="username",
         password="password",
         registry_url="https://myregistry.dockerhub.com",
     )
 
-    job_configuration.image_registry = registry
-    aci_worker.run(worker_flow_run, job_configuration)
+    raw_job_configuration.image_registry = registry
+    raw_job_configuration.prepare_for_flow_run(worker_flow_run)
 
-    mock_container_group_constructor.assert_called_once()
+    container_group = raw_job_configuration.arm_template["resources"][0]
+    image_registry_credentials = container_group["properties"]["imageRegistryCredentials"]
 
-    (_, kwargs) = mock_container_group_constructor.call_args
-    registry_arg: List[ImageRegistryCredential] = kwargs.get(
-        "image_registry_credentials"
+    assert len(image_registry_credentials) == 1
+    assert image_registry_credentials[0]["server"] == registry.registry_url
+    assert image_registry_credentials[0]["username"] == registry.username
+    assert image_registry_credentials[0]["password"] == registry.password.get_secret_value()
+
+
+def test_add_acr_registry_identity(
+    raw_job_configuration, worker_flow_run, mock_aci_client, monkeypatch
+):
+
+    registry = ACRManagedIdentity(
+        registry_url="https://myregistry.azurecr.io",
+        identity="my-identity",
     )
 
-    # ensure the registry was used, passed as a list the way the Azure SDK expects it,
-    # and correctly converted to an Azure ImageRegistryCredential.
-    assert registry_arg is not None
-    assert isinstance(registry_arg, list)
+    raw_job_configuration.image_registry = registry
+    raw_job_configuration.prepare_for_flow_run(worker_flow_run)
 
-    registry_object = registry_arg[0]
-    assert isinstance(registry_object, ImageRegistryCredential)
-    assert registry_object.username == registry.username
-    assert registry_object.password == registry.password.get_secret_value()
-    assert registry_object.server == registry.registry_url
+    container_group = raw_job_configuration.arm_template["resources"][0]
+    image_registry_credentials = container_group["properties"]["imageRegistryCredentials"]
 
-
+    assert len(image_registry_credentials) == 1
+    assert image_registry_credentials[0]["server"] == registry.registry_url
+    assert image_registry_credentials[0]["identity"] == registry.identity
 
