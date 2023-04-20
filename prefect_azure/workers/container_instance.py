@@ -224,11 +224,11 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
     memory: float = Field(default=ACI_DEFAULT_MEMORY)
     subnet_ids: Optional[List[str]] = Field(default=None)
     dns_servers: Optional[List[str]] = Field(default=None)
-    stream_output: Optional[bool] = Field(default=False)
+    stream_output: bool = Field(default=False)
     aci_credentials: AzureContainerInstanceCredentials = Field(
         # default to an empty credentials object that will use
         # `DefaultAzureCredential` to authenticate.
-        default=AzureContainerInstanceCredentials()
+        default_factory=AzureContainerInstanceCredentials
     )
     # Execution settings
     task_start_timeout_seconds: int = Field(default=240)
@@ -464,8 +464,8 @@ class AzureContainerVariables(BaseVariables):
     aci_credentials: AzureContainerInstanceCredentials = Field(
         description=("The credentials to use to authenticate with Azure."),
     )
-    stream_output: Optional[bool] = Field(
-        default=None,
+    stream_output: bool = Field(
+        default=False,
         description=(
             "If `True`, logs will be streamed from the Prefect container to the local "
             "console."
