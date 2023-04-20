@@ -225,7 +225,6 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
     subnet_ids: Optional[List[str]] = Field(default=None)
     dns_servers: Optional[List[str]] = Field(default=None)
     stream_output: Optional[bool] = Field(default=None)
-    env: Dict[str, Optional[str]] = Field()
     aci_credentials: AzureContainerInstanceCredentials = Field()
     # Execution settings
     task_start_timeout_seconds: int = Field(default=240)
@@ -467,15 +466,6 @@ class AzureContainerVariables(BaseVariables):
         description=(
             "If `True`, logs will be streamed from the Prefect container to the local "
             "console."
-        ),
-    )
-    env: Dict[str, Optional[str]] = Field(
-        title="Environment Variables",
-        default_factory=dict,
-        description=(
-            "Environment variables to provide to the task run. These variables are set "
-            "on the Prefect container at task runtime. These will not be set on the "
-            "task definition."
         ),
     )
     # Execution settings
