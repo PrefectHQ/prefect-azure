@@ -921,7 +921,7 @@ class AzureContainerWorker(BaseWorker):
             # get all missed logs on the next check.
             self._logger.warning(
                 f"{self._log_prefix}: Unable to retrieve logs from container "
-                f"{container.name}. Trying again in {self.task_watch_poll_interval}s"
+                f"{container.name}. Trying again in {configuration.task_watch_poll_interval}s"
             )
 
         return logs.content if logs else ""
