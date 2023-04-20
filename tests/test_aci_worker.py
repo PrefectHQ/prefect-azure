@@ -392,17 +392,15 @@ async def test_aci_worker_deployment_call(
     job_configuration,
     monkeypatch,
 ):
-    # simulate a successful deployment of a container group to Azure
-    monkeypatch.setattr(
-        aci_worker,
-        "_get_container_group",
-        Mock(return_value=running_worker_container_group),
+    #simulate a successful deployment of a container group to Azure
+    completed_worker_container_group.provisioning_state = (
+        ContainerGroupProvisioningState.SUCCEEDED
     )
 
     monkeypatch.setattr(
         aci_worker,
-        "_wait_for_task_container_start",
-        Mock(return_value=running_worker_container_group),
+        "_get_container_group",
+        Mock(return_value=completed_worker_container_group),
     )
     mock_poller = Mock()
     # the deployment poller should return a successful deployment
