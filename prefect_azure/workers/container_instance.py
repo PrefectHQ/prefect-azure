@@ -73,13 +73,6 @@ def _get_default_arm_template():
     return {
         "$schema": "https://schema.management.azure.com/schemas/2022-09-01/deploymentTemplate.json#",  # noqa
         "contentVersion": "1.0.0.0",
-        "metadata": {
-            "_generator": {
-                "name": "bicep",
-                "version": "0.5.6.12127",
-                "templateHash": "17016281914347876853",
-            }
-        },
         "parameters": {
             "location": {
                 "type": "string",
