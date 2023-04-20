@@ -899,9 +899,7 @@ def test_job_configuration_creation():
 async def test_add_identities(
     raw_job_configuration, worker_flow_run, mock_aci_client, monkeypatch
 ):
-    raw_job_configuration.identities = [
-        "identity1", "identity2", "identity3"
-    ]
+    raw_job_configuration.identities = ["identity1", "identity2", "identity3"]
     raw_job_configuration.prepare_for_flow_run(worker_flow_run)
 
     container_group = raw_job_configuration.arm_template["resources"][0]
@@ -917,9 +915,7 @@ async def test_add_identities(
 async def test_add_subnet_ids(
     raw_job_configuration, worker_flow_run, mock_aci_client, monkeypatch
 ):
-    raw_job_configuration.subnet_ids = [
-        "subnet1", "subnet2", "subnet3"
-    ]
+    raw_job_configuration.subnet_ids = ["subnet1", "subnet2", "subnet3"]
     raw_job_configuration.prepare_for_flow_run(worker_flow_run)
 
     container_group = raw_job_configuration.arm_template["resources"][0]
@@ -934,9 +930,7 @@ async def test_add_subnet_ids(
 async def test_add_dns_servers(
     raw_job_configuration, worker_flow_run, mock_aci_client, monkeypatch
 ):
-    raw_job_configuration.dns_servers = [
-        "dns1", "dns2", "dns3"
-    ]
+    raw_job_configuration.dns_servers = ["dns1", "dns2", "dns3"]
     raw_job_configuration.prepare_for_flow_run(worker_flow_run)
 
     container_group = raw_job_configuration.arm_template["resources"][0]
@@ -946,4 +940,3 @@ async def test_add_dns_servers(
     # entries in the dns servers list
     for dns_server in raw_job_configuration.dns_servers:
         assert dns_server in dns_config["nameServers"]
-
