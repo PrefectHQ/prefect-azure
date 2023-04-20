@@ -207,7 +207,7 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
     Configuration for an Azure Container Instance flow run.
     """
 
-    image: Optional[str] = Field()
+    image: Optional[str] = Field(default_factory=get_prefect_image_name)
     resource_group_name: str = Field(default=...)
     subscription_id: SecretStr = Field(default=...)
     identities: Optional[List[str]] = Field(default=None)
@@ -374,7 +374,6 @@ class AzureContainerVariables(BaseVariables):
     """
 
     image: Optional[str] = Field(
-        default_factory=get_prefect_image_name,
         description=(
             "The image to use for the Prefect container in the task. This value "
             "defaults to a Prefect base image matching your local versions."
