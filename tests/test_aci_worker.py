@@ -179,7 +179,8 @@ def aci_worker(mock_prefect_client, monkeypatch):
         "get_client",
         Mock(return_value=mock_prefect_client),
     )
-    return AzureContainerWorker(work_pool_name="test_pool")
+    async with AzureContainerWorker(work_pool_name="test_pool") as worker:
+        yield worker
 
 
 @pytest.fixture()
