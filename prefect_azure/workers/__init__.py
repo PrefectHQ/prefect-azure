@@ -1,1 +1,3 @@
-from .container_instance import AzureContainerWorker
+"""
+Worker classes for Azure
+"""
