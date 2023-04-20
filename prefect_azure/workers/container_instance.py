@@ -378,10 +378,6 @@ class AzureContainerWorker(BaseWorker):
     job_configuration = AzureContainerJobConfiguration
     job_configuration_variables = AzureContainerVariables
 
-    async def verify_submitted_deployment(self, deployment: Deployment):
-        # TODO: Implement deployment verification for `AzureContainerWorker`
-        pass
-
     async def run(
         self,
         flow_run: FlowRun,
