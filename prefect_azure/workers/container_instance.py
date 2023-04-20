@@ -214,6 +214,15 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
         if self.image_registry:
             self._add_image_registry_credentials(self.image_registry)
 
+        if self.identities:
+            self._add_identities(self.identities)
+
+        if self.subnet_ids:
+            self._add_subnets(self.subnet_ids)
+
+        if self.dns_servers:
+            self._add_dns_servers(self.dns_servers)
+
     def _add_image_registry_credentials(
         self,
         image_registry: Union[
@@ -250,6 +259,47 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
                     "identity": image_registry.identity,
                 }
             ]
+
+    def _add_identities(self, identities: List[str]):
+        """
+        Add identities to the container group.
+
+        Args:
+            identities: A list of user-assigned identities to add to
+            the container group.
+        """
+        self.arm_template["resources"][0]["properties"]["identity"] = {
+            "type": "UserAssigned",
+            "userAssignedIdentities": {
+                # note: For user-assigned identities, the key is the resource ID of the identity
+                # and the value is an empty object. See:
+                # https://docs.microsoft.com/en-us/azure/templates/microsoft.containerinstance/containergroups?tabs=bicep#identity-object
+                identity: {}
+                for identity in identities
+            },
+        }
+
+    def _add_subnets(self, subnet_ids: List[str]):
+        """
+        Add subnets to the container group.
+
+        Args:
+            subnet_ids: A list of subnet ids to add to the container group.
+        """
+        self.arm_template["resources"][0]["properties"]["subnetIds"] = [
+            {"id": subnet_id} for subnet_id in subnet_ids
+        ]
+
+    def _add_dns_servers(self, dns_servers: List[str]):
+        """
+        Add dns servers to the container group.
+
+        Args:
+            dns_servers: A list of dns servers to add to the container group.
+        """
+        self.arm_template["resources"][0]["properties"]["dnsConfig"] = {
+            "nameServers": dns_servers
+        }
 
     def _get_arm_environment(self):
         """

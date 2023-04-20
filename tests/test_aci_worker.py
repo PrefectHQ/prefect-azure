@@ -894,3 +894,56 @@ def test_job_configuration_creation():
     assert config.aci_credentials.client_id == "my-client-id"
     assert config.aci_credentials.client_secret.get_secret_value() == "my-client-secret"
     assert type(config.arm_template) == dict
+
+
+async def test_add_identities(
+    raw_job_configuration, worker_flow_run, mock_aci_client, monkeypatch
+):
+    raw_job_configuration.identities = [
+        "identity1", "identity2", "identity3"
+    ]
+    raw_job_configuration.prepare_for_flow_run(worker_flow_run)
+
+    container_group = raw_job_configuration.arm_template["resources"][0]
+    identities = container_group["properties"]["identity"]["userAssignedIdentities"]
+    assert len(identities) == 3
+    # each of the identities in the input list should be the key of one of the
+    # entries in the identities dict. The value of each entry doesn't matter as
+    # long as it's not null
+    for identity in raw_job_configuration.identities:
+        assert identities[identity] is not None
+
+
+async def test_add_subnet_ids(
+    raw_job_configuration, worker_flow_run, mock_aci_client, monkeypatch
+):
+    raw_job_configuration.subnet_ids = [
+        "subnet1", "subnet2", "subnet3"
+    ]
+    raw_job_configuration.prepare_for_flow_run(worker_flow_run)
+
+    container_group = raw_job_configuration.arm_template["resources"][0]
+    subnet_ids = container_group["properties"]["subnetIds"]
+    assert len(subnet_ids) == 3
+    # each of the subnet ids in the input list should be the value of one of the
+    # entries in the subnet ids list
+    for subnet_id in raw_job_configuration.subnet_ids:
+        assert {"id": subnet_id} in subnet_ids
+
+
+async def test_add_dns_servers(
+    raw_job_configuration, worker_flow_run, mock_aci_client, monkeypatch
+):
+    raw_job_configuration.dns_servers = [
+        "dns1", "dns2", "dns3"
+    ]
+    raw_job_configuration.prepare_for_flow_run(worker_flow_run)
+
+    container_group = raw_job_configuration.arm_template["resources"][0]
+    dns_config = container_group["properties"]["dnsConfig"]
+    assert len(dns_config["nameServers"]) == 3
+    # each of the dns servers in the input list should be the value of one of the
+    # entries in the dns servers list
+    for dns_server in raw_job_configuration.dns_servers:
+        assert dns_server in dns_config["nameServers"]
+
