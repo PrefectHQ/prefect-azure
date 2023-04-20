@@ -1,3 +1,17 @@
+"""
+<span class="badge-api beta"/>
+
+Module containing the Azure Container Instances worker used for executing flow
+runs in ACI containers.
+
+Note this module is in **beta**. The interfaces within may change without notice.
+
+To start an ACI worker, run the following command:
+
+```bash
+prefect worker start --pool 'my-work-pool' --type azure-container-instance
+```
+"""
 import datetime
 import sys
 import time
@@ -55,6 +69,7 @@ CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS = 30
 
 
 def _get_default_arm_template():
+    """Get the default ARM template for creating a container group."""
     return {
         "$schema": "https://schema.management.azure.com/schemas/2022-09-01/deploymentTemplate.json#",  # noqa
         "contentVersion": "1.0.0.0",
@@ -135,6 +150,9 @@ class ContainerRunState(str, Enum):
 
 
 class AzureContainerJobConfiguration(BaseJobConfiguration):
+    """
+    Configuration for an Azure Container Instance flow run.
+    """
     image: Optional[str] = Field()
     resource_group_name: str = Field(default=...)
     subscription_id: SecretStr = Field(default=...)
@@ -248,6 +266,9 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
 
 
 class AzureContainerVariables(BaseVariables):
+    """
+    Variables for an Azure Container Instance flow run.
+    """
     image: Optional[str] = Field(
         default_factory=get_prefect_image_name,
         description=(
@@ -374,6 +395,9 @@ class AzureContainerWorkerResult(BaseWorkerResult):
 
 
 class AzureContainerWorker(BaseWorker):
+    """
+    A Prefect worker that runs flows in an Azure Container Instance.
+    """
     type = "azure-container-instance"
     job_configuration = AzureContainerJobConfiguration
     job_configuration_variables = AzureContainerVariables
@@ -384,6 +408,17 @@ class AzureContainerWorker(BaseWorker):
         configuration: AzureContainerJobConfiguration,
         task_status: Optional[anyio.abc.TaskStatus] = None,
     ):
+        """
+        Run a flow in an Azure Container Instance.
+        Args:
+            flow_run: The flow run to run.
+            configuration: The configuration for the flow run.
+            task_status: The task status object for the current task. Used
+            to provide an identifier that can be used to cancel the task.
+
+        Returns:
+            The result of the flow run.
+        """
         run_start_time = datetime.datetime.now(datetime.timezone.utc)
         prefect_client = get_client()
 
@@ -552,6 +587,17 @@ class AzureContainerWorker(BaseWorker):
         configuration: AzureContainerJobConfiguration,
         container_group_name: str,
     ):
+        """
+        Create a container group and wait for it to start.
+        Args:
+            aci_client: An authenticated ACI client.
+            resource_client: An authenticated resource client.
+            configuration: The job configuration.
+            container_group_name: The name of the container group to create.
+
+        Returns:
+            A `ContainerGroup` representing the container group that was created.
+        """
         properties = DeploymentProperties(
             mode=DeploymentMode.INCREMENTAL,
             template=configuration.arm_template,
@@ -655,6 +701,13 @@ class AzureContainerWorker(BaseWorker):
         configuration: AzureContainerJobConfiguration,
         container_group_name: str,
     ):
+        """
+        Wait for the container group to be deleted.
+        Args:
+            aci_client: An authenticated ACI client.
+            configuration: The job configuration.
+            container_group_name: The name of the container group to delete.
+        """
         self._logger.info(f"{self._log_prefix}: Deleting container...")
 
         deletion_status_poller = await run_sync_in_worker_thread(
