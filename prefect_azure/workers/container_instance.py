@@ -224,8 +224,8 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
     memory: float = Field(default=ACI_DEFAULT_MEMORY)
     subnet_ids: Optional[List[str]] = Field(default=None)
     dns_servers: Optional[List[str]] = Field(default=None)
-    stream_output: Optional[bool] = Field(default=None)
     aci_credentials: AzureContainerInstanceCredentials = Field()
+    stream_output: Optional[bool] = Field(default=False)
     # Execution settings
     task_start_timeout_seconds: int = Field(default=240)
     task_watch_poll_interval: float = Field(default=5.0)
