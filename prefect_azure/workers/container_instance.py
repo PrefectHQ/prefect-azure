@@ -815,14 +815,6 @@ class AzureContainerWorker(BaseWorker):
 
         return last_written_time
 
-    def _get_environment(self):
-        """
-        Generates a dictionary of all environment variables to send to the
-        ACI container.
-        """
-
-        return {**self._base_environment(), **self.env}
-
     @property
     def _log_prefix(self) -> str:
         """
