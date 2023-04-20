@@ -621,6 +621,8 @@ async def test_provisioning_timeout_throws_exception(
     job_configuration.task_start_timeout_seconds = 0.10
 
     async with aci_worker:
+        # ensure that the worker throws an exception if the container group
+        # provisioning times out
         with pytest.raises(RuntimeError, match="Timed out after"):
             await aci_worker.run(worker_flow_run, job_configuration)
 
@@ -899,7 +901,7 @@ async def test_provisioning_container_group(
     monkeypatch.setattr(mock_resource_client, "deployments", mock_deployments)
 
     async with aci_worker:
-        # We want to ensure that the provisioning call, is made; we don't care about
+        # We want to ensure that the provisioning call is made; we don't care about
         # the rest of the run, so an exception is expected since we haven't mocked
         # ACI client responses.
         with pytest.raises(RuntimeError):
@@ -1036,6 +1038,7 @@ async def test_kill_infrastructure_deletes_running_container_group(
     job_configuration.task_watch_poll_interval = 0.01
 
     async with aci_worker:
+        # Deletion timing out should raise a RuntimeError
         with pytest.raises(RuntimeError):
             await aci_worker.kill_infrastructure(identifier, job_configuration)
 
