@@ -66,7 +66,8 @@ nav:
     - Blob Storage: blob_storage.md
     - Cosmos DB: cosmos_db.md
     - ML Datastore: ml_datastore.md
-    - Container Instance: container_instance.md
+    - Container Instance Block: container_instance.md
+    - Container Instance Worker: container_instance_worker.md
 
 extra:
     social:

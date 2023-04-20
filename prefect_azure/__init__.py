@@ -5,6 +5,7 @@ from .credentials import (  # noqa
     AzureMlCredentials,
     AzureContainerInstanceCredentials,
 )
+from .workers.container_instance import AzureContainerWorker  # noqa
 from .container_instance import AzureContainerInstanceJob  # noqa
 
 __all__ = [
@@ -13,6 +14,7 @@ __all__ = [
     "AzureMlCredentials",
     "AzureContainerInstanceCredentials",
     "AzureContainerInstanceJob",
+    "AzureContainerWorker",
 ]
 
 __version__ = _version.get_versions()["version"]
