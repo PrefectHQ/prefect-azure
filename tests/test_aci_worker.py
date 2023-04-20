@@ -877,11 +877,13 @@ def test_job_configuration_creation():
             client_id="my-client-id",
             client_secret="my-client-secret",
         ),
-        arm_template=prefect_azure.workers.container_instance._get_default_arm_template(),
+        arm_template=(
+            prefect_azure.workers.container_instance._get_default_arm_template()
+        ),
         image="my-image",
         cpu=1,
         memory=1,
-        env={"TEST": "VALUE"}
+        env={"TEST": "VALUE"},
     )
 
     assert config.image == "my-image"
