@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from typing import List, Tuple, Union, Dict
 from unittest.mock import MagicMock, Mock
@@ -92,7 +93,7 @@ async def create_job_configuration(
         "subscription_id": SecretStr("sub_id"),
         "name": None,
         "task_watch_poll_interval": 0.05,
-        "stream_output": True,
+        "stream_output": False,
     }
 
     for k, v in overrides.items():
@@ -185,12 +186,12 @@ def aci_worker(mock_prefect_client, monkeypatch):
 
 
 @pytest.fixture()
-async def job_configuration(aci_credentials, worker_flow_run):
+def job_configuration(aci_credentials, worker_flow_run):
     """
     Returns a basic initialized ACI infrastructure block suitable for use
     in a variety of tests.
     """
-    return await create_job_configuration(aci_credentials, worker_flow_run)
+    return asyncio.run(create_job_configuration(aci_credentials, worker_flow_run))
 
 
 @pytest.fixture()
@@ -675,7 +676,7 @@ async def test_output_streaming(
     mock_datetime = Mock()
     mock_datetime.datetime.now.return_value = run_start_time
 
-    monkeypatch.setattr(prefect_azure.container_instance, "datetime", mock_datetime)
+    monkeypatch.setattr(prefect_azure.workers.container_instance, "datetime", mock_datetime)
 
     log_lines = """
 2022-10-03T20:41:05.3119525Z 20:41:05.307 | INFO    | Flow run 'ultramarine-dugong' - Created task run "Test-39fdf8ff-0" for task "ACI Test"
