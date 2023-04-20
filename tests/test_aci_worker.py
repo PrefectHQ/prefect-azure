@@ -1,6 +1,6 @@
 import asyncio
 import uuid
-from typing import List, Tuple, Union, Dict
+from typing import Dict, List, Tuple, Union
 from unittest.mock import MagicMock, Mock
 
 import dateutil.parser
@@ -8,9 +8,6 @@ import pytest
 from anyio.abc import TaskStatus
 from azure.core.exceptions import HttpResponseError
 from azure.identity import ClientSecretCredential
-from azure.mgmt.containerinstance.models import (
-    ImageRegistryCredential,
-)
 from azure.mgmt.resource import ResourceManagementClient
 from prefect.client.schemas import FlowRun
 from prefect.infrastructure.docker import DockerRegistry
@@ -676,7 +673,9 @@ async def test_output_streaming(
     mock_datetime = Mock()
     mock_datetime.datetime.now.return_value = run_start_time
 
-    monkeypatch.setattr(prefect_azure.workers.container_instance, "datetime", mock_datetime)
+    monkeypatch.setattr(
+        prefect_azure.workers.container_instance, "datetime", mock_datetime
+    )
 
     log_lines = """
 2022-10-03T20:41:05.3119525Z 20:41:05.307 | INFO    | Flow run 'ultramarine-dugong' - Created task run "Test-39fdf8ff-0" for task "ACI Test"
@@ -753,6 +752,7 @@ def test_block_accessible_in_module_toplevel():
     # is not accessible directly from `prefect_azure`
     from prefect_azure import AzureContainerWorker  # noqa
 
+
 def test_secure_environment_variables(
     raw_job_configuration, worker_flow_run, monkeypatch
 ):
@@ -804,12 +804,17 @@ def test_add_docker_registry_credentials(
     raw_job_configuration.prepare_for_flow_run(worker_flow_run)
 
     container_group = raw_job_configuration.arm_template["resources"][0]
-    image_registry_credentials = container_group["properties"]["imageRegistryCredentials"]
+    image_registry_credentials = container_group["properties"][
+        "imageRegistryCredentials"
+    ]
 
     assert len(image_registry_credentials) == 1
     assert image_registry_credentials[0]["server"] == registry.registry_url
     assert image_registry_credentials[0]["username"] == registry.username
-    assert image_registry_credentials[0]["password"] == registry.password.get_secret_value()
+    assert (
+        image_registry_credentials[0]["password"]
+        == registry.password.get_secret_value()
+    )
 
 
 def test_add_acr_registry_identity(
@@ -825,7 +830,9 @@ def test_add_acr_registry_identity(
     raw_job_configuration.prepare_for_flow_run(worker_flow_run)
 
     container_group = raw_job_configuration.arm_template["resources"][0]
-    image_registry_credentials = container_group["properties"]["imageRegistryCredentials"]
+    image_registry_credentials = container_group["properties"][
+        "imageRegistryCredentials"
+    ]
 
     assert len(image_registry_credentials) == 1
     assert image_registry_credentials[0]["server"] == registry.registry_url
@@ -833,26 +840,21 @@ def test_add_acr_registry_identity(
 
 
 async def test_provisioning_container_group(
-        aci_worker,
-        worker_flow_run,
-        job_configuration,
-        mock_aci_client,
-        mock_resource_client,
-        running_worker_container_group,
-        monkeypatch
+    aci_worker,
+    worker_flow_run,
+    job_configuration,
+    mock_aci_client,
+    mock_resource_client,
+    running_worker_container_group,
+    monkeypatch,
 ):
     mock_deployments = Mock(name="deployments")
     mock_provisioning_call = Mock(
-        name="provisioning_call",
-        return_value=running_worker_container_group
+        name="provisioning_call", return_value=running_worker_container_group
     )
     mock_deployments.begin_create_or_update = mock_provisioning_call
 
-    monkeypatch.setattr(
-        mock_resource_client,
-        "deployments",
-        mock_deployments
-    )
+    monkeypatch.setattr(mock_resource_client, "deployments", mock_deployments)
     # we want to ensure that the provisioning call is made; we don't care about
     # the rest of the run
     with pytest.raises(RuntimeError):

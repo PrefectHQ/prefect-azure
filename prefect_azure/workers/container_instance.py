@@ -195,14 +195,13 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
         if self.image_registry:
             self._add_image_registry_credentials(self.image_registry)
 
-
     def _add_image_registry_credentials(
         self,
         image_registry: Union[
             prefect.infrastructure.docker.DockerRegistry,
             ACRManagedIdentity,
             None,
-        ]
+        ],
     ):
         """
         Create image registry credentials based on the type of image_registry provided.
@@ -212,9 +211,11 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
             ACRManagedIdentity object.
         """
         if image_registry and isinstance(
-                image_registry, prefect.infrastructure.docker.DockerRegistry
+            image_registry, prefect.infrastructure.docker.DockerRegistry
         ):
-            self.arm_template["resources"][0]["properties"]["imageRegistryCredentials"] = [
+            self.arm_template["resources"][0]["properties"][
+                "imageRegistryCredentials"
+            ] = [
                 {
                     "server": image_registry.registry_url,
                     "username": image_registry.username,
@@ -222,10 +223,12 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
                 }
             ]
         elif image_registry and isinstance(image_registry, ACRManagedIdentity):
-            self.arm_template["resources"][0]["properties"]["imageRegistryCredentials"] = [
+            self.arm_template["resources"][0]["properties"][
+                "imageRegistryCredentials"
+            ] = [
                 {
                     "server": image_registry.registry_url,
-                    "identity": image_registry.identity
+                    "identity": image_registry.identity,
                 }
             ]
 
