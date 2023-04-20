@@ -392,7 +392,7 @@ async def test_aci_worker_deployment_call(
     job_configuration,
     monkeypatch,
 ):
-    #simulate a successful deployment of a container group to Azure
+    # simulate a successful deployment of a container group to Azure
     completed_worker_container_group.provisioning_state = (
         ContainerGroupProvisioningState.SUCCEEDED
     )

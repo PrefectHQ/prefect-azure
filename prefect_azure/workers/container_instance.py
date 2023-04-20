@@ -153,6 +153,7 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
     """
     Configuration for an Azure Container Instance flow run.
     """
+
     image: Optional[str] = Field()
     resource_group_name: str = Field(default=...)
     subscription_id: SecretStr = Field(default=...)
@@ -269,6 +270,7 @@ class AzureContainerVariables(BaseVariables):
     """
     Variables for an Azure Container Instance flow run.
     """
+
     image: Optional[str] = Field(
         default_factory=get_prefect_image_name,
         description=(
@@ -398,6 +400,7 @@ class AzureContainerWorker(BaseWorker):
     """
     A Prefect worker that runs flows in an Azure Container Instance.
     """
+
     type = "azure-container-instance"
     job_configuration = AzureContainerJobConfiguration
     job_configuration_variables = AzureContainerVariables
