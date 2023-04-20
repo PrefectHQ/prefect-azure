@@ -831,3 +831,31 @@ def test_add_acr_registry_identity(
     assert image_registry_credentials[0]["server"] == registry.registry_url
     assert image_registry_credentials[0]["identity"] == registry.identity
 
+
+async def test_provisioning_container_group(
+        aci_worker,
+        worker_flow_run,
+        job_configuration,
+        mock_aci_client,
+        mock_resource_client,
+        running_worker_container_group,
+        monkeypatch
+):
+    mock_deployments = Mock(name="deployments")
+    mock_provisioning_call = Mock(
+        name="provisioning_call",
+        return_value=running_worker_container_group
+    )
+    mock_deployments.begin_create_or_update = mock_provisioning_call
+
+    monkeypatch.setattr(
+        mock_resource_client,
+        "deployments",
+        mock_deployments
+    )
+    # we want to ensure that the provisioning call is made; we don't care about
+    # the rest of the run
+    with pytest.raises(RuntimeError):
+        await aci_worker.run(worker_flow_run, job_configuration)
+
+    mock_provisioning_call.assert_called_once()
