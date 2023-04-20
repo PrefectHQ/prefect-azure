@@ -612,7 +612,7 @@ class AzureContainerWorker(BaseWorker):
                 container_group_name=container_group_name,
             )
         except ResourceNotFoundError as exc:
-            # the container group no longer exists, so there's sothing to cancel
+            # the container group no longer exists, so there's nothing to cancel
             raise InfrastructureNotFound(
                 f"Cannot stop ACI job: container group "
                 f"{container_group_name} no longer exists."
@@ -837,7 +837,7 @@ class AzureContainerWorker(BaseWorker):
                         f"az container show --name {container_group_name} --resource-group {configuration.resource_group_name}"  # noqa
                     )
                 )
-            await anyio.sleep(configuration.poll_interval)
+            await anyio.sleep(configuration.task_watch_poll_interval)
 
         self._logger.info(f"{self._log_prefix}: Container deleted.")
 
