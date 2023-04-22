@@ -22,7 +22,7 @@ to poll for flow runs.
     ```yaml
     ---
     arm_template:
-      "$schema": https://schema.management.azure.com/schemas/2022-09-01/deploymentTemplate.json#
+      "$schema": https://schema.management.azure.com/schemas/2019-08-01/deploymentTemplate.json#
       contentVersion: 1.0.0.0
       parameters:
         location:
@@ -131,7 +131,7 @@ CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS = 30
 def _get_default_arm_template():
     """Get the default ARM template for creating a container group."""
     return {
-        "$schema": "https://schema.management.azure.com/schemas/2022-09-01/deploymentTemplate.json#",  # noqa
+        "$schema": "https://schema.management.azure.com/schemas/2019-08-01/deploymentTemplate.json#",  # noqa
         "contentVersion": "1.0.0.0",
         "parameters": {
             "location": {
