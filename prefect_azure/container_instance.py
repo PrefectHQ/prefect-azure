@@ -214,6 +214,12 @@ class AzureContainerInstanceJob(Infrastructure):
             "defaults to a Prefect base image matching your local versions."
         ),
     )
+    name: Optional[str] = Field(
+        default=None,
+        description=(
+            "Name of the Azure Container Instance."
+        ),
+    )
     entrypoint: Optional[str] = Field(
         default=DEFAULT_CONTAINER_ENTRYPOINT,
         description=(
@@ -470,7 +476,7 @@ class AzureContainerInstanceJob(Infrastructure):
         ]
 
         # all container names in a resource group must be unique
-        container_name = str(uuid.uuid4())
+        container_name = self.name if self.name else str(uuid.uuid4())
         container_resource_requirements = self._configure_container_resources()
 
         # add the entrypoint if provided, because creating an ACI container with a
