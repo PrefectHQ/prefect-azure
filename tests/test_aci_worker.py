@@ -10,6 +10,7 @@ from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 from azure.identity import ClientSecretCredential
 from azure.mgmt.resource import ResourceManagementClient
 from prefect.client.schemas import FlowRun
+from prefect.docker import get_prefect_image_name
 from prefect.exceptions import InfrastructureNotFound
 from prefect.infrastructure.docker import DockerRegistry
 from prefect.server.schemas.core import Flow
@@ -938,6 +939,25 @@ def test_job_configuration_creation():
     assert config.aci_credentials.client_id == "my-client-id"
     assert config.aci_credentials.client_secret.get_secret_value() == "my-client-secret"
     assert type(config.arm_template) == dict
+
+
+async def test_image_populated_in_template_when_not_provided(worker_flow_run):
+    config = await AzureContainerJobConfiguration.from_template_and_values(
+        base_job_template=AzureContainerWorker.get_default_base_job_template(),
+        values=AzureContainerVariables(
+            subscription_id="my-subscription-id",
+            resource_group_name="my-resource-group",
+        ).dict(exclude_unset=True),
+    )
+    config.prepare_for_flow_run(worker_flow_run)
+
+    assert config.image == get_prefect_image_name()
+    assert (
+        config.arm_template["resources"][0]["properties"]["containers"][0][
+            "properties"
+        ]["image"]
+        == get_prefect_image_name()
+    )
 
 
 async def test_add_identities(
