@@ -64,6 +64,8 @@ Examples:
 """
 import datetime
 import json
+import random
+import string
 import sys
 import time
 import uuid
@@ -476,7 +478,8 @@ class AzureContainerInstanceJob(Infrastructure):
         ]
 
         # all container names in a resource group must be unique
-        container_name = self.name if self.name else str(uuid.uuid4())
+        number_suffix = ''.join(random.choices(string.digits, k=6))
+        container_name = self.name + '-' + number_suffix if self.name else str(uuid.uuid4())
         container_resource_requirements = self._configure_container_resources()
 
         # add the entrypoint if provided, because creating an ACI container with a
