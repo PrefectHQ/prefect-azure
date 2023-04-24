@@ -155,7 +155,7 @@ def _get_default_arm_template():
         "resources": [
             {
                 "type": "Microsoft.ContainerInstance/containerGroups",
-                "apiVersion": "2021-09-01",
+                "apiVersion": "2022-09-01",
                 "name": "[parameters('container_group_name')]",
                 "location": "[parameters('location')]",
                 "properties": {
@@ -207,7 +207,7 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
     Configuration for an Azure Container Instance flow run.
     """
 
-    image: Optional[str] = Field(default_factory=get_prefect_image_name)
+    image: str = Field(default_factory=get_prefect_image_name)
     resource_group_name: str = Field(default=...)
     subscription_id: SecretStr = Field(default=...)
     identities: Optional[List[str]] = Field(default=None)
@@ -217,7 +217,7 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
             prefect.infrastructure.docker.DockerRegistry,
             ACRManagedIdentity,
         ]
-    ]
+    ] = Field(default=None)
     cpu: float = Field(default=ACI_DEFAULT_CPU)
     gpu_count: Optional[int] = Field(default=None)
     gpu_sku: Optional[str] = Field(default=None)
@@ -259,6 +259,8 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
         if self.command:
             container["properties"]["command"] = self.command.split(" ")
 
+        self._add_image()
+
         # Add the entrypoint if provided. Creating an ACI container with a
         # command overrides the container's built-in entrypoint. Prefect base images
         # use entrypoint.sh as the entrypoint, so we need to add to the beginning of
@@ -278,6 +280,17 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
 
         if self.dns_servers:
             self._add_dns_servers(self.dns_servers)
+
+    def _add_image(self):
+        """
+        Add the image to the arm template.
+        """
+        try:
+            self.arm_template["resources"][0]["properties"]["containers"][0][
+                "properties"
+            ]["image"] = self.image
+        except KeyError:
+            raise ValueError("Unable to add image due to invalid job ARM template.")
 
     def _add_image_registry_credentials(
         self,
@@ -378,6 +391,7 @@ class AzureContainerVariables(BaseVariables):
     """
 
     image: Optional[str] = Field(
+        default=None,
         description=(
             "The image to use for the Prefect container in the task. This value "
             "defaults to a Prefect base image matching your local versions."
@@ -462,6 +476,7 @@ class AzureContainerVariables(BaseVariables):
         ),
     )
     aci_credentials: AzureContainerInstanceCredentials = Field(
+        default_factory=AzureContainerInstanceCredentials,
         description=("The credentials to use to authenticate with Azure."),
     )
     stream_output: bool = Field(
