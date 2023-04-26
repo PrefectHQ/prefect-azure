@@ -476,7 +476,7 @@ class AzureContainerInstanceJob(Infrastructure):
         aci_naming_regex = r"^(?!-)(?!.*--)[a-z0-9-]{1,51}[a-z0-9]?(?<!-)$"
         slugified_name = slugify(self.name, max_length=52, regex_pattern=aci_naming_regex)
         random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
-        container_name = slugified_name + '-' + number_suffix
+        container_name = slugified_name + '-' + random_suffix
         container_resource_requirements = self._configure_container_resources()
 
         # add the entrypoint if provided, because creating an ACI container with a
