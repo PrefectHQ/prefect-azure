@@ -100,6 +100,7 @@ from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFoun
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
 from pydantic import BaseModel, Field, SecretStr
+from slugify import slugify
 from typing_extensions import Literal
 
 from prefect_azure.credentials import AzureContainerInstanceCredentials
@@ -214,12 +215,6 @@ class AzureContainerInstanceJob(Infrastructure):
         description=(
             "The image to use for the Prefect container in the task. This value "
             "defaults to a Prefect base image matching your local versions."
-        ),
-    )
-    name: Optional[str] = Field(
-        default=None,
-        description=(
-            "Name of the Azure Container Instance."
         ),
     )
     entrypoint: Optional[str] = Field(
@@ -478,8 +473,10 @@ class AzureContainerInstanceJob(Infrastructure):
         ]
 
         # all container names in a resource group must be unique
-        number_suffix = ''.join(random.choices(string.digits, k=6))
-        container_name = self.name + '-' + number_suffix if self.name else str(uuid.uuid4())
+        aci_naming_regex = r"^(?!-)(?!.*--)[a-z0-9-]{1,51}[a-z0-9]?(?<!-)$"
+        slugified_name = slugify(self.name, max_length=53, regex_pattern=aci_naming_regex)
+        random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
+        container_name = slugified_name + '-' + number_suffix
         container_resource_requirements = self._configure_container_resources()
 
         # add the entrypoint if provided, because creating an ACI container with a
