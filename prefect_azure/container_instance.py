@@ -474,7 +474,7 @@ class AzureContainerInstanceJob(Infrastructure):
 
         # all container names in a resource group must be unique
         aci_naming_regex = r"^(?!-)(?!.*--)[a-z0-9-]{1,51}[a-z0-9]?(?<!-)$"
-        slugified_name = slugify(self.name, max_length=53, regex_pattern=aci_naming_regex)
+        slugified_name = slugify(self.name, max_length=52, regex_pattern=aci_naming_regex)
         random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
         container_name = slugified_name + '-' + number_suffix
         container_resource_requirements = self._configure_container_resources()
