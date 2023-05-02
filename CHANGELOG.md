@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## 0.2.8
+
+Released on May 2nd, 2023.
+
+### Added
+
+- Added push and pull steps for Azure Blob Storage - [#95](https://github.com/PrefectHQ/prefect-azure/pull/95)
+
 ## 0.2.7
 
 Released on April 25th, 2023.
