@@ -15,14 +15,14 @@ push and pull steps for the entire project, or they can be used in a project's
 
     push:
         - prefect_azure.projects.steps.push_project_to_azure_blob_storage:
-            requires: prefect-azure
+            requires: prefect-azure[blob_storage]
             container: my-container
             folder: my-project
             credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
 
     pull:
         - prefect_azure.projects.steps.pull_project_from_azure_blob_storage:
-            requires: prefect-azure
+            requires: prefect-azure[blob_storage]
             container: "{{ container }}"
             folder: "{{ folder }}"
             credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
@@ -63,7 +63,7 @@ def push_project_to_azure_blob_storage(
         ```yaml
         push:
             - prefect_azure.projects.steps.push_project_to_azure_blob_storage:
-                requires: prefect-azure
+                requires: prefect-azure[blob_storage]
                 container: my-container
                 folder: my-project
                 credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
@@ -74,7 +74,7 @@ def push_project_to_azure_blob_storage(
         ```yaml
         push:
             - prefect_azure.projects.steps.push_project_to_azure_blob_storage:
-                requires: prefect-azure
+                requires: prefect-azure[blob_storage]
                 container: my-container
                 folder: my-project
                 credentials:
@@ -145,7 +145,7 @@ def pull_project_from_azure_blob_storage(
         ```yaml
         pull:
             - prefect_azure.projects.steps.pull_project_from_azure_blob_storage:
-                requires: prefect-azure
+                requires: prefect-azure[blob_storage]
                 container: my-container
                 folder: my-project
                 credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
@@ -156,7 +156,7 @@ def pull_project_from_azure_blob_storage(
         ```yaml
         pull:
             - prefect_azure.projects.steps.pull_project_from_azure_blob_storage:
-                requires: prefect-azure
+                requires: prefect-azure[blob_storage]
                 container: my-container
                 folder: my-project
                 credentials:

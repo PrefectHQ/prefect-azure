@@ -110,8 +110,8 @@ class TestPushProject:
 
         assert all(
             [
-                open(call.args[1].name).read() == "Sample text"
-                for call in upload_blob_mock.call_args_list
+                open(call[1][1].name).read() == "Sample text"
+                for call in upload_blob_mock.mock_calls
             ]
         )
 
@@ -165,8 +165,8 @@ class TestPushProject:
 
         assert all(
             [
-                open(call.args[1].name).read() == "Sample text"
-                for call in upload_blob_mock.call_args_list
+                open(call[1][1].name).read() == "Sample text"
+                for call in upload_blob_mock.mock_calls
             ]
         )
 
@@ -238,8 +238,8 @@ class TestPushProject:
 
         assert all(
             [
-                open(call.args[1].name).read() == "Sample text"
-                for call in upload_blob_mock.call_args_list
+                open(call[1][1].name).read() == "Sample text"
+                for call in upload_blob_mock.mock_calls
             ]
         )
 

@@ -23,7 +23,7 @@ extras_require["dev"] = dev_requires + extras_require["all_extras"]
 
 setup(
     name="prefect-azure",
-    description="Prefect tasks and subflows for interacting with Azure",
+    description="Prefect integrations with Microsoft Azure services",
     license="Apache License 2.0",
     author="Prefect Technologies, Inc.",
     author_email="help@prefect.io",
