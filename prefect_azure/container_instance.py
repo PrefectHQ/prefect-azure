@@ -473,9 +473,19 @@ class AzureContainerInstanceJob(Infrastructure):
         ]
 
         # all container names in a resource group must be unique
-        slugified_name = slugify(self.name, max_length=52, regex_pattern=r"[^a-zA-Z0-9-]+")
-        random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
-        container_name = slugified_name + '-' + random_suffix
+        if self.name:
+            slugified_name = slugify(
+                self.name,
+                max_length=52,
+                regex_pattern=r"[^a-zA-Z0-9-]+",
+            )
+            random_suffix = "".join(
+                random.choices(string.ascii_lowercase + string.digits, k=10)
+            )
+            container_name = slugified_name + "-" + random_suffix
+        else:
+            container_name = str(uuid.uuid4())
+
         container_resource_requirements = self._configure_container_resources()
 
         # add the entrypoint if provided, because creating an ACI container with a
