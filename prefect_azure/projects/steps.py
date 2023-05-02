@@ -1,3 +1,35 @@
+"""
+Prefect project steps for code storage and retrieval in Azure Blob Storage.
+
+These steps can be used in a project's `prefect.yaml` file to define the default 
+push and pull steps for the entire project, or they can be used in a project's 
+`deployment.yaml` file to define the push and pull steps for a specific deployment.
+
+!!! example
+    Sample `prefect.yaml` file that is configured to push and pull a
+    project to and from an Azure Blob Storage container:
+
+    ```yaml
+    prefect_version: ...
+    name: ...
+
+    push:
+        - prefect_azure.projects.steps.push_project_to_azure_blob_storage:
+            requires: prefect-azure
+            container: my-container
+            folder: my-project
+            credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
+
+    pull:
+        - prefect_azure.projects.steps.pull_project_from_azure_blob_storage:
+            requires: prefect-azure
+            container: "{{ container }}"
+            folder: "{{ folder }}"
+            credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
+    ```
+
+For more information about using project steps, check out out the Prefect [docs](https://docs.prefect.io/latest/concepts/projects/#the-prefect-yaml-file).
+"""  # noqa
 from pathlib import Path, PurePosixPath
 from typing import Dict, Optional
 
@@ -25,7 +57,7 @@ def push_project_to_azure_blob_storage(
             pushing to Azure Blob Storage. If not provided, the default `.prefectignore`
             file will be used.
 
-    Examples:
+    Example:
         Push a project to an Azure Blob Storage container using credentials stored in a
         block:
         ```yaml
@@ -107,7 +139,7 @@ def pull_project_from_azure_blob_storage(
             `account_url` and values of the corresponding connection string or
             account url. If both are provided, `connection_string` will be used.
 
-    Examples:
+    Example:
         Pull a project from an Azure Blob Storage container using credentials stored in
         a block:
         ```yaml
