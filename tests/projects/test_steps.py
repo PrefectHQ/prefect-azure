@@ -61,80 +61,288 @@ def tmp_files(tmp_path: Path):
     return tmp_path
 
 
-@pytest.mark.usefixtures("mock_azure_blob_storage")
-def test_push_project_to_azure_blob_storage_with_connection_string(
-    tmp_files: Path, container_client_mock: MagicMock
-):
-    container = "test-container"
-    folder = "test-folder"
-    credentials = {"connection_string": "fake_connection_string"}
+class TestPushProject:
+    @pytest.mark.usefixtures("mock_azure_blob_storage")
+    def test_push_project_to_azure_blob_storage_with_connection_string(
+        self, tmp_files: Path, container_client_mock: MagicMock
+    ):
+        container = "test-container"
+        folder = "test-folder"
+        credentials = {"connection_string": "fake_connection_string"}
 
-    os.chdir(tmp_files)
+        os.chdir(tmp_files)
 
-    push_project_to_azure_blob_storage(container, folder, credentials)
+        push_project_to_azure_blob_storage(container, folder, credentials)
 
-    container_client_mock.from_connection_string.assert_called_once_with(
-        credentials["connection_string"], container_name=container
-    )
+        container_client_mock.from_connection_string.assert_called_once_with(
+            credentials["connection_string"], container_name=container
+        )
 
-    upload_blob_mock = (
-        container_client_mock.from_connection_string.return_value.__enter__.return_value.upload_blob  # noqa
-    )
+        upload_blob_mock = (
+            container_client_mock.from_connection_string.return_value.__enter__.return_value.upload_blob  # noqa
+        )
 
-    upload_blob_mock.assert_has_calls(
-        [
-            call(
-                f"{folder}/testfile1.txt",
-                ANY,
-                overwrite=True,
-            ),
-            call(
-                f"{folder}/testfile2.txt",
-                ANY,
-                overwrite=True,
-            ),
-            call(
-                f"{folder}/testfile3.txt",
-                ANY,
-                overwrite=True,
-            ),
-            call(
-                f"{folder}/testdir2/testfile5.txt",
-                ANY,
-                overwrite=True,
-            ),
-        ],
-        any_order=True,
-    )
+        upload_blob_mock.assert_has_calls(
+            [
+                call(
+                    f"{folder}/testfile1.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+                call(
+                    f"{folder}/testfile2.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+                call(
+                    f"{folder}/testfile3.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+                call(
+                    f"{folder}/testdir2/testfile5.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+            ],
+            any_order=True,
+        )
 
-    assert all(
-        [
-            open(call.args[1].name).read() == "Sample text"
-            for call in upload_blob_mock.call_args_list
-        ]
-    )
+        assert all(
+            [
+                open(call.args[1].name).read() == "Sample text"
+                for call in upload_blob_mock.call_args_list
+            ]
+        )
+
+    @pytest.mark.usefixtures("mock_azure_blob_storage")
+    def test_push_project_to_azure_blob_storage_with_account_url(
+        self, tmp_files: Path, container_client_mock: MagicMock
+    ):
+        container = "test-container"
+        folder = "test-folder"
+        credentials = {"account_url": "https://fake_account_url.blob.core.windows.net/"}
+
+        os.chdir(tmp_files)
+
+        push_project_to_azure_blob_storage(container, folder, credentials)
+
+        container_client_mock.assert_called_once_with(
+            account_url=credentials["account_url"],
+            container_name=container,
+            credential=ANY,
+        )
+
+        upload_blob_mock = (
+            container_client_mock.return_value.__enter__.return_value.upload_blob
+        )
+
+        upload_blob_mock.assert_has_calls(
+            [
+                call(
+                    f"{folder}/testfile1.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+                call(
+                    f"{folder}/testfile2.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+                call(
+                    f"{folder}/testfile3.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+                call(
+                    f"{folder}/testdir2/testfile5.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+            ],
+            any_order=True,
+        )
+
+        assert all(
+            [
+                open(call.args[1].name).read() == "Sample text"
+                for call in upload_blob_mock.call_args_list
+            ]
+        )
+
+    @pytest.mark.usefixtures("mock_azure_blob_storage")
+    def test_push_project_to_azure_blob_storage_missing_credentials(
+        self, tmp_files: Path
+    ):
+        container = "test-container"
+        folder = "test-folder"
+        credentials = {}
+
+        os.chdir(tmp_files)
+
+        with pytest.raises(
+            ValueError,
+            match="Credentials must contain either connection_string or account_url",
+        ):
+            push_project_to_azure_blob_storage(container, folder, credentials)
+
+    @pytest.mark.usefixtures("mock_azure_blob_storage")
+    def test_push_project_to_azure_blob_storage_both_credentials_provided(
+        self, tmp_files: Path, container_client_mock: MagicMock
+    ):
+        """connection_string should take precedence over account_url"""
+        container = "test-container"
+        folder = "test-folder"
+        credentials = {
+            "account_url": "https://fake_account_url.blob.core.windows.net/",
+            "connection_string": "fake_connection_string",
+        }
+
+        os.chdir(tmp_files)
+
+        push_project_to_azure_blob_storage(container, folder, credentials)
+
+        container_client_mock.from_connection_string.assert_called_once_with(
+            credentials["connection_string"], container_name=container
+        )
+
+        upload_blob_mock = (
+            container_client_mock.from_connection_string.return_value.__enter__.return_value.upload_blob  # noqa
+        )
+
+        upload_blob_mock.assert_has_calls(
+            [
+                call(
+                    f"{folder}/testfile1.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+                call(
+                    f"{folder}/testfile2.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+                call(
+                    f"{folder}/testfile3.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+                call(
+                    f"{folder}/testdir2/testfile5.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+            ],
+            any_order=True,
+        )
+
+        assert all(
+            [
+                open(call.args[1].name).read() == "Sample text"
+                for call in upload_blob_mock.call_args_list
+            ]
+        )
 
 
-@pytest.mark.usefixtures("mock_azure_blob_storage")
-def test_pull_project_from_azure_blob_storage_with_connection_string(
-    tmp_path, container_client_mock
-):
-    container = "test-container"
-    folder = "test-folder"
-    credentials = {"connection_string": "fake_connection_string"}
+class TestPullProject:
+    @pytest.mark.usefixtures("mock_azure_blob_storage")
+    def test_pull_project_from_azure_blob_storage_with_connection_string(
+        self, tmp_path, container_client_mock
+    ):
+        container = "test-container"
+        folder = "test-folder"
+        credentials = {"connection_string": "fake_connection_string"}
 
-    blob_mock = MagicMock()
-    blob_mock.name = f"{folder}/sample_file.txt"
+        os.chdir(tmp_path)
 
-    mock_context_client = (
-        container_client_mock.from_connection_string.return_value.__enter__.return_value
-    )
-    mock_context_client.list_blobs.return_value = [blob_mock]
+        blob_mock = MagicMock()
+        blob_mock.name = f"{folder}/sample_file.txt"
 
-    pull_project_from_azure_blob_storage(container, folder, credentials)
+        mock_context_client = (
+            container_client_mock.from_connection_string.return_value.__enter__.return_value  # noqa
+        )
+        mock_context_client.list_blobs.return_value = [blob_mock]
 
-    mock_context_client.list_blobs.assert_called_once_with(name_starts_with=folder)
-    mock_context_client.download_blob.assert_called_once_with(blob_mock)
+        pull_project_from_azure_blob_storage(container, folder, credentials)
 
-    expected_file = tmp_path / "sample_file.txt"
-    assert expected_file.exists()
+        mock_context_client.list_blobs.assert_called_once_with(name_starts_with=folder)
+        mock_context_client.download_blob.assert_called_once_with(blob_mock)
+
+        expected_file = tmp_path / "sample_file.txt"
+        assert expected_file.exists()
+
+    @pytest.mark.usefixtures("mock_azure_blob_storage")
+    def test_pull_project_from_azure_blob_storage_with_account_url(
+        self, tmp_path, container_client_mock
+    ):
+        container = "test-container"
+        folder = "test-folder"
+        credentials = {"account_url": "https://fake_account_url.blob.core.windows.net/"}
+
+        os.chdir(tmp_path)
+
+        blob_mock = MagicMock()
+        blob_mock.name = f"{folder}/sample_file.txt"
+
+        mock_context_client = container_client_mock.return_value.__enter__.return_value
+        mock_context_client.list_blobs.return_value = [blob_mock]
+
+        pull_project_from_azure_blob_storage(container, folder, credentials)
+
+        container_client_mock.assert_called_once_with(
+            account_url=credentials["account_url"],
+            container_name=container,
+            credential=ANY,
+        )
+
+        mock_context_client.list_blobs.assert_called_once_with(name_starts_with=folder)
+        mock_context_client.download_blob.assert_called_once_with(blob_mock)
+
+        expected_file = tmp_path / "sample_file.txt"
+        assert expected_file.exists()
+
+    @pytest.mark.usefixtures("mock_azure_blob_storage")
+    def test_pull_project_to_azure_blob_storage_missing_credentials(
+        self, tmp_files: Path
+    ):
+        container = "test-container"
+        folder = "test-folder"
+        credentials = {}
+
+        os.chdir(tmp_files)
+
+        with pytest.raises(
+            ValueError,
+            match="Credentials must contain either connection_string or account_url",
+        ):
+            pull_project_from_azure_blob_storage(container, folder, credentials)
+
+    @pytest.mark.usefixtures("mock_azure_blob_storage")
+    def test_pull_project_from_azure_blob_storage_both_credentials_provided(
+        self, tmp_files: Path, container_client_mock
+    ):
+        """connection_string should take precedence over account_url"""
+        container = "test-container"
+        folder = "test-folder"
+        credentials = {
+            "account_url": "https://fake_account_url.blob.core.windows.net/",
+            "connection_string": "fake_connection_string",
+        }
+
+        os.chdir(tmp_files)
+
+        blob_mock = MagicMock()
+        blob_mock.name = f"{folder}/sample_file.txt"
+
+        mock_context_client = (
+            container_client_mock.from_connection_string.return_value.__enter__.return_value  # noqa
+        )
+        mock_context_client.list_blobs.return_value = [blob_mock]
+
+        pull_project_from_azure_blob_storage(container, folder, credentials)
+
+        mock_context_client.list_blobs.assert_called_once_with(name_starts_with=folder)
+        mock_context_client.download_blob.assert_called_once_with(blob_mock)
+
+        expected_file = tmp_files / "sample_file.txt"
+        assert expected_file.exists()

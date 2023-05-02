@@ -18,9 +18,9 @@ def push_project_to_azure_blob_storage(
     Args:
         container: The name of the container to push project files to
         folder: The folder within the container to push to
-        credentials: A dictionary of credentials with keys
-            `connection_string` or `account_url` and values of the corresponding
-            connection string or account url.
+        credentials: A dictionary of credentials with keys `connection_string` or
+            `account_url` and values of the corresponding connection string or
+            account url. If both are provided, `connection_string` will be used.
         ignore_file: The path to a file containing patterns of files to ignore when
             pushing to Azure Blob Storage. If not provided, the default `.prefectignore`
             file will be used.
@@ -103,9 +103,9 @@ def pull_project_from_azure_blob_storage(
     Args:
         container: The name of the container to pull project files from
         folder: The folder within the container to pull from
-        credentials: A dictionary of credentials with keys
-            `connection_string` or `account_url` and values of the corresponding
-            connection string or account url.
+        credentials: A dictionary of credentials with keys `connection_string` or
+            `account_url` and values of the corresponding connection string or
+            account url. If both are provided, `connection_string` will be used.
 
     Examples:
         Pull a project from an Azure Blob Storage container using credentials stored in
@@ -155,7 +155,7 @@ def pull_project_from_azure_blob_storage(
             )
             Path.mkdir(Path(target.parent), parents=True, exist_ok=True)
             with open(target, "wb") as f:
-                container_client.download_blob(blob).readinto(f)
+                client.download_blob(blob).readinto(f)
 
     return {
         "container": container,
