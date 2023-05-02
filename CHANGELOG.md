@@ -9,8 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-Made created containers have human-readable names with a randomized suffix.
-
 ### Changed
 
 ### Deprecated
@@ -28,6 +26,10 @@ Released on May 2nd, 2023.
 ### Added
 
 - Added push and pull steps for Azure Blob Storage - [#95](https://github.com/PrefectHQ/prefect-azure/pull/95)
+
+### Changed
+
+- Added option to give containers created by `AzureContainerInstanceJob` human-readable names with a randomized suffix via the `name` attribute - [#92](https://github.com/PrefectHQ/prefect-azure/pull/92)
 
 ## 0.2.7
 
