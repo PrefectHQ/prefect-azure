@@ -515,6 +515,16 @@ class AzureContainerWorker(BaseWorker):
     type = "azure-container-instance"
     job_configuration = AzureContainerJobConfiguration
     job_configuration_variables = AzureContainerVariables
+    _is_beta = True
+    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+    _display_name = "Azure Container Instances"
+    _description = (
+        "Execute flow runs within containers on Azure's Container Instances "
+        "service. Requires an Azure account."
+    )
+    _documentation_url = (
+        "https://prefecthq.github.io/prefect-azure/container_instance_worker/"
+    )
 
     async def run(
         self,
