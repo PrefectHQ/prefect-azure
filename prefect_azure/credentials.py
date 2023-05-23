@@ -3,7 +3,7 @@
 import functools
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from azure.identity import ClientSecretCredential, DefaultAzureCredential
+from azure.identity.aio import ClientSecretCredential, DefaultAzureCredential
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
 from azure.mgmt.resource import ResourceManagementClient
 from pydantic import Field, SecretStr, root_validator
