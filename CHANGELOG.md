@@ -19,6 +19,8 @@ Made created containers have human-readable names with a randomized suffix.
 
 ### Fixed
 
+- Fixes bug where default Azure credentials could not be used - [#97](https://github.com/PrefectHQ/prefect-azure/pull/97)
+
 ### Security
 
 ## 0.2.7
