@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixes bug where default Azure credentials could not be used - [#97](https://github.com/PrefectHQ/prefect-azure/pull/97)
+
 ### Security
 
 ## 0.2.8
