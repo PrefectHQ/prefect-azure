@@ -20,6 +20,7 @@ Made created containers have human-readable names with a randomized suffix.
 ### Fixed
 
 - Fixes bug where default Azure credentials could not be used - [#97](https://github.com/PrefectHQ/prefect-azure/pull/97)
+- Add py.typed marker to make the package PEP 561 compatible -[#100 ](https://github.com/PrefectHQ/prefect-azure/pull/100)
 
 ### Security
 
