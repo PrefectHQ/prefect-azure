@@ -1,34 +1,34 @@
 """
-Prefect project steps for code storage and retrieval in Azure Blob Storage.
+Prefect deployment steps for code storage and retrieval in Azure Blob Storage.
 
-These steps can be used in a project's `prefect.yaml` file to define the default 
-push and pull steps for the entire project, or they can be used in a project's 
-`deployment.yaml` file to define the push and pull steps for a specific deployment.
+These steps can be used in a `prefect.yaml` file to define the default 
+push and pull steps for a group of deployments, or they can be used to 
+define the push and pull steps for a specific deployment.
 
 !!! example
-    Sample `prefect.yaml` file that is configured to push and pull a
-    project to and from an Azure Blob Storage container:
+    Sample `prefect.yaml` file that is configured to push and pull to and 
+    from an Azure Blob Storage container:
 
     ```yaml
     prefect_version: ...
     name: ...
 
     push:
-        - prefect_azure.projects.steps.push_project_to_azure_blob_storage:
+        - prefect_azure.deployments.steps.push_to_azure_blob_storage:
             requires: prefect-azure[blob_storage]
             container: my-container
             folder: my-project
             credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
 
     pull:
-        - prefect_azure.projects.steps.pull_project_from_azure_blob_storage:
+        - prefect_azure.deployments.steps.pull_from_azure_blob_storage:
             requires: prefect-azure[blob_storage]
             container: "{{ container }}"
             folder: "{{ folder }}"
             credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
     ```
 
-For more information about using project steps, check out out the Prefect [docs](https://docs.prefect.io/latest/concepts/projects/#the-prefect-yaml-file).
+For more information about using deployment steps, check out out the Prefect [docs](https://docs.prefect.io/latest/concepts/projects/#the-prefect-yaml-file).
 """  # noqa
 from pathlib import Path, PurePosixPath
 from typing import Dict, Optional
@@ -38,17 +38,17 @@ from azure.storage.blob import ContainerClient
 from prefect.utilities.filesystem import filter_files, relative_path_to_current_platform
 
 
-def push_project_to_azure_blob_storage(
+def push_to_azure_blob_storage(
     container: str,
     folder: str,
     credentials: Dict[str, str],
     ignore_file: Optional[str] = ".prefectignore",
 ):
     """
-    Pushes a project to an Azure Blob Storage container.
+    Pushes to an Azure Blob Storage container.
 
     Args:
-        container: The name of the container to push project files to
+        container: The name of the container to push files to
         folder: The folder within the container to push to
         credentials: A dictionary of credentials with keys `connection_string` or
             `account_url` and values of the corresponding connection string or
@@ -58,22 +58,22 @@ def push_project_to_azure_blob_storage(
             file will be used.
 
     Example:
-        Push a project to an Azure Blob Storage container using credentials stored in a
+        Push to an Azure Blob Storage container using credentials stored in a
         block:
         ```yaml
         push:
-            - prefect_azure.projects.steps.push_project_to_azure_blob_storage:
+            - prefect_azure.deployments.steps.push_to_azure_blob_storage:
                 requires: prefect-azure[blob_storage]
                 container: my-container
                 folder: my-project
                 credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
         ```
 
-        Push a project to an Azure Blob Storage container using an account URL and
+        Push to an Azure Blob Storage container using an account URL and
         default credentials:
         ```yaml
         push:
-            - prefect_azure.projects.steps.push_project_to_azure_blob_storage:
+            - prefect_azure.deployments.steps.push_to_azure_blob_storage:
                 requires: prefect-azure[blob_storage]
                 container: my-container
                 folder: my-project
@@ -124,38 +124,38 @@ def push_project_to_azure_blob_storage(
     }
 
 
-def pull_project_from_azure_blob_storage(
+def pull_from_azure_blob_storage(
     container: str,
     folder: str,
     credentials: Dict[str, str],
 ):
     """
-    Pulls a project from an Azure Blob Storage container.
+    Pulls from an Azure Blob Storage container.
 
     Args:
-        container: The name of the container to pull project files from
+        container: The name of the container to pull files from
         folder: The folder within the container to pull from
         credentials: A dictionary of credentials with keys `connection_string` or
             `account_url` and values of the corresponding connection string or
             account url. If both are provided, `connection_string` will be used.
 
     Example:
-        Pull a project from an Azure Blob Storage container using credentials stored in
+        Pull from an Azure Blob Storage container using credentials stored in
         a block:
         ```yaml
         pull:
-            - prefect_azure.projects.steps.pull_project_from_azure_blob_storage:
+            - prefect_azure.deployments.steps.pull_from_azure_blob_storage:
                 requires: prefect-azure[blob_storage]
                 container: my-container
                 folder: my-project
                 credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
         ```
 
-        Pull a project from an Azure Blob Storage container using an account URL and
+        Pull from an Azure Blob Storage container using an account URL and
         default credentials:
         ```yaml
         pull:
-            - prefect_azure.projects.steps.pull_project_from_azure_blob_storage:
+            - prefect_azure.deployments.steps.pull_from_azure_blob_storage:
                 requires: prefect-azure[blob_storage]
                 container: my-container
                 folder: my-project

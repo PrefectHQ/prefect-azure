@@ -6,9 +6,9 @@ import pytest
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import ContainerClient
 
-from prefect_azure.projects.steps import (
-    pull_project_from_azure_blob_storage,
-    push_project_to_azure_blob_storage,
+from prefect_azure.deployments.steps import (
+    pull_from_azure_blob_storage,
+    push_to_azure_blob_storage,
 )
 
 
@@ -27,11 +27,11 @@ def mock_azure_blob_storage(
     monkeypatch, container_client_mock, default_azure_credential_mock
 ):
     monkeypatch.setattr(
-        "prefect_azure.projects.steps.ContainerClient",
+        "prefect_azure.deployments.steps.ContainerClient",
         container_client_mock,
     )
     monkeypatch.setattr(
-        "prefect_azure.projects.steps.DefaultAzureCredential",
+        "prefect_azure.deployments.steps.DefaultAzureCredential",
         default_azure_credential_mock,
     )
 
@@ -61,9 +61,9 @@ def tmp_files(tmp_path: Path):
     return tmp_path
 
 
-class TestPushProject:
+class TestPush:
     @pytest.mark.usefixtures("mock_azure_blob_storage")
-    def test_push_project_to_azure_blob_storage_with_connection_string(
+    def test_push_to_azure_blob_storage_with_connection_string(
         self, tmp_files: Path, container_client_mock: MagicMock
     ):
         container = "test-container"
@@ -72,7 +72,7 @@ class TestPushProject:
 
         os.chdir(tmp_files)
 
-        push_project_to_azure_blob_storage(container, folder, credentials)
+        push_to_azure_blob_storage(container, folder, credentials)
 
         container_client_mock.from_connection_string.assert_called_once_with(
             credentials["connection_string"], container_name=container
@@ -116,7 +116,7 @@ class TestPushProject:
         )
 
     @pytest.mark.usefixtures("mock_azure_blob_storage")
-    def test_push_project_to_azure_blob_storage_with_account_url(
+    def test_push_to_azure_blob_storage_with_account_url(
         self, tmp_files: Path, container_client_mock: MagicMock
     ):
         container = "test-container"
@@ -125,7 +125,7 @@ class TestPushProject:
 
         os.chdir(tmp_files)
 
-        push_project_to_azure_blob_storage(container, folder, credentials)
+        push_to_azure_blob_storage(container, folder, credentials)
 
         container_client_mock.assert_called_once_with(
             account_url=credentials["account_url"],
@@ -171,9 +171,7 @@ class TestPushProject:
         )
 
     @pytest.mark.usefixtures("mock_azure_blob_storage")
-    def test_push_project_to_azure_blob_storage_missing_credentials(
-        self, tmp_files: Path
-    ):
+    def test_push_to_azure_blob_storage_missing_credentials(self, tmp_files: Path):
         container = "test-container"
         folder = "test-folder"
         credentials = {}
@@ -184,10 +182,10 @@ class TestPushProject:
             ValueError,
             match="Credentials must contain either connection_string or account_url",
         ):
-            push_project_to_azure_blob_storage(container, folder, credentials)
+            push_to_azure_blob_storage(container, folder, credentials)
 
     @pytest.mark.usefixtures("mock_azure_blob_storage")
-    def test_push_project_to_azure_blob_storage_both_credentials_provided(
+    def test_push_to_azure_blob_storage_both_credentials_provided(
         self, tmp_files: Path, container_client_mock: MagicMock
     ):
         """connection_string should take precedence over account_url"""
@@ -200,7 +198,7 @@ class TestPushProject:
 
         os.chdir(tmp_files)
 
-        push_project_to_azure_blob_storage(container, folder, credentials)
+        push_to_azure_blob_storage(container, folder, credentials)
 
         container_client_mock.from_connection_string.assert_called_once_with(
             credentials["connection_string"], container_name=container
@@ -244,9 +242,9 @@ class TestPushProject:
         )
 
 
-class TestPullProject:
+class TestPull:
     @pytest.mark.usefixtures("mock_azure_blob_storage")
-    def test_pull_project_from_azure_blob_storage_with_connection_string(
+    def test_pull_from_azure_blob_storage_with_connection_string(
         self, tmp_path, container_client_mock
     ):
         container = "test-container"
@@ -263,7 +261,7 @@ class TestPullProject:
         )
         mock_context_client.list_blobs.return_value = [blob_mock]
 
-        pull_project_from_azure_blob_storage(container, folder, credentials)
+        pull_from_azure_blob_storage(container, folder, credentials)
 
         mock_context_client.list_blobs.assert_called_once_with(name_starts_with=folder)
         mock_context_client.download_blob.assert_called_once_with(blob_mock)
@@ -272,7 +270,7 @@ class TestPullProject:
         assert expected_file.exists()
 
     @pytest.mark.usefixtures("mock_azure_blob_storage")
-    def test_pull_project_from_azure_blob_storage_with_account_url(
+    def test_pull_from_azure_blob_storage_with_account_url(
         self, tmp_path, container_client_mock
     ):
         container = "test-container"
@@ -287,7 +285,7 @@ class TestPullProject:
         mock_context_client = container_client_mock.return_value.__enter__.return_value
         mock_context_client.list_blobs.return_value = [blob_mock]
 
-        pull_project_from_azure_blob_storage(container, folder, credentials)
+        pull_from_azure_blob_storage(container, folder, credentials)
 
         container_client_mock.assert_called_once_with(
             account_url=credentials["account_url"],
@@ -302,9 +300,7 @@ class TestPullProject:
         assert expected_file.exists()
 
     @pytest.mark.usefixtures("mock_azure_blob_storage")
-    def test_pull_project_to_azure_blob_storage_missing_credentials(
-        self, tmp_files: Path
-    ):
+    def test_pull_to_azure_blob_storage_missing_credentials(self, tmp_files: Path):
         container = "test-container"
         folder = "test-folder"
         credentials = {}
@@ -315,10 +311,10 @@ class TestPullProject:
             ValueError,
             match="Credentials must contain either connection_string or account_url",
         ):
-            pull_project_from_azure_blob_storage(container, folder, credentials)
+            pull_from_azure_blob_storage(container, folder, credentials)
 
     @pytest.mark.usefixtures("mock_azure_blob_storage")
-    def test_pull_project_from_azure_blob_storage_both_credentials_provided(
+    def test_pull_from_azure_blob_storage_both_credentials_provided(
         self, tmp_files: Path, container_client_mock
     ):
         """connection_string should take precedence over account_url"""
@@ -339,7 +335,7 @@ class TestPullProject:
         )
         mock_context_client.list_blobs.return_value = [blob_mock]
 
-        pull_project_from_azure_blob_storage(container, folder, credentials)
+        pull_from_azure_blob_storage(container, folder, credentials)
 
         mock_context_client.list_blobs.assert_called_once_with(name_starts_with=folder)
         mock_context_client.download_blob.assert_called_once_with(blob_mock)
