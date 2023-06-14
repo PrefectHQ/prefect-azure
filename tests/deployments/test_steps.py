@@ -241,6 +241,63 @@ class TestPush:
             ]
         )
 
+    @pytest.mark.usefixtures("mock_azure_blob_storage")
+    def test_push_to_azure_blob_storage_trailing_slash_in_folder(
+        self, tmp_files: Path, container_client_mock: MagicMock
+    ):
+        container = "test-container"
+        folder = "test-folder/"
+        credentials = {"connection_string": "fake_connection_string"}
+
+        os.chdir(tmp_files)
+
+        push_to_azure_blob_storage(container, folder, credentials)
+
+        upload_blob_mock = (
+            container_client_mock.from_connection_string.return_value.__enter__.return_value.upload_blob  # noqa
+        )
+
+        # Assert that the trailing slash is properly handled
+        upload_blob_mock.assert_has_calls(
+            [
+                call(
+                    "test-folder/testfile1.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+                # ... repeat for other files
+            ],
+            any_order=True,
+        )
+
+    @pytest.mark.usefixtures("mock_azure_blob_storage")
+    def test_push_to_azure_blob_storage_no_folder_provided(
+        self, tmp_files: Path, container_client_mock: MagicMock
+    ):
+        container = "test-container"
+        credentials = {"connection_string": "fake_connection_string"}
+
+        os.chdir(tmp_files)
+
+        push_to_azure_blob_storage(container, "", credentials)
+
+        upload_blob_mock = (
+            container_client_mock.from_connection_string.return_value.__enter__.return_value.upload_blob  # noqa
+        )
+
+        # Assert that the files are uploaded to the root of the container
+        upload_blob_mock.assert_has_calls(
+            [
+                call(
+                    "testfile1.txt",
+                    ANY,
+                    overwrite=True,
+                ),
+                # ... repeat for other files
+            ],
+            any_order=True,
+        )
+
 
 class TestPull:
     @pytest.mark.usefixtures("mock_azure_blob_storage")
@@ -341,4 +398,59 @@ class TestPull:
         mock_context_client.download_blob.assert_called_once_with(blob_mock)
 
         expected_file = tmp_files / "sample_file.txt"
+        assert expected_file.exists()
+
+    @pytest.mark.usefixtures("mock_azure_blob_storage")
+    def test_pull_from_azure_blob_storage_trailing_slash_in_folder(
+        self, tmp_path, container_client_mock
+    ):
+        container = "test-container"
+        folder = "test-folder/"
+        credentials = {"connection_string": "fake_connection_string"}
+
+        os.chdir(tmp_path)
+
+        blob_mock = MagicMock()
+        blob_mock.name = "test-folder/sample_file.txt"
+
+        mock_context_client = (
+            container_client_mock.from_connection_string.return_value.__enter__.return_value  # noqa
+        )
+        mock_context_client.list_blobs.return_value = [blob_mock]
+
+        pull_from_azure_blob_storage(container, folder, credentials)
+
+        # Assert that the trailing slash is properly handled
+        mock_context_client.list_blobs.assert_called_once_with(
+            name_starts_with="test-folder/"
+        )
+        mock_context_client.download_blob.assert_called_once_with(blob_mock)
+
+        expected_file = tmp_path / "sample_file.txt"
+        assert expected_file.exists()
+
+    @pytest.mark.usefixtures("mock_azure_blob_storage")
+    def test_pull_from_azure_blob_storage_no_folder_provided(
+        self, tmp_path, container_client_mock
+    ):
+        container = "test-container"
+        credentials = {"connection_string": "fake_connection_string"}
+
+        os.chdir(tmp_path)
+
+        blob_mock = MagicMock()
+        blob_mock.name = "sample_file.txt"
+
+        mock_context_client = (
+            container_client_mock.from_connection_string.return_value.__enter__.return_value  # noqa
+        )
+        mock_context_client.list_blobs.return_value = [blob_mock]
+
+        pull_from_azure_blob_storage(container, "", credentials)
+
+        # Assert that the files are downloaded from the root of the container
+        mock_context_client.list_blobs.assert_called_once_with(name_starts_with="")
+        mock_context_client.download_blob.assert_called_once_with(blob_mock)
+
+        expected_file = tmp_path / "sample_file.txt"
         assert expected_file.exists()
