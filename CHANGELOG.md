@@ -17,14 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixes bug where default Azure credentials could not be used - [#97](https://github.com/PrefectHQ/prefect-azure/pull/97)
-- Add py.typed marker to make the package PEP 561 compatible -[#100 ](https://github.com/PrefectHQ/prefect-azure/pull/100)
-
 ### Security
 
 ## 0.2.8
 
-Released on May 2nd, 2023.
+Released on June 15th, 2023.
 
 ### Added
 
@@ -33,6 +30,12 @@ Released on May 2nd, 2023.
 ### Changed
 
 - Added option to give containers created by `AzureContainerInstanceJob` human-readable names with a randomized suffix via the `name` attribute - [#92](https://github.com/PrefectHQ/prefect-azure/pull/92)
+
+### Fixed
+
+- Fixes bug where default Azure credentials could not be used - [#97](https://github.com/PrefectHQ/prefect-azure/pull/97)
+- Add py.typed marker to make the package PEP 561 compatible -[#100 ](https://github.com/PrefectHQ/prefect-azure/pull/100)
+
 
 ## 0.2.7
 
