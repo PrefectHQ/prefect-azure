@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixes bug where default Azure credentials could not be used - [#97](https://github.com/PrefectHQ/prefect-azure/pull/97)
+- Add py.typed marker to make the package PEP 561 compatible -[#100 ](https://github.com/PrefectHQ/prefect-azure/pull/100)
 
 ### Security
 
