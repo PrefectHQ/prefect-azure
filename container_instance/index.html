@@ -17,7 +17,7 @@
         <link rel="next" href="../container_instance_worker/">
       
       <link rel="icon" href="../img/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ded33207.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.a0c5b2b5.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -487,6 +487,55 @@
   
 
     
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          Deployments
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
+          Deployments
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployments/steps/" class="md-nav__link">
+        Steps
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -711,10 +760,7 @@ user-assigned managed identity be available to the ACI container group.</p>
 
         <details class="quote">
           <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
 <span class="normal">143</span>
 <span class="normal">144</span>
 <span class="normal">145</span>
@@ -730,7 +776,10 @@ user-assigned managed identity be available to the ACI container group.</p>
 <span class="normal">155</span>
 <span class="normal">156</span>
 <span class="normal">157</span>
-<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ACRManagedIdentity</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ACRManagedIdentity</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Use a Managed Identity to access Azure Container registry. Requires the</span>
 <span class="sd">    user-assigned managed identity be available to the ACI container group.</span>
@@ -796,10 +845,7 @@ Note this block is experimental. The interface may change without notice.</p>
 
         <details class="quote">
           <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">170</span>
 <span class="normal">171</span>
 <span class="normal">172</span>
 <span class="normal">173</span>
@@ -1531,7 +1577,22 @@ Note this block is experimental. The interface may change without notice.</p>
 <span class="normal">899</span>
 <span class="normal">900</span>
 <span class="normal">901</span>
-<span class="normal">902</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerInstanceJob</span><span class="p">(</span><span class="n">Infrastructure</span><span class="p">):</span>
+<span class="normal">902</span>
+<span class="normal">903</span>
+<span class="normal">904</span>
+<span class="normal">905</span>
+<span class="normal">906</span>
+<span class="normal">907</span>
+<span class="normal">908</span>
+<span class="normal">909</span>
+<span class="normal">910</span>
+<span class="normal">911</span>
+<span class="normal">912</span>
+<span class="normal">913</span>
+<span class="normal">914</span>
+<span class="normal">915</span>
+<span class="normal">916</span>
+<span class="normal">917</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerInstanceJob</span><span class="p">(</span><span class="n">Infrastructure</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    &lt;span class=&quot;badge-api experimental&quot;/&gt;</span>
 <span class="sd">    Run a command using a container on Azure Container Instances.</span>
@@ -1837,7 +1898,19 @@ Note this block is experimental. The interface may change without notice.</p>
         <span class="p">]</span>
 
         <span class="c1"># all container names in a resource group must be unique</span>
-        <span class="n">container_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="n">slugified_name</span> <span class="o">=</span> <span class="n">slugify</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">max_length</span><span class="o">=</span><span class="mi">52</span><span class="p">,</span>
+                <span class="n">regex_pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;[^a-zA-Z0-9-]+&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">random_suffix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_lowercase</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">container_name</span> <span class="o">=</span> <span class="n">slugified_name</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">random_suffix</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">container_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+
         <span class="n">container_resource_requirements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configure_container_resources</span><span class="p">()</span>
 
         <span class="c1"># add the entrypoint if provided, because creating an ACI container with a</span>
@@ -2316,8 +2389,12 @@ Note this block is experimental. The interface may change without notice.</p>
           <td>
                 <code>str</code>
           </td>
-          <td><p>The container group name yielded by
-<code>AzureContainerInstanceJob.run</code>.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The container group name yielded by
+<code>AzureContainerInstanceJob.run</code>.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -2327,10 +2404,7 @@ Note this block is experimental. The interface may change without notice.</p>
 
       <details class="quote">
         <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">383</span>
-<span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">386</span>
 <span class="normal">387</span>
 <span class="normal">388</span>
 <span class="normal">389</span>
@@ -2379,7 +2453,10 @@ Note this block is experimental. The interface may change without notice.</p>
 <span class="normal">432</span>
 <span class="normal">433</span>
 <span class="normal">434</span>
-<span class="normal">435</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">async</span> <span class="k">def</span> <span class="nf">kill</span><span class="p">(</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">async</span> <span class="k">def</span> <span class="nf">kill</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">container_group_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">grace_seconds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">CONTAINER_GROUP_DELETION_TIMEOUT_SECONDS</span><span class="p">,</span>
@@ -2465,17 +2542,18 @@ Note this block is experimental. The interface may change without notice.</p>
           <td>
                 <code>str</code>
           </td>
-          <td><p>A string containing the summary.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>A string containing the summary.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
 
       <details class="quote">
         <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">437</span>
-<span class="normal">438</span>
-<span class="normal">439</span>
-<span class="normal">440</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">440</span>
 <span class="normal">441</span>
 <span class="normal">442</span>
 <span class="normal">443</span>
@@ -2489,7 +2567,10 @@ Note this block is experimental. The interface may change without notice.</p>
 <span class="normal">451</span>
 <span class="normal">452</span>
 <span class="normal">453</span>
-<span class="normal">454</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">preview</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">preview</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Provides a summary of how the container will be created when `run` is called.</span>
 
@@ -2547,7 +2628,11 @@ Note this block is experimental. The interface may change without notice.</p>
           <td>
                 <code><span title="typing.Optional">Optional</span>[<span title="anyio.abc.TaskStatus">TaskStatus</span>]</code>
           </td>
-          <td><p>An optional <code>TaskStatus</code> to update when the container starts.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>An optional <code>TaskStatus</code> to update when the container starts.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -2568,17 +2653,18 @@ Note this block is experimental. The interface may change without notice.</p>
           <td>
                 <code><a class="autorefs autorefs-internal" title="prefect_azure.container_instance.AzureContainerInstanceJobResult" href="#prefect_azure.container_instance.AzureContainerInstanceJobResult">AzureContainerInstanceJobResult</a></code>
           </td>
-          <td><p>An <code>AzureContainerInstanceJobResult</code> with the container's exit code.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>An <code>AzureContainerInstanceJobResult</code> with the container's exit code.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
 
       <details class="quote">
         <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">316</span>
-<span class="normal">317</span>
-<span class="normal">318</span>
-<span class="normal">319</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">319</span>
 <span class="normal">320</span>
 <span class="normal">321</span>
 <span class="normal">322</span>
@@ -2640,7 +2726,10 @@ Note this block is experimental. The interface may change without notice.</p>
 <span class="normal">378</span>
 <span class="normal">379</span>
 <span class="normal">380</span>
-<span class="normal">381</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@sync_compatible</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@sync_compatible</span>
 <span class="k">async</span> <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">task_status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TaskStatus</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AzureContainerInstanceJobResult</span><span class="p">:</span>
@@ -2741,10 +2830,10 @@ Note this block is experimental. The interface may change without notice.</p>
 
         <details class="quote">
           <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerInstanceJobResult</span><span class="p">(</span><span class="n">InfrastructureResult</span><span class="p">):</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerInstanceJobResult</span><span class="p">(</span><span class="n">InfrastructureResult</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The result of an `AzureContainerInstanceJob` run.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2777,14 +2866,14 @@ the states in this Enum are the only ones that can be relied on as dependencies.
 
         <details class="quote">
           <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">123</span>
 <span class="normal">124</span>
 <span class="normal">125</span>
 <span class="normal">126</span>
-<span class="normal">127</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ContainerGroupProvisioningState</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ContainerGroupProvisioningState</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Terminal provisioning states for ACI container groups. Per the Azure docs,</span>
 <span class="sd">    the states in this Enum are the only ones that can be relied on as dependencies.</span>
@@ -2836,13 +2925,13 @@ the states in this Enum are the only ones that can be relied on as dependencies.
 
         <details class="quote">
           <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">133</span>
 <span class="normal">134</span>
 <span class="normal">135</span>
-<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ContainerRunState</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ContainerRunState</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Terminal run states for ACI containers.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -3025,7 +3114,7 @@ the states in this Enum are the only ones that can be relied on as dependencies.
     <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.51198bba.min.js"></script>
+      <script src="../assets/javascripts/bundle.b4d07000.min.js"></script>
       
     
   </body>

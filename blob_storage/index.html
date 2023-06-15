@@ -17,7 +17,7 @@
         <link rel="next" href="../cosmos_db/">
       
       <link rel="icon" href="../img/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
     
     
       
@@ -25,10 +25,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ded33207.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.a0c5b2b5.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -440,6 +440,55 @@
   
 
     
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          Deployments
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
+          Deployments
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../deployments/steps/" class="md-nav__link">
+        Steps
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -585,7 +634,11 @@
           <td>
                 <code>str</code>
           </td>
-          <td><p>Name of the blob within this container to retrieve.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of the blob within this container to retrieve.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -595,7 +648,11 @@
           <td>
                 <code>str</code>
           </td>
-          <td><p>Name of the Blob Storage container to retrieve from.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of the Blob Storage container to retrieve from.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -605,7 +662,11 @@
           <td>
                 <code><a class="autorefs autorefs-internal" title="prefect_azure.credentials.AzureBlobStorageCredentials" href="../credentials/#prefect_azure.credentials.AzureBlobStorageCredentials">AzureBlobStorageCredentials</a></code>
           </td>
-          <td><p>Credentials to use for authentication with Azure.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Credentials to use for authentication with Azure.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -626,12 +687,16 @@
           <td>
                 <code>bytes</code>
           </td>
-          <td><p>A <code>bytes</code> representation of the downloaded blob.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>A <code>bytes</code> representation of the downloaded blob.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
 
-<details class="example">
+<details class="example" open>
   <summary>Example</summary>
   <p>Download a file from a Blob Storage container
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">flow</span>
@@ -788,7 +853,11 @@
           <td>
                 <code>str</code>
           </td>
-          <td><p>Name of the Blob Storage container to retrieve from.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of the Blob Storage container to retrieve from.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -798,7 +867,11 @@
           <td>
                 <code><a class="autorefs autorefs-internal" title="prefect_azure.credentials.AzureBlobStorageCredentials" href="../credentials/#prefect_azure.credentials.AzureBlobStorageCredentials">AzureBlobStorageCredentials</a></code>
           </td>
-          <td><p>Credentials to use for authentication with Azure.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Credentials to use for authentication with Azure.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -808,8 +881,12 @@
           <td>
                 <code>str</code>
           </td>
-          <td><p>Filters the results to return only blobs whose names
-begin with the specified prefix.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Filters the results to return only blobs whose names
+begin with the specified prefix.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -819,10 +896,14 @@ begin with the specified prefix.</p></td>
           <td>
                 <code><span title="typing.Union">Union</span>[str, <span title="typing.List">List</span>[str]]</code>
           </td>
-          <td><p>Specifies one or more additional datasets to include in the response.
+          <td>
+            <div class="doc-md-description">
+              <p>Specifies one or more additional datasets to include in the response.
 Options include: 'snapshots', 'metadata', 'uncommittedblobs', 'copy',
 'deleted', 'deletedwithversions', 'tags', 'versions', 'immutabilitypolicy',
-'legalhold'.</p></td>
+'legalhold'.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -831,7 +912,11 @@ Options include: 'snapshots', 'metadata', 'uncommittedblobs', 'copy',
           <td><code>**kwargs</code></td>
           <td>
           </td>
-          <td><p>Addtional kwargs passed to <code>ContainerClient.list_blobs()</code></p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Addtional kwargs passed to <code>ContainerClient.list_blobs()</code></p>
+            </div>
+          </td>
           <td>
                 <code>{}</code>
           </td>
@@ -852,12 +937,16 @@ Options include: 'snapshots', 'metadata', 'uncommittedblobs', 'copy',
           <td>
                 <code><span title="typing.List">List</span>[<span title="azure.storage.blob.BlobProperties">BlobProperties</span>]</code>
           </td>
-          <td><p>A <code>list</code> of <code>dict</code>s containing metadata about the blob.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>A <code>list</code> of <code>dict</code>s containing metadata about the blob.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
 
-<details class="example">
+<details class="example" open>
   <summary>Example</summary>
   <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">flow</span>
 
@@ -1036,7 +1125,11 @@ Options include: 'snapshots', 'metadata', 'uncommittedblobs', 'copy',
           <td>
                 <code>bytes</code>
           </td>
-          <td><p>Bytes representation of data to upload to Blob Storage.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Bytes representation of data to upload to Blob Storage.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -1046,7 +1139,11 @@ Options include: 'snapshots', 'metadata', 'uncommittedblobs', 'copy',
           <td>
                 <code>str</code>
           </td>
-          <td><p>Name of the Blob Storage container to upload to.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of the Blob Storage container to upload to.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -1056,7 +1153,11 @@ Options include: 'snapshots', 'metadata', 'uncommittedblobs', 'copy',
           <td>
                 <code><a class="autorefs autorefs-internal" title="prefect_azure.credentials.AzureBlobStorageCredentials" href="../credentials/#prefect_azure.credentials.AzureBlobStorageCredentials">AzureBlobStorageCredentials</a></code>
           </td>
-          <td><p>Credentials to use for authentication with Azure.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Credentials to use for authentication with Azure.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -1066,7 +1167,11 @@ Options include: 'snapshots', 'metadata', 'uncommittedblobs', 'copy',
           <td>
                 <code>str</code>
           </td>
-          <td><p>Name of the blob within this container to retrieve.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of the blob within this container to retrieve.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -1076,8 +1181,12 @@ Options include: 'snapshots', 'metadata', 'uncommittedblobs', 'copy',
           <td>
                 <code>bool</code>
           </td>
-          <td><p>If <code>True</code>, an existing blob with the same name will be overwritten.
-Defaults to <code>False</code> and an error will be thrown if the blob already exists.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>If <code>True</code>, an existing blob with the same name will be overwritten.
+Defaults to <code>False</code> and an error will be thrown if the blob already exists.</p>
+            </div>
+          </td>
           <td>
                 <code>False</code>
           </td>
@@ -1098,12 +1207,16 @@ Defaults to <code>False</code> and an error will be thrown if the blob already e
           <td>
                 <code>str</code>
           </td>
-          <td><p>The blob name of the uploaded object</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The blob name of the uploaded object</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
 
-<details class="example">
+<details class="example" open>
   <summary>Example</summary>
   <p>Read and upload a file to a Blob Storage container
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">flow</span>
@@ -1403,7 +1516,7 @@ Defaults to <code>False</code> and an error will be thrown if the blob already e
     <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.51198bba.min.js"></script>
+      <script src="../assets/javascripts/bundle.b4d07000.min.js"></script>
       
     
   </body>
