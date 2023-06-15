@@ -72,18 +72,23 @@ def _raise_help_msg(key: str):
 
 class AzureBlobStorageCredentials(Block):
     """
-    Block used to manage Blob Storage authentication with Azure.
-    Azure authentication is handled via the `azure` module through
-    a connection string.
+    Stores credentials for authenticating with Azure Blob Storage.
 
     Args:
-        connection_string: Includes the authorization information required.
+        account_url: The URL for your Azure storage account. If provided, the account
+            URL will be used to authenticate with the discovered default Azure
+            credentials.
+        connection_string: The connection string to your Azure storage account. If
+            provided, the connection string will take precedence over the account URL.
 
     Example:
-        Load stored Azure Blob Storage credentials:
+        Load stored Azure Blob Storage credentials and retrieve a blob service client:
         ```python
         from prefect_azure import AzureBlobStorageCredentials
+
         azure_credentials_block = AzureBlobStorageCredentials.load("BLOCK_NAME")
+
+        blob_service_client = azure_credentials_block.get_blob_client()
         ```
     """
 
@@ -94,15 +99,17 @@ class AzureBlobStorageCredentials(Block):
     connection_string: Optional[SecretStr] = Field(
         default=None,
         description=(
-            "If account_url is not provided, " "the connection string to authenticate."
+            "The connection string to your Azure storage account. If provided, the "
+            "connection string will take precedence over the account URL."
         ),
     )
     account_url: Optional[str] = Field(
         default=None,
+        title="Account URL",
         description=(
-            "If a connection string is not provided, "
-            "the URL to the Blob Storage account; will use "
-            "DefaultAzureCredential to authenticate."
+            "The URL for your Azure storage account. If provided, the account "
+            "URL will be used to authenticate with the discovered default "
+            "Azure credentials."
         ),
     )
 
