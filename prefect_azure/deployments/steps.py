@@ -17,7 +17,7 @@ define the push and pull steps for a specific deployment.
         - prefect_azure.deployments.steps.push_to_azure_blob_storage:
             requires: prefect-azure[blob_storage]
             container: my-container
-            folder: my-project
+            folder: my-folder
             credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
 
     pull:
@@ -65,7 +65,7 @@ def push_to_azure_blob_storage(
             - prefect_azure.deployments.steps.push_to_azure_blob_storage:
                 requires: prefect-azure[blob_storage]
                 container: my-container
-                folder: my-project
+                folder: my-folder
                 credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
         ```
 
@@ -76,7 +76,7 @@ def push_to_azure_blob_storage(
             - prefect_azure.deployments.steps.push_to_azure_blob_storage:
                 requires: prefect-azure[blob_storage]
                 container: my-container
-                folder: my-project
+                folder: my-folder
                 credentials:
                     account_url: https://myaccount.blob.core.windows.net/
         ```
@@ -147,7 +147,7 @@ def pull_from_azure_blob_storage(
             - prefect_azure.deployments.steps.pull_from_azure_blob_storage:
                 requires: prefect-azure[blob_storage]
                 container: my-container
-                folder: my-project
+                folder: my-folder
                 credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
         ```
 
@@ -158,7 +158,7 @@ def pull_from_azure_blob_storage(
             - prefect_azure.deployments.steps.pull_from_azure_blob_storage:
                 requires: prefect-azure[blob_storage]
                 container: my-container
-                folder: my-project
+                folder: my-folder
                 credentials:
                     account_url: https://myaccount.blob.core.windows.net/
         ```
