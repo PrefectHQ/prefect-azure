@@ -17,9 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixes bug where User assigned Identities could not be used - [#103](https://github.com/PrefectHQ/prefect-azure/issues/103)
-
 ### Security
+
+## 0.2.9
+
+Released on June 21st, 2023.
+
+### Fixed
+
+- Fixed bug where user assigned identities could not be used - [#103](https://github.com/PrefectHQ/prefect-azure/issues/103)
 
 ## 0.2.8
 
