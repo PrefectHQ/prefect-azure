@@ -967,7 +967,7 @@ async def test_add_identities(
     raw_job_configuration.prepare_for_flow_run(worker_flow_run)
 
     container_group = raw_job_configuration.arm_template["resources"][0]
-    identities = container_group["properties"]["identity"]["userAssignedIdentities"]
+    identities = container_group["identity"]["userAssignedIdentities"]
     assert len(identities) == 3
     # each of the identities in the input list should be the key of one of the
     # entries in the identities dict. The value of each entry doesn't matter as

@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixes bug where User assigned Identities could not be used - [#103](https://github.com/PrefectHQ/prefect-azure/issues/103)
+
 ### Security
 
 ## 0.2.8
