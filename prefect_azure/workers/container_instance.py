@@ -337,7 +337,7 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
             identities: A list of user-assigned identities to add to
             the container group.
         """
-        self.arm_template["resources"][0]["properties"]["identity"] = {
+        self.arm_template["resources"][0]["identity"] = {
             "type": "UserAssigned",
             "userAssignedIdentities": {
                 # note: For user-assigned identities, the key is the resource ID
