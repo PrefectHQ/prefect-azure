@@ -7,7 +7,7 @@ import dateutil.parser
 import pytest
 from anyio.abc import TaskStatus
 from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
-from azure.identity.aio import ClientSecretCredential, DefaultAzureCredential
+from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.mgmt.containerinstance.models import (
     EnvironmentVariable,
     ImageRegistryCredential,
