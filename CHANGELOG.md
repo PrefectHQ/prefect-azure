@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## 0.2.10
+
+Released on June 22nd, 2023.
+
+### Fixed
+
+- Fixed credentials imports to ensure async credential classes are only used with async clients - [#106](https://github.com/PrefectHQ/prefect-azure/pull/106)
+
 ## 0.2.9
 
 Released on June 21st, 2023.

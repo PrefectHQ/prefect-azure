@@ -3,7 +3,8 @@
 import functools
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from azure.identity.aio import ClientSecretCredential, DefaultAzureCredential
+from azure.identity import ClientSecretCredential, DefaultAzureCredential
+from azure.identity.aio import DefaultAzureCredential as ADefaultAzureCredential
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
 from azure.mgmt.resource import ResourceManagementClient
 from pydantic import Field, SecretStr, root_validator
@@ -158,7 +159,7 @@ class AzureBlobStorageCredentials(Block):
         if self.connection_string is None:
             return BlobServiceClient(
                 account_url=self.account_url,
-                credential=DefaultAzureCredential(),
+                credential=ADefaultAzureCredential(),
             )
 
         return BlobServiceClient.from_connection_string(
@@ -202,7 +203,7 @@ class AzureBlobStorageCredentials(Block):
             return BlobClient(
                 account_url=self.account_url,
                 container_name=container,
-                credential=DefaultAzureCredential(),
+                credential=ADefaultAzureCredential(),
                 blob_name=blob,
             )
 
@@ -247,7 +248,7 @@ class AzureBlobStorageCredentials(Block):
             return ContainerClient(
                 account_url=self.account_url,
                 container_name=container,
-                credential=DefaultAzureCredential(),
+                credential=ADefaultAzureCredential(),
             )
 
         container_client = ContainerClient.from_connection_string(
