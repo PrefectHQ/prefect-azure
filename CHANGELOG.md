@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.2.11
 
-Released June 29th, 2023.
+Released July 20th, 2023.
 
 ### Changed
 - Promoted workers to GA, removed beta disclaimers
