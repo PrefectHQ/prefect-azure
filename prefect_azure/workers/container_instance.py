@@ -1,10 +1,6 @@
 """
-<span class="badge-api beta"/>
-
 Module containing the Azure Container Instances worker used for executing flow
 runs in ACI containers.
-
-Note this module is in **beta**. The interfaces within may change without notice.
 
 To start an ACI worker, run the following command:
 
@@ -515,7 +511,6 @@ class AzureContainerWorker(BaseWorker):
     type = "azure-container-instance"
     job_configuration = AzureContainerJobConfiguration
     job_configuration_variables = AzureContainerVariables
-    _is_beta = True
     _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
     _display_name = "Azure Container Instances"
     _description = (
