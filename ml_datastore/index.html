@@ -17,7 +17,7 @@
         <link rel="next" href="../container_instance/">
       
       <link rel="icon" href="../img/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.19">
     
     
       
@@ -25,7 +25,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.eebd395e.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
@@ -593,7 +593,7 @@
 
 
 <h1 id="prefect_azure.ml_datastore" class="doc doc-heading">
-          <code>prefect_azure.ml_datastore</code>
+            <code>prefect_azure.ml_datastore</code>
 
 
 </h1>
@@ -614,6 +614,7 @@
 <h2 id="prefect_azure.ml_datastore-classes">Classes</h2>
 <h2 id="prefect_azure.ml_datastore-functions">Functions</h2>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -631,6 +632,8 @@
   <div class="doc doc-contents ">
   
       <p>Gets the Datastore within the Workspace.</p>
+
+
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -696,9 +699,9 @@ default Datastore of the Workspace is returned.</p>
     <span class="k">return</span> <span class="n">results</span>
 </code></pre></div></p>
 </details>
-      <details class="quote">
-        <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 76</span>
+          <details class="quote">
+            <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 76</span>
 <span class="normal"> 77</span>
 <span class="normal"> 78</span>
 <span class="normal"> 79</span>
@@ -774,10 +777,11 @@ default Datastore of the Workspace is returned.</p>
     <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">_get_datastore</span><span class="p">(</span><span class="n">ml_credentials</span><span class="p">,</span> <span class="n">datastore_name</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div></td></tr></table></div>
-      </details>
+          </details>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -792,6 +796,8 @@ default Datastore of the Workspace is returned.</p>
   <div class="doc doc-contents ">
   
       <p>Lists the Datastores in the Workspace.</p>
+
+
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -842,9 +848,9 @@ default Datastore of the Workspace is returned.</p>
     <span class="k">return</span> <span class="n">results</span>
 </code></pre></div></p>
 </details>
-      <details class="quote">
-        <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">22</span>
+          <details class="quote">
+            <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">22</span>
 <span class="normal">23</span>
 <span class="normal">24</span>
 <span class="normal">25</span>
@@ -914,10 +920,11 @@ default Datastore of the Workspace is returned.</p>
     <span class="n">results</span> <span class="o">=</span> <span class="n">workspace</span><span class="o">.</span><span class="n">datastores</span>
     <span class="k">return</span> <span class="n">results</span>
 </code></pre></div></td></tr></table></div>
-      </details>
+          </details>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -937,6 +944,8 @@ default Datastore of the Workspace is returned.</p>
   
       <p>Registers a Azure Blob Storage container as a
 Datastore in a Azure ML service Workspace.</p>
+
+
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -1082,9 +1091,9 @@ for the Workspace.</p>
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div></p>
 </details>
-      <details class="quote">
-        <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">205</span>
+          <details class="quote">
+            <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">205</span>
 <span class="normal">206</span>
 <span class="normal">207</span>
 <span class="normal">208</span>
@@ -1256,10 +1265,11 @@ for the Workspace.</p>
 
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div></td></tr></table></div>
-      </details>
+          </details>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -1278,6 +1288,8 @@ for the Workspace.</p>
   <div class="doc doc-contents ">
   
       <p>Uploads local files to a Datastore.</p>
+
+
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -1408,9 +1420,9 @@ default Datastore of the Workspace is returned.</p>
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div></p>
 </details>
-      <details class="quote">
-        <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">116</span>
+          <details class="quote">
+            <summary>Source code in <code>prefect_azure/ml_datastore.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">116</span>
 <span class="normal">117</span>
 <span class="normal">118</span>
 <span class="normal">119</span>
@@ -1584,7 +1596,7 @@ default Datastore of the Workspace is returned.</p>
     <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">to_thread</span><span class="o">.</span><span class="n">run_sync</span><span class="p">(</span><span class="n">partial_upload</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div></td></tr></table></div>
-      </details>
+          </details>
   </div>
 
 </div>
@@ -1738,10 +1750,10 @@ default Datastore of the Workspace is returned.</p>
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.a51614de.min.js"></script>
+      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>

@@ -17,7 +17,7 @@
         <link rel="next" href="../container_instance_worker/">
       
       <link rel="icon" href="../img/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.19">
     
     
       
@@ -25,7 +25,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.eebd395e.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
@@ -673,7 +673,7 @@
 
 
 <h1 id="prefect_azure.container_instance" class="doc doc-heading">
-          <code>prefect_azure.container_instance</code>
+            <code>prefect_azure.container_instance</code>
 
 
 </h1>
@@ -686,6 +686,8 @@ Note this module is experimental. The interfaces within may change without notic
 <p>The <code>AzureContainerInstanceJob</code> infrastructure block in this module is ideally
 configured via the Prefect UI and run via a Prefect agent, but it can be called directly
 as demonstrated in the following examples.</p>
+
+
 
 <p><strong>Examples:</strong></p>
     <p>Run a command using an Azure Container Instances container.
@@ -743,24 +745,23 @@ as demonstrated in the following examples.</p>
 
 
 <h3 id="prefect_azure.container_instance.ACRManagedIdentity" class="doc doc-heading">
-        <code>ACRManagedIdentity</code>
+          <code>ACRManagedIdentity</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="pydantic.BaseModel">BaseModel</span></code></p>
 
   
       <p>Use a Managed Identity to access Azure Container registry. Requires the
 user-assigned managed identity be available to the ACI container group.</p>
 
-
-        <details class="quote">
-          <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
+            <details class="quote">
+              <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
 <span class="normal">143</span>
 <span class="normal">144</span>
 <span class="normal">145</span>
@@ -800,7 +801,7 @@ user-assigned managed identity be available to the ACI container group.</p>
         <span class="p">),</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+            </details>
 
   
 
@@ -827,25 +828,24 @@ user-assigned managed identity be available to the ACI container group.</p>
 
 
 <h3 id="prefect_azure.container_instance.AzureContainerInstanceJob" class="doc doc-heading">
-        <code>AzureContainerInstanceJob</code>
+          <code>AzureContainerInstanceJob</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="prefect.infrastructure.base.Infrastructure">Infrastructure</span></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="prefect.infrastructure.base.Infrastructure">Infrastructure</span></code></p>
 
   
       <p><span class="badge-api experimental"/>
 Run a command using a container on Azure Container Instances.
 Note this block is experimental. The interface may change without notice.</p>
 
-
-        <details class="quote">
-          <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">170</span>
+            <details class="quote">
+              <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">170</span>
 <span class="normal">171</span>
 <span class="normal">172</span>
 <span class="normal">173</span>
@@ -2341,7 +2341,7 @@ Note this block is experimental. The interface may change without notice.</p>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+            </details>
 
   
 
@@ -2354,6 +2354,7 @@ Note this block is experimental. The interface may change without notice.</p>
 
 
 <h4 id="prefect_azure.container_instance.AzureContainerInstanceJob-functions">Functions</h4>
+
 
 <div class="doc doc-object doc-function">
 
@@ -2372,6 +2373,8 @@ Note this block is experimental. The interface may change without notice.</p>
   <div class="doc doc-contents ">
   
       <p>Kill a flow running in an ACI container group.</p>
+
+
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -2402,9 +2405,9 @@ Note this block is experimental. The interface may change without notice.</p>
     </tbody>
   </table>
 
-      <details class="quote">
-        <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">386</span>
+          <details class="quote">
+            <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">386</span>
 <span class="normal">387</span>
 <span class="normal">388</span>
 <span class="normal">389</span>
@@ -2510,10 +2513,11 @@ Note this block is experimental. The interface may change without notice.</p>
             <span class="sa">f</span><span class="s2">&quot;but container </span><span class="si">{</span><span class="n">container</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has already terminated.&quot;</span>
         <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-      </details>
+          </details>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -2528,6 +2532,8 @@ Note this block is experimental. The interface may change without notice.</p>
   <div class="doc doc-contents ">
   
       <p>Provides a summary of how the container will be created when <code>run</code> is called.</p>
+
+
 
   <p><strong>Returns:</strong></p>
   <table>
@@ -2551,9 +2557,9 @@ Note this block is experimental. The interface may change without notice.</p>
     </tbody>
   </table>
 
-      <details class="quote">
-        <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">440</span>
+          <details class="quote">
+            <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">440</span>
 <span class="normal">441</span>
 <span class="normal">442</span>
 <span class="normal">443</span>
@@ -2589,10 +2595,11 @@ Note this block is experimental. The interface may change without notice.</p>
 
     <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">preview</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-      </details>
+          </details>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -2611,6 +2618,8 @@ Note this block is experimental. The interface may change without notice.</p>
   <div class="doc doc-contents ">
   
       <p>Runs the configured task using an ACI container.</p>
+
+
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -2640,6 +2649,8 @@ Note this block is experimental. The interface may change without notice.</p>
     </tbody>
   </table>
 
+
+
   <p><strong>Returns:</strong></p>
   <table>
     <thead>
@@ -2662,9 +2673,9 @@ Note this block is experimental. The interface may change without notice.</p>
     </tbody>
   </table>
 
-      <details class="quote">
-        <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">319</span>
+          <details class="quote">
+            <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">319</span>
 <span class="normal">320</span>
 <span class="normal">321</span>
 <span class="normal">322</span>
@@ -2796,7 +2807,7 @@ Note this block is experimental. The interface may change without notice.</p>
         <span class="n">identifier</span><span class="o">=</span><span class="n">created_container_group</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="n">status_code</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-      </details>
+          </details>
   </div>
 
 </div>
@@ -2814,23 +2825,22 @@ Note this block is experimental. The interface may change without notice.</p>
 
 
 <h3 id="prefect_azure.container_instance.AzureContainerInstanceJobResult" class="doc doc-heading">
-        <code>AzureContainerInstanceJobResult</code>
+          <code>AzureContainerInstanceJobResult</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="prefect.infrastructure.base.InfrastructureResult">InfrastructureResult</span></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="prefect.infrastructure.base.InfrastructureResult">InfrastructureResult</span></code></p>
 
   
       <p>The result of an <code>AzureContainerInstanceJob</code> run.</p>
 
-
-        <details class="quote">
-          <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
+            <details class="quote">
+              <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
 <span class="normal">165</span>
 <span class="normal">166</span>
 <span class="normal">167</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerInstanceJobResult</span><span class="p">(</span><span class="n">InfrastructureResult</span><span class="p">):</span>
@@ -2838,7 +2848,7 @@ Note this block is experimental. The interface may change without notice.</p>
 <span class="sd">    The result of an `AzureContainerInstanceJob` run.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+            </details>
 
   </div>
 
@@ -2849,24 +2859,23 @@ Note this block is experimental. The interface may change without notice.</p>
 
 
 <h3 id="prefect_azure.container_instance.ContainerGroupProvisioningState" class="doc doc-heading">
-        <code>ContainerGroupProvisioningState</code>
+          <code>ContainerGroupProvisioningState</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>str</code>, <code><span title="enum.Enum">Enum</span></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>str</code>, <code><span title="enum.Enum">Enum</span></code></p>
 
   
       <p>Terminal provisioning states for ACI container groups. Per the Azure docs,
 the states in this Enum are the only ones that can be relied on as dependencies.</p>
 
-
-        <details class="quote">
-          <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">123</span>
+            <details class="quote">
+              <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">123</span>
 <span class="normal">124</span>
 <span class="normal">125</span>
 <span class="normal">126</span>
@@ -2882,7 +2891,7 @@ the states in this Enum are the only ones that can be relied on as dependencies.
     <span class="n">SUCCEEDED</span> <span class="o">=</span> <span class="s2">&quot;Succeeded&quot;</span>
     <span class="n">FAILED</span> <span class="o">=</span> <span class="s2">&quot;Failed&quot;</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+            </details>
 
   
 
@@ -2909,23 +2918,22 @@ the states in this Enum are the only ones that can be relied on as dependencies.
 
 
 <h3 id="prefect_azure.container_instance.ContainerRunState" class="doc doc-heading">
-        <code>ContainerRunState</code>
+          <code>ContainerRunState</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>str</code>, <code><span title="enum.Enum">Enum</span></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>str</code>, <code><span title="enum.Enum">Enum</span></code></p>
 
   
       <p>Terminal run states for ACI containers.</p>
 
-
-        <details class="quote">
-          <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">133</span>
+            <details class="quote">
+              <summary>Source code in <code>prefect_azure/container_instance.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">133</span>
 <span class="normal">134</span>
 <span class="normal">135</span>
 <span class="normal">136</span>
@@ -2939,7 +2947,7 @@ the states in this Enum are the only ones that can be relied on as dependencies.
     <span class="n">RUNNING</span> <span class="o">=</span> <span class="s2">&quot;Running&quot;</span>
     <span class="n">TERMINATED</span> <span class="o">=</span> <span class="s2">&quot;Terminated&quot;</span>
 </code></pre></div></td></tr></table></div>
-        </details>
+            </details>
 
   
 
@@ -3111,10 +3119,10 @@ the states in this Enum are the only ones that can be relied on as dependencies.
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.a51614de.min.js"></script>
+      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>
