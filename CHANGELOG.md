@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## 0.2.12
+
+Released August 21st, 2023.
+
+### Fixed
+
+- Fixed misconfiguration in `AzureContainerWorker` base job template where `subnet_ids` and `dns_servers` were not included in the default base hob template variables - [#113](https://github.com/PrefectHQ/prefect-azure/pull/113/files)
+
 ## 0.2.11
 
 Released July 20th, 2023.

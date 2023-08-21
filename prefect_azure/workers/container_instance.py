@@ -471,6 +471,16 @@ class AzureContainerVariables(BaseVariables):
             "on the task definition."
         ),
     )
+    subnet_ids: Optional[List[str]] = Field(
+        title="Subnet IDs",
+        default=None,
+        description=("A list of subnet IDs to associate with the container group. "),
+    )
+    dns_servers: Optional[List[str]] = Field(
+        title="DNS Servers",
+        default=None,
+        description=("A list of DNS servers to associate with the container group."),
+    )
     aci_credentials: AzureContainerInstanceCredentials = Field(
         default_factory=AzureContainerInstanceCredentials,
         description=("The credentials to use to authenticate with Azure."),
