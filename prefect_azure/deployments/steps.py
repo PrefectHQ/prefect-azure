@@ -180,11 +180,16 @@ def pull_from_azure_blob_storage(
         )
 
     with container_client as client:
-        for blob in client.list_blobs(name_starts_with=folder):
+        for blob in client.list_blobs(name_starts_with=folder, ):
             target = PurePosixPath(
                 local_path
                 / relative_path_to_current_platform(blob.name).relative_to(folder)
             )
+            
+            # don't download a blob over a directory, otherwise it will error
+            if Path(target).is_dir():
+                continue
+            
             Path.mkdir(Path(target.parent), parents=True, exist_ok=True)
             with open(target, "wb") as f:
                 client.download_blob(blob).readinto(f)
