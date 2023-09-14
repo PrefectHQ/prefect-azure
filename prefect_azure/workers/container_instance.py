@@ -90,11 +90,11 @@ from azure.mgmt.resource.resources.models import (
 )
 from prefect import get_client
 from prefect.client.schemas import FlowRun
-from prefect.docker import get_prefect_image_name
 from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.server.schemas.core import Flow
 from prefect.server.schemas.responses import DeploymentResponse
 from prefect.utilities.asyncutils import run_sync_in_worker_thread
+from prefect.utilities.dockerutils import get_prefect_image_name
 from prefect.workers.base import (
     BaseJobConfiguration,
     BaseVariables,
@@ -210,7 +210,7 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
     entrypoint: Optional[str] = Field(default=DEFAULT_CONTAINER_ENTRYPOINT)
     image_registry: Optional[
         Union[
-            prefect.infrastructure.docker.DockerRegistry,
+            prefect.infrastructure.container.DockerRegistry,
             ACRManagedIdentity,
         ]
     ] = Field(default=None)
@@ -291,7 +291,7 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
     def _add_image_registry_credentials(
         self,
         image_registry: Union[
-            prefect.infrastructure.docker.DockerRegistry,
+            prefect.infrastructure.container.DockerRegistry,
             ACRManagedIdentity,
             None,
         ],
@@ -304,7 +304,7 @@ class AzureContainerJobConfiguration(BaseJobConfiguration):
             ACRManagedIdentity object.
         """
         if image_registry and isinstance(
-            image_registry, prefect.infrastructure.docker.DockerRegistry
+            image_registry, prefect.infrastructure.container.DockerRegistry
         ):
             self.arm_template["resources"][0]["properties"][
                 "imageRegistryCredentials"
@@ -426,7 +426,7 @@ class AzureContainerVariables(BaseVariables):
     )
     image_registry: Optional[
         Union[
-            prefect.infrastructure.docker.DockerRegistry,
+            prefect.infrastructure.container.DockerRegistry,
             ACRManagedIdentity,
         ]
     ] = Field(

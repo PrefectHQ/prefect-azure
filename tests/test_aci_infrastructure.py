@@ -15,7 +15,7 @@ from azure.mgmt.containerinstance.models import (
 )
 from azure.mgmt.resource import ResourceManagementClient
 from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
-from prefect.infrastructure.docker import DockerRegistry
+from prefect.infrastructure.container import DockerRegistry
 from prefect.settings import get_current_settings
 from pydantic import SecretStr
 

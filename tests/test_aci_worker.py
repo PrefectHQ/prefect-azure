@@ -10,12 +10,12 @@ from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 from azure.identity import ClientSecretCredential
 from azure.mgmt.resource import ResourceManagementClient
 from prefect.client.schemas import FlowRun
-from prefect.docker import get_prefect_image_name
 from prefect.exceptions import InfrastructureNotFound
-from prefect.infrastructure.docker import DockerRegistry
+from prefect.infrastructure.container import DockerRegistry
 from prefect.server.schemas.core import Flow
 from prefect.settings import get_current_settings
 from prefect.testing.utilities import AsyncMock
+from prefect.utilities.dockerutils import get_prefect_image_name
 from pydantic import SecretStr
 
 import prefect_azure.container_instance

@@ -74,7 +74,7 @@ from typing import Dict, List, Optional, Union
 
 import anyio
 import dateutil.parser
-import prefect.infrastructure.docker
+import prefect.infrastructure.container
 from anyio.abc import TaskStatus
 from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 from azure.core.polling import LROPoller
@@ -95,10 +95,10 @@ from azure.mgmt.containerinstance.models import (
     ResourceRequirements,
     UserAssignedIdentities,
 )
-from prefect.docker import get_prefect_image_name
 from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
+from prefect.utilities.dockerutils import get_prefect_image_name
 from pydantic import BaseModel, Field, SecretStr
 from slugify import slugify
 from typing_extensions import Literal
@@ -229,7 +229,7 @@ class AzureContainerInstanceJob(Infrastructure):
     )
     image_registry: Optional[
         Union[
-            prefect.infrastructure.docker.DockerRegistry,
+            prefect.infrastructure.container.DockerRegistry,
             ACRManagedIdentity,
         ]
     ] = Field(
@@ -587,7 +587,7 @@ class AzureContainerInstanceJob(Infrastructure):
     @staticmethod
     def _create_image_registry_credentials(
         image_registry: Union[
-            prefect.infrastructure.docker.DockerRegistry,
+            prefect.infrastructure.container.DockerRegistry,
             ACRManagedIdentity,
             None,
         ]
@@ -605,7 +605,7 @@ class AzureContainerInstanceJob(Infrastructure):
             input doesn't match any of the expected types.
         """
         if image_registry and isinstance(
-            image_registry, prefect.infrastructure.docker.DockerRegistry
+            image_registry, prefect.infrastructure.container.DockerRegistry
         ):
             return [
                 ImageRegistryCredential(
