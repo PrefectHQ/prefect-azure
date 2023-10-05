@@ -415,7 +415,7 @@ class AzureMlCredentials(Block):
     )
     subscription_id: str = Field(
         default=...,
-        description="The Azure subscription ID containing the workspace, in format: '00000000-0000-0000-0000-000000000000'.",
+        description="The Azure subscription ID containing the workspace, in format: '00000000-0000-0000-0000-000000000000'.",  # noqa
     )
     resource_group: str = Field(
         default=..., description="The resource group containing the workspace."
