@@ -414,7 +414,8 @@ class AzureMlCredentials(Block):
         default=..., description="The service principal password/key."
     )
     subscription_id: str = Field(
-        default=..., description="The Azure subscription ID containing the workspace, in UUID format: '00000000-0000-0000-0000-000000000000'."
+        default=...,
+        description="The Azure subscription ID containing the workspace, in format: '00000000-0000-0000-0000-000000000000'.",
     )
     resource_group: str = Field(
         default=..., description="The resource group containing the workspace."
