@@ -11,8 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Updated imports of deprecated Prefect Docker modules, bumping the minimum required Prefect version to 2.10.11 - [#118](https://github.com/PrefectHQ/prefect-azure/pull/118)
-
 ### Deprecated
 
 ### Removed
@@ -24,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 0.3.1
 
 Released October 10th, 2023.
+
+### Changed
+
+- Updated imports of deprecated Prefect Docker modules, bumping the minimum required Prefect version to 2.10.11 - [#118](https://github.com/PrefectHQ/prefect-azure/pull/118)
 
 ### Fixed
 
