@@ -7,7 +7,12 @@ from azure.identity import ClientSecretCredential, DefaultAzureCredential
 from azure.identity.aio import DefaultAzureCredential as ADefaultAzureCredential
 from azure.mgmt.containerinstance import ContainerInstanceManagementClient
 from azure.mgmt.resource import ResourceManagementClient
-from pydantic import Field, SecretStr, root_validator
+from pydantic import VERSION as PYDANTIC_VERSION
+
+if PYDANTIC_VERSION.startswith("2."):
+    from pydantic.v1 import Field, SecretStr, root_validator
+else:
+    from pydantic import Field, SecretStr, root_validator
 
 try:
     from azure.cosmos import CosmosClient
@@ -409,7 +414,8 @@ class AzureMlCredentials(Block):
         default=..., description="The service principal password/key."
     )
     subscription_id: str = Field(
-        default=..., description="The Azure subscription ID containing the workspace."
+        default=...,
+        description="The Azure subscription ID containing the workspace, in format: '00000000-0000-0000-0000-000000000000'.",  # noqa
     )
     resource_group: str = Field(
         default=..., description="The resource group containing the workspace."
