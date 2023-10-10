@@ -34,7 +34,7 @@ from pathlib import Path, PurePosixPath
 from typing import Dict, Optional
 
 from azure.identity.aio import DefaultAzureCredential
-from azure.storage.blob import ContainerClient
+from azure.storage.blob.aio import ContainerClient
 from prefect.utilities.filesystem import filter_files, relative_path_to_current_platform
 
 
