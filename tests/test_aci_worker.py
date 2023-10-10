@@ -16,7 +16,6 @@ from prefect.server.schemas.core import Flow
 from prefect.settings import get_current_settings
 from prefect.testing.utilities import AsyncMock
 from prefect.utilities.dockerutils import get_prefect_image_name
-
 from pydantic import VERSION as PYDANTIC_VERSION
 
 if PYDANTIC_VERSION.startswith("2."):
