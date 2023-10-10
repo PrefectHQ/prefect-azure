@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../img/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.4">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.5">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.bd3936ea.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.6a10b989.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.356b1318.min.css">
@@ -1001,7 +1001,7 @@ template to use any features available in Azure Container Instances.</p>
     <span class="n">entrypoint</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_CONTAINER_ENTRYPOINT</span><span class="p">)</span>
     <span class="n">image_registry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
         <span class="n">Union</span><span class="p">[</span>
-            <span class="n">prefect</span><span class="o">.</span><span class="n">infrastructure</span><span class="o">.</span><span class="n">docker</span><span class="o">.</span><span class="n">DockerRegistry</span><span class="p">,</span>
+            <span class="n">prefect</span><span class="o">.</span><span class="n">infrastructure</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">DockerRegistry</span><span class="p">,</span>
             <span class="n">ACRManagedIdentity</span><span class="p">,</span>
         <span class="p">]</span>
     <span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -1082,7 +1082,7 @@ template to use any features available in Azure Container Instances.</p>
     <span class="k">def</span> <span class="nf">_add_image_registry_credentials</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">image_registry</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
-            <span class="n">prefect</span><span class="o">.</span><span class="n">infrastructure</span><span class="o">.</span><span class="n">docker</span><span class="o">.</span><span class="n">DockerRegistry</span><span class="p">,</span>
+            <span class="n">prefect</span><span class="o">.</span><span class="n">infrastructure</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">DockerRegistry</span><span class="p">,</span>
             <span class="n">ACRManagedIdentity</span><span class="p">,</span>
             <span class="kc">None</span><span class="p">,</span>
         <span class="p">],</span>
@@ -1095,7 +1095,7 @@ template to use any features available in Azure Container Instances.</p>
 <span class="sd">            ACRManagedIdentity object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">image_registry</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="n">image_registry</span><span class="p">,</span> <span class="n">prefect</span><span class="o">.</span><span class="n">infrastructure</span><span class="o">.</span><span class="n">docker</span><span class="o">.</span><span class="n">DockerRegistry</span>
+            <span class="n">image_registry</span><span class="p">,</span> <span class="n">prefect</span><span class="o">.</span><span class="n">infrastructure</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">DockerRegistry</span>
         <span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">arm_template</span><span class="p">[</span><span class="s2">&quot;resources&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span>
                 <span class="s2">&quot;imageRegistryCredentials&quot;</span>
@@ -1497,7 +1497,7 @@ template to use any features available in Azure Container Instances.</p>
     <span class="p">)</span>
     <span class="n">image_registry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
         <span class="n">Union</span><span class="p">[</span>
-            <span class="n">prefect</span><span class="o">.</span><span class="n">infrastructure</span><span class="o">.</span><span class="n">docker</span><span class="o">.</span><span class="n">DockerRegistry</span><span class="p">,</span>
+            <span class="n">prefect</span><span class="o">.</span><span class="n">infrastructure</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">DockerRegistry</span><span class="p">,</span>
             <span class="n">ACRManagedIdentity</span><span class="p">,</span>
         <span class="p">]</span>
     <span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -3377,7 +3377,7 @@ the states in this Enum are the only ones that can be relied on as dependencies.
     <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.94c44541.min.js"></script>
+      <script src="../assets/javascripts/bundle.aecac24b.min.js"></script>
       
     
   </body>
