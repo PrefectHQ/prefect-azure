@@ -11,8 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Updated imports of deprecated Prefect Docker modules, bumping the minimum required Prefect version to 2.10.11 - [#118](https://github.com/PrefectHQ/prefect-azure/pull/118)
-
 ### Deprecated
 
 ### Removed
@@ -20,6 +18,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
+
+## 0.3.1
+
+Released October 10th, 2023.
+
+### Changed
+
+- Updated imports of deprecated Prefect Docker modules, bumping the minimum required Prefect version to 2.10.11 - [#118](https://github.com/PrefectHQ/prefect-azure/pull/118)
+
+### Fixed
+
+- Fixed errors when using deployment steps with `account_url` - [#121](https://github.com/PrefectHQ/prefect-azure/pull/121)
+
+## 0.3.0
+
+Released October 5th, 2023.
+
+### Changed
+
+- Added conditional import to support operating with pydantic>2 installed - [#119](https://github.com/PrefectHQ/prefect-azure/pull/119)
+- Updated subscription ID description to contain the expected format - [#120](https://github.com/PrefectHQ/prefect-azure/pull/120)
 
 ## 0.2.12
 
