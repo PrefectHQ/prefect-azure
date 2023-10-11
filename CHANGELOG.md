@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Worker created deployments will cut flow name length to not reach max 64 character deployment name length
+
 ### Deprecated
 
 ### Removed
