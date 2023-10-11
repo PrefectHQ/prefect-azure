@@ -69,6 +69,8 @@ to poll for flow runs.
     template to use any features available in Azure Container Instances.
 """  # noqa
 import datetime
+import random
+import string
 import sys
 import time
 from enum import Enum
@@ -107,6 +109,8 @@ if PYDANTIC_VERSION.startswith("2."):
     from pydantic.v1 import Field, SecretStr
 else:
     from pydantic import Field, SecretStr
+
+from slugify import slugify
 
 from prefect_azure.container_instance import ACRManagedIdentity
 from prefect_azure.credentials import AzureContainerInstanceCredentials
@@ -565,6 +569,16 @@ class AzureContainerWorker(BaseWorker):
         # to make it easier to identify and debug.
         flow = await prefect_client.read_flow(flow_run.flow_id)
         container_group_name = f"{flow.name}-{flow_run.id}"
+
+        # Slugify flow.name if the generated name will be too long for the
+        # max deployment name length (64) including "prefect-"
+        if len(container_group_name) > 55:
+            slugified_flow_name = slugify(
+                flow.name,
+                max_length=55 - len(flow_run.id),
+                regex_pattern=r"[^a-zA-Z0-9-]+",
+            )
+            container_group_name = f"{slugified_flow_name}-{flow_run.id}"
 
         self._logger.info(
             f"{self._log_prefix}: Preparing to run command {configuration.command} "
