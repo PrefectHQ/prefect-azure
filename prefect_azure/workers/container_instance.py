@@ -69,8 +69,6 @@ to poll for flow runs.
     template to use any features available in Azure Container Instances.
 """  # noqa
 import datetime
-import random
-import string
 import sys
 import time
 from enum import Enum
