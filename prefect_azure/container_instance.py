@@ -65,10 +65,12 @@ Examples:
 import datetime
 import json
 import random
+import shlex
 import string
 import sys
 import time
 import uuid
+from copy import deepcopy
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
@@ -95,6 +97,7 @@ from azure.mgmt.containerinstance.models import (
     ResourceRequirements,
     UserAssignedIdentities,
 )
+from prefect.blocks.core import BlockNotSavedError
 from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFound
 from prefect.infrastructure.base import Infrastructure, InfrastructureResult
 from prefect.utilities.asyncutils import run_sync_in_worker_thread, sync_compatible
@@ -461,6 +464,81 @@ class AzureContainerInstanceJob(Infrastructure):
         }
 
         return json.dumps(preview)
+
+    def get_corresponding_worker_type(self) -> str:
+        """Return the corresponding worker type for this infrastructure block."""
+        from prefect_azure.workers.container_instance import AzureContainerWorker
+
+        return AzureContainerWorker.type
+
+    async def generate_work_pool_base_job_template(self) -> dict:
+        """
+        Generate a base job template for a cloud-run work pool with the same
+        configuration as this block.
+        Returns:
+            - dict: a base job template for a cloud-run work pool
+        """
+        from prefect_azure.workers.container_instance import AzureContainerWorker
+
+        base_job_template = deepcopy(
+            AzureContainerWorker.get_default_base_job_template()
+        )
+        for key, value in self.dict(exclude_unset=True, exclude_defaults=True).items():
+            if key == "command":
+                base_job_template["variables"]["properties"]["command"][
+                    "default"
+                ] = shlex.join(value)
+            elif key in [
+                "type",
+                "block_type_slug",
+                "_block_document_id",
+                "_block_document_name",
+                "_is_anonymous",
+            ]:
+                continue
+            elif key == "subscription_id":
+                base_job_template["variables"]["properties"]["subscription_id"][
+                    "default"
+                ] = value.get_secret_value()
+            elif key == "aci_credentials":
+                if not self.aci_credentials._block_document_id:
+                    raise BlockNotSavedError(
+                        "It looks like you are trying to use a block that"
+                        " has not been saved. Please call `.save` on your block"
+                        " before publishing it as a work pool."
+                    )
+                base_job_template["variables"]["properties"]["aci_credentials"][
+                    "default"
+                ] = {
+                    "$ref": {
+                        "block_document_id": str(
+                            self.aci_credentials._block_document_id
+                        )
+                    }
+                }
+            elif key == "image_registry":
+                if not self.image_registry._block_document_id:
+                    raise BlockNotSavedError(
+                        "It looks like you are trying to use a block that"
+                        " has not been saved. Please call `.save` on your block"
+                        " before publishing it as a work pool."
+                    )
+                base_job_template["variables"]["properties"]["image_registry"][
+                    "default"
+                ] = {
+                    "$ref": {
+                        "block_document_id": str(self.image_registry._block_document_id)
+                    }
+                }
+            elif key in base_job_template["variables"]["properties"]:
+                base_job_template["variables"]["properties"][key]["default"] = value
+            else:
+                self.logger.warning(
+                    f"Variable {key!r} is not supported by Cloud Run work pools."
+                    " Skipping."
+                )
+
+        return base_job_template
 
     def _configure_container(self) -> Container:
         """
