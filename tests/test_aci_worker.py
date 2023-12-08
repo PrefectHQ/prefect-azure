@@ -181,13 +181,7 @@ def aci_credentials(monkeypatch):
 
 @pytest.fixture
 async def aci_worker(mock_prefect_client, monkeypatch):
-    monkeypatch.setattr(
-        prefect_azure.workers.container_instance,
-        "get_client",
-        Mock(return_value=mock_prefect_client),
-    )
-    async with AzureContainerWorker(work_pool_name="test_pool") as worker:
-        yield worker
+    return AzureContainerWorker(work_pool_name="test_pool")
 
 
 @pytest.fixture()
