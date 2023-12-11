@@ -21,6 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## 0.3.3
+
+Released December 11th, 2023.
+
+### Added
+
+- Ability to publish `AzureContainerInstanceJob` blocks as an azure-container-instance work pool - [#130](https://github.com/PrefectHQ/prefect-azure/pull/130)
+
 ## 0.3.1
 
 Released October 10th, 2023.
