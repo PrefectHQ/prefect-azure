@@ -473,10 +473,10 @@ class AzureContainerInstanceJob(Infrastructure):
 
     async def generate_work_pool_base_job_template(self) -> dict:
         """
-        Generate a base job template for a cloud-run work pool with the same
+        Generate a base job template for an `Azure Container Instance` work pool with the same
         configuration as this block.
         Returns:
-            - dict: a base job template for a cloud-run work pool
+            - dict: a base job template for an `Azure Container Instance` work pool
         """
         from prefect_azure.workers.container_instance import AzureContainerWorker
 
@@ -534,7 +534,7 @@ class AzureContainerInstanceJob(Infrastructure):
                 base_job_template["variables"]["properties"][key]["default"] = value
             else:
                 self.logger.warning(
-                    f"Variable {key!r} is not supported by Cloud Run work pools."
+                    f"Variable {key!r} is not supported by `Azure Container Instance` work pools."
                     " Skipping."
                 )
 
