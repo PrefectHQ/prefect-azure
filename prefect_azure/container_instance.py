@@ -475,7 +475,7 @@ class AzureContainerInstanceJob(Infrastructure):
         """
         Generate a base job template for an `Azure Container Instance` work pool
         with the same configuration as this block.
-        
+
         Returns:
             - dict: a base job template for an `Azure Container Instance` work pool
         """
