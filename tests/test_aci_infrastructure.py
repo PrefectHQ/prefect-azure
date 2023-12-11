@@ -1,5 +1,6 @@
 import json
 import uuid
+from copy import deepcopy
 from typing import Dict, List, Tuple, Union
 from unittest.mock import MagicMock, Mock
 
@@ -18,6 +19,8 @@ from prefect.exceptions import InfrastructureNotAvailable, InfrastructureNotFoun
 from prefect.infrastructure.container import DockerRegistry
 from prefect.settings import get_current_settings
 from pydantic import VERSION as PYDANTIC_VERSION
+
+from prefect_azure.workers.container_instance import AzureContainerWorker
 
 if PYDANTIC_VERSION.startswith("2."):
     from pydantic.v1 import SecretStr
@@ -93,6 +96,7 @@ def aci_credentials():
     credentials = AzureContainerInstanceCredentials(
         client_id=client_id, client_secret=client_secret, tenant_id=tenant_id
     )
+    credentials.save("test-block", overwrite=True)
     return credentials
 
 
@@ -534,9 +538,9 @@ def test_preview(aci_credentials):
 
     preview = json.loads(block.preview())
 
-    for (k, v) in block_args.items():
+    for k, v in block_args.items():
         if k == "env":
-            for (k2, v2) in block_args["env"].items():
+            for k2, v2 in block_args["env"].items():
                 assert preview[k][k2] == block_args["env"][k2]
 
         else:
@@ -925,3 +929,146 @@ def test_azure_container_instance_job_default_factory():
         subscription_id="test_sub_id",
     )
     assert isinstance(instance_job.aci_credentials, AzureContainerInstanceCredentials)
+
+
+@pytest.fixture
+def default_base_job_template():
+    return deepcopy(AzureContainerWorker.get_default_base_job_template())
+
+
+@pytest.fixture
+def base_job_template_with_defaults(
+    default_base_job_template, aci_credentials, image_registry_block
+):
+    base_job_template_with_defaults = deepcopy(default_base_job_template)
+    base_job_template_with_defaults["variables"]["properties"]["command"][
+        "default"
+    ] = "python my_script.py"
+    base_job_template_with_defaults["variables"]["properties"]["env"]["default"] = {
+        "VAR1": "value1",
+        "VAR2": "value2",
+    }
+    base_job_template_with_defaults["variables"]["properties"]["labels"]["default"] = {
+        "label1": "value1",
+        "label2": "value2",
+    }
+    base_job_template_with_defaults["variables"]["properties"]["name"][
+        "default"
+    ] = "prefect-job"
+    base_job_template_with_defaults["variables"]["properties"]["image"][
+        "default"
+    ] = "docker.io/my_image:latest"
+    base_job_template_with_defaults["variables"]["properties"]["resource_group_name"][
+        "default"
+    ] = "testgroup"
+    base_job_template_with_defaults["variables"]["properties"]["subscription_id"][
+        "default"
+    ] = "subid"
+    base_job_template_with_defaults["variables"]["properties"]["aci_credentials"][
+        "default"
+    ] = {"$ref": {"block_document_id": str(aci_credentials._block_document_id)}}
+    base_job_template_with_defaults["variables"]["properties"]["identities"][
+        "default"
+    ] = ["/my/managed_identity/one", "/my/managed_identity/two"]
+    base_job_template_with_defaults["variables"]["properties"]["entrypoint"][
+        "default"
+    ] = "/test/entrypoint.sh"
+    base_job_template_with_defaults["variables"]["properties"]["image_registry"][
+        "default"
+    ] = {"$ref": {"block_document_id": str(image_registry_block._block_document_id)}}
+    base_job_template_with_defaults["variables"]["properties"]["cpu"]["default"] = 2.0
+    base_job_template_with_defaults["variables"]["properties"]["gpu_count"][
+        "default"
+    ] = 1
+    base_job_template_with_defaults["variables"]["properties"]["gpu_sku"][
+        "default"
+    ] = "V100"
+    base_job_template_with_defaults["variables"]["properties"]["memory"][
+        "default"
+    ] = 3.0
+    base_job_template_with_defaults["variables"]["properties"]["subnet_ids"][
+        "default"
+    ] = ["subnet1", "subnet2", "subnet3"]
+    base_job_template_with_defaults["variables"]["properties"]["dns_servers"][
+        "default"
+    ] = ["dns1", "dns2", "dns3"]
+    base_job_template_with_defaults["variables"]["properties"]["stream_output"][
+        "default"
+    ] = True
+    base_job_template_with_defaults["variables"]["properties"][
+        "task_start_timeout_seconds"
+    ]["default"] = 120
+    base_job_template_with_defaults["variables"]["properties"][
+        "task_watch_poll_interval"
+    ]["default"] = 0.1
+    return base_job_template_with_defaults
+
+
+@pytest.fixture
+async def image_registry_block():
+    block = DockerRegistry(
+        username="username",
+        password="password",
+        registry_url="https://myregistry.dockerhub.com",
+    )
+    await block.save("test-for-publish", overwrite=True)
+    return block
+
+
+@pytest.mark.parametrize(
+    "job_config",
+    [
+        "default",
+        "custom",
+    ],
+)
+async def test_generate_work_pool_base_job_template(
+    job_config,
+    base_job_template_with_defaults,
+    aci_credentials,
+    default_base_job_template,
+    image_registry_block,
+):
+    job = AzureContainerInstanceJob(
+        aci_credentials=aci_credentials,
+        resource_group_name="testgroup",
+        subscription_id="subid",
+    )
+    expected_template = default_base_job_template
+    default_base_job_template["variables"]["properties"]["resource_group_name"][
+        "default"
+    ] = "testgroup"
+    default_base_job_template["variables"]["properties"]["subscription_id"][
+        "default"
+    ] = "subid"
+    default_base_job_template["variables"]["properties"]["aci_credentials"][
+        "default"
+    ] = {"$ref": {"block_document_id": str(aci_credentials._block_document_id)}}
+    if job_config == "custom":
+        expected_template = base_job_template_with_defaults
+        job = AzureContainerInstanceJob(
+            command=["python", "my_script.py"],
+            env={"VAR1": "value1", "VAR2": "value2"},
+            labels={"label1": "value1", "label2": "value2"},
+            name="prefect-job",
+            image="docker.io/my_image:latest",
+            aci_credentials=aci_credentials,
+            resource_group_name="testgroup",
+            subscription_id="subid",
+            identities=["/my/managed_identity/one", "/my/managed_identity/two"],
+            entrypoint="/test/entrypoint.sh",
+            image_registry=image_registry_block,
+            cpu=2.0,
+            gpu_count=1,
+            gpu_sku="V100",
+            memory=3.0,
+            subnet_ids=["subnet1", "subnet2", "subnet3"],
+            dns_servers=["dns1", "dns2", "dns3"],
+            stream_output=True,
+            task_start_timeout_seconds=120,
+            task_watch_poll_interval=0.1,
+        )
+
+    template = await job.generate_work_pool_base_job_template()
+
+    assert template == expected_template
