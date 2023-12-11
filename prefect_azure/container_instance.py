@@ -535,7 +535,7 @@ class AzureContainerInstanceJob(Infrastructure):
                 base_job_template["variables"]["properties"][key]["default"] = value
             else:
                 self.logger.warning(
-                    f"Variable {key!r} is not supported by `Azure Container Instance`
+                    f"Variable {key!r} is not supported by `Azure Container Instance`"
                     " work pools. Skipping."
                 )
 
