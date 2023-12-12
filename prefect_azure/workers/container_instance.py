@@ -528,17 +528,12 @@ class AzureContainerWorker(BaseWorker):
     type = "azure-container-instance"
     job_configuration = AzureContainerJobConfiguration
     job_configuration_variables = AzureContainerVariables
-    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+    _logo_url = "https://cdn.sanity.io/images/3ugk85nk/production/54e3fa7e00197a4fbd1d82ed62494cb58d08c96a-250x250.png"  # noqa
     _display_name = "Azure Container Instances"
     _description = (
         "Execute flow runs within containers on Azure's Container Instances "
         "service. Requires an Azure account."
     )
-    _documentation_url = (
-        "https://prefecthq.github.io/prefect-azure/container_instance_worker/"
-    )
-
-    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
     _documentation_url = (
         "https://prefecthq.github.io/prefect-azure/container_instance_worker/"
     )
