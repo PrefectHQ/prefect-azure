@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="../../img/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.2">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.6">
     
     
       
@@ -104,7 +104,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="prefect-azure" class="md-header__button md-logo" aria-label="prefect-azure" data-md-component="logo">
       
-  <img src="../../img/prefect-logo-mark-solid-white-500.png" alt="logo">
+  <img src="../../img/prefect-logo-mark.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -246,7 +246,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="prefect-azure" class="md-nav__button md-logo" aria-label="prefect-azure" data-md-component="logo">
       
-  <img src="../../img/prefect-logo-mark-solid-white-500.png" alt="logo">
+  <img src="../../img/prefect-logo-mark.png" alt="logo">
 
     </a>
     prefect-azure
@@ -505,7 +505,7 @@
         <li class="md-nav__item">
   <a href="#prefect_azure.deployments.steps.pull_from_azure_blob_storage" class="md-nav__link">
     <span class="md-ellipsis">
-      pull_from_azure_blob_storage()
+      pull_from_azure_blob_storage
     </span>
   </a>
   
@@ -514,7 +514,7 @@
         <li class="md-nav__item">
   <a href="#prefect_azure.deployments.steps.push_to_azure_blob_storage" class="md-nav__link">
     <span class="md-ellipsis">
-      push_to_azure_blob_storage()
+      push_to_azure_blob_storage
     </span>
   </a>
   
@@ -572,7 +572,7 @@
         <li class="md-nav__item">
   <a href="#prefect_azure.deployments.steps.pull_from_azure_blob_storage" class="md-nav__link">
     <span class="md-ellipsis">
-      pull_from_azure_blob_storage()
+      pull_from_azure_blob_storage
     </span>
   </a>
   
@@ -581,7 +581,7 @@
         <li class="md-nav__item">
   <a href="#prefect_azure.deployments.steps.push_to_azure_blob_storage" class="md-nav__link">
     <span class="md-ellipsis">
-      push_to_azure_blob_storage()
+      push_to_azure_blob_storage
     </span>
   </a>
   
@@ -640,6 +640,10 @@ from an Azure Blob Storage container:</p>
 <span class="w">        </span><span class="nt">credentials</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">prefect.blocks.azure-blob-storage-credentials.dev-credentials</span><span class="nv"> </span><span class="s">}}&quot;</span>
 </code></pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Azure Storage account needs to have Hierarchical Namespace disabled.</p>
+</div>
 <p>For more information about using deployment steps, check out out the Prefect <a href="https://docs.prefect.io/latest/concepts/projects/#the-prefect-yaml-file">docs</a>.</p>
 
   
@@ -656,7 +660,6 @@ from an Azure Blob Storage container:</p>
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -730,6 +733,10 @@ account url. If both are provided, <code>connection_string</code> will be used.<
     </tbody>
   </table>
 
+<details class="note" open>
+  <summary>Note</summary>
+  <p>Azure Storage account needs to have Hierarchical Namespace disabled.</p>
+</details>
 <details class="example" open>
   <summary>Example</summary>
   <p>Pull from an Azure Blob Storage container using credentials stored in
@@ -754,10 +761,7 @@ default credentials:
 </details>
           <details class="quote">
             <summary>Source code in <code>prefect_azure/deployments/steps.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">130</span>
 <span class="normal">131</span>
 <span class="normal">132</span>
 <span class="normal">133</span>
@@ -823,7 +827,13 @@ default credentials:
 <span class="normal">193</span>
 <span class="normal">194</span>
 <span class="normal">195</span>
-<span class="normal">196</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">pull_from_azure_blob_storage</span><span class="p">(</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">pull_from_azure_blob_storage</span><span class="p">(</span>
     <span class="n">container</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">credentials</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
@@ -837,6 +847,9 @@ default credentials:
 <span class="sd">        credentials: A dictionary of credentials with keys `connection_string` or</span>
 <span class="sd">            `account_url` and values of the corresponding connection string or</span>
 <span class="sd">            account url. If both are provided, `connection_string` will be used.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Azure Storage account needs to have Hierarchical Namespace disabled.</span>
 
 <span class="sd">    Example:</span>
 <span class="sd">        Pull from an Azure Blob Storage container using credentials stored in</span>
@@ -901,7 +914,6 @@ default credentials:
 
 
 <div class="doc doc-object doc-function">
-
 
 
 
@@ -1015,10 +1027,7 @@ default credentials:
 </details>
           <details class="quote">
             <summary>Source code in <code>prefect_azure/deployments/steps.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 41</span>
-<span class="normal"> 42</span>
-<span class="normal"> 43</span>
-<span class="normal"> 44</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 44</span>
 <span class="normal"> 45</span>
 <span class="normal"> 46</span>
 <span class="normal"> 47</span>
@@ -1098,7 +1107,10 @@ default credentials:
 <span class="normal">121</span>
 <span class="normal">122</span>
 <span class="normal">123</span>
-<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">push_to_azure_blob_storage</span><span class="p">(</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">push_to_azure_blob_storage</span><span class="p">(</span>
     <span class="n">container</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">credentials</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
@@ -1346,10 +1358,10 @@ default credentials:
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      <script src="../../assets/javascripts/bundle.e1c3ead8.min.js"></script>
       
     
   </body>

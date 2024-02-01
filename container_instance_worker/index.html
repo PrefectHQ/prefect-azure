@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../img/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.2">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.6">
     
     
       
@@ -106,7 +106,7 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href=".." title="prefect-azure" class="md-header__button md-logo" aria-label="prefect-azure" data-md-component="logo">
       
-  <img src="../img/prefect-logo-mark-solid-white-500.png" alt="logo">
+  <img src="../img/prefect-logo-mark.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -248,7 +248,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href=".." title="prefect-azure" class="md-nav__button md-logo" aria-label="prefect-azure" data-md-component="logo">
       
-  <img src="../img/prefect-logo-mark-solid-white-500.png" alt="logo">
+  <img src="../img/prefect-logo-mark.png" alt="logo">
 
     </a>
     prefect-azure
@@ -458,7 +458,7 @@
           <li class="md-nav__item">
   <a href="#prefect_azure.workers.container_instance.AzureContainerJobConfiguration.prepare_for_flow_run" class="md-nav__link">
     <span class="md-ellipsis">
-      prepare_for_flow_run()
+      prepare_for_flow_run
     </span>
   </a>
   
@@ -491,7 +491,7 @@
           <li class="md-nav__item">
   <a href="#prefect_azure.workers.container_instance.AzureContainerWorker.kill_infrastructure" class="md-nav__link">
     <span class="md-ellipsis">
-      kill_infrastructure()
+      kill_infrastructure
     </span>
   </a>
   
@@ -500,7 +500,7 @@
           <li class="md-nav__item">
   <a href="#prefect_azure.workers.container_instance.AzureContainerWorker.run" class="md-nav__link">
     <span class="md-ellipsis">
-      run()
+      run
     </span>
   </a>
   
@@ -657,7 +657,7 @@
           <li class="md-nav__item">
   <a href="#prefect_azure.workers.container_instance.AzureContainerJobConfiguration.prepare_for_flow_run" class="md-nav__link">
     <span class="md-ellipsis">
-      prepare_for_flow_run()
+      prepare_for_flow_run
     </span>
   </a>
   
@@ -690,7 +690,7 @@
           <li class="md-nav__item">
   <a href="#prefect_azure.workers.container_instance.AzureContainerWorker.kill_infrastructure" class="md-nav__link">
     <span class="md-ellipsis">
-      kill_infrastructure()
+      kill_infrastructure
     </span>
   </a>
   
@@ -699,7 +699,7 @@
           <li class="md-nav__item">
   <a href="#prefect_azure.workers.container_instance.AzureContainerWorker.run" class="md-nav__link">
     <span class="md-ellipsis">
-      run()
+      run
     </span>
   </a>
   
@@ -841,7 +841,6 @@ template to use any features available in Azure Container Instances.</p>
 
 
 
-
 <h2 id="prefect_azure.workers.container_instance.AzureContainerJobConfiguration" class="doc doc-heading">
           <code>AzureContainerJobConfiguration</code>
 
@@ -858,9 +857,7 @@ template to use any features available in Azure Container Instances.</p>
 
             <details class="quote">
               <summary>Source code in <code>prefect_azure/workers/container_instance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">208</span>
 <span class="normal">209</span>
 <span class="normal">210</span>
 <span class="normal">211</span>
@@ -1038,7 +1035,9 @@ template to use any features available in Azure Container Instances.</p>
 <span class="normal">383</span>
 <span class="normal">384</span>
 <span class="normal">385</span>
-<span class="normal">386</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerJobConfiguration</span><span class="p">(</span><span class="n">BaseJobConfiguration</span><span class="p">):</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerJobConfiguration</span><span class="p">(</span><span class="n">BaseJobConfiguration</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configuration for an Azure Container Instance flow run.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1239,7 +1238,6 @@ template to use any features available in Azure Container Instances.</p>
 
 
 
-
 <h3 id="prefect_azure.workers.container_instance.AzureContainerJobConfiguration.prepare_for_flow_run" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">prepare_for_flow_run</span><span class="p">(</span><span class="n">flow_run</span><span class="p">,</span> <span class="n">deployment</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flow</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
@@ -1252,9 +1250,7 @@ template to use any features available in Azure Container Instances.</p>
 
           <details class="quote">
             <summary>Source code in <code>prefect_azure/workers/container_instance.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">241</span>
 <span class="normal">242</span>
 <span class="normal">243</span>
 <span class="normal">244</span>
@@ -1296,7 +1292,9 @@ template to use any features available in Azure Container Instances.</p>
 <span class="normal">280</span>
 <span class="normal">281</span>
 <span class="normal">282</span>
-<span class="normal">283</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">prepare_for_flow_run</span><span class="p">(</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">prepare_for_flow_run</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">flow_run</span><span class="p">:</span> <span class="s2">&quot;FlowRun&quot;</span><span class="p">,</span>
     <span class="n">deployment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;DeploymentResponse&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1353,10 +1351,10 @@ template to use any features available in Azure Container Instances.</p>
 
   </div>
 
+
 </div>
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1376,9 +1374,7 @@ template to use any features available in Azure Container Instances.</p>
 
             <details class="quote">
               <summary>Source code in <code>prefect_azure/workers/container_instance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">391</span>
 <span class="normal">392</span>
 <span class="normal">393</span>
 <span class="normal">394</span>
@@ -1501,7 +1497,9 @@ template to use any features available in Azure Container Instances.</p>
 <span class="normal">511</span>
 <span class="normal">512</span>
 <span class="normal">513</span>
-<span class="normal">514</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerVariables</span><span class="p">(</span><span class="n">BaseVariables</span><span class="p">):</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerVariables</span><span class="p">(</span><span class="n">BaseVariables</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Variables for an Azure Container Instance flow run.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1648,10 +1646,10 @@ template to use any features available in Azure Container Instances.</p>
 
   </div>
 
+
 </div>
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -1671,9 +1669,7 @@ template to use any features available in Azure Container Instances.</p>
 
             <details class="quote">
               <summary>Source code in <code>prefect_azure/workers/container_instance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 521</span>
-<span class="normal"> 522</span>
-<span class="normal"> 523</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 523</span>
 <span class="normal"> 524</span>
 <span class="normal"> 525</span>
 <span class="normal"> 526</span>
@@ -2196,7 +2192,14 @@ template to use any features available in Azure Container Instances.</p>
 <span class="normal">1043</span>
 <span class="normal">1044</span>
 <span class="normal">1045</span>
-<span class="normal">1046</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerWorker</span><span class="p">(</span><span class="n">BaseWorker</span><span class="p">):</span>
+<span class="normal">1046</span>
+<span class="normal">1047</span>
+<span class="normal">1048</span>
+<span class="normal">1049</span>
+<span class="normal">1050</span>
+<span class="normal">1051</span>
+<span class="normal">1052</span>
+<span class="normal">1053</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerWorker</span><span class="p">(</span><span class="n">BaseWorker</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A Prefect worker that runs flows in an Azure Container Instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2204,17 +2207,12 @@ template to use any features available in Azure Container Instances.</p>
     <span class="nb">type</span> <span class="o">=</span> <span class="s2">&quot;azure-container-instance&quot;</span>
     <span class="n">job_configuration</span> <span class="o">=</span> <span class="n">AzureContainerJobConfiguration</span>
     <span class="n">job_configuration_variables</span> <span class="o">=</span> <span class="n">AzureContainerVariables</span>
-    <span class="n">_logo_url</span> <span class="o">=</span> <span class="s2">&quot;https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250&quot;</span>  <span class="c1"># noqa</span>
+    <span class="n">_logo_url</span> <span class="o">=</span> <span class="s2">&quot;https://cdn.sanity.io/images/3ugk85nk/production/54e3fa7e00197a4fbd1d82ed62494cb58d08c96a-250x250.png&quot;</span>  <span class="c1"># noqa</span>
     <span class="n">_display_name</span> <span class="o">=</span> <span class="s2">&quot;Azure Container Instances&quot;</span>
     <span class="n">_description</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">&quot;Execute flow runs within containers on Azure&#39;s Container Instances &quot;</span>
         <span class="s2">&quot;service. Requires an Azure account.&quot;</span>
     <span class="p">)</span>
-    <span class="n">_documentation_url</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s2">&quot;https://prefecthq.github.io/prefect-azure/container_instance_worker/&quot;</span>
-    <span class="p">)</span>
-
-    <span class="n">_logo_url</span> <span class="o">=</span> <span class="s2">&quot;https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250&quot;</span>  <span class="c1"># noqa</span>
     <span class="n">_documentation_url</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">&quot;https://prefecthq.github.io/prefect-azure/container_instance_worker/&quot;</span>
     <span class="p">)</span>
@@ -2243,6 +2241,16 @@ template to use any features available in Azure Container Instances.</p>
         <span class="c1"># to make it easier to identify and debug.</span>
         <span class="n">flow</span> <span class="o">=</span> <span class="k">await</span> <span class="n">prefect_client</span><span class="o">.</span><span class="n">read_flow</span><span class="p">(</span><span class="n">flow_run</span><span class="o">.</span><span class="n">flow_id</span><span class="p">)</span>
         <span class="n">container_group_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">flow</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">flow_run</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Slugify flow.name if the generated name will be too long for the</span>
+        <span class="c1"># max deployment name length (64) including &quot;prefect-&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">container_group_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">55</span><span class="p">:</span>
+            <span class="n">slugified_flow_name</span> <span class="o">=</span> <span class="n">slugify</span><span class="p">(</span>
+                <span class="n">flow</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">max_length</span><span class="o">=</span><span class="mi">55</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">flow_run</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                <span class="n">regex_pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;[^a-zA-Z0-9-]+&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">container_group_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">slugified_flow_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">flow_run</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_prefix</span><span class="si">}</span><span class="s2">: Preparing to run command </span><span class="si">{</span><span class="n">configuration</span><span class="o">.</span><span class="n">command</span><span class="si">}</span><span class="s2"> &quot;</span>
@@ -2742,7 +2750,6 @@ template to use any features available in Azure Container Instances.</p>
 
 
 
-
 <h3 id="prefect_azure.workers.container_instance.AzureContainerWorker.kill_infrastructure" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">kill_infrastructure</span><span class="p">(</span><span class="n">infrastructure_pid</span><span class="p">,</span> <span class="n">configuration</span><span class="p">)</span></code>
   
@@ -2804,14 +2811,7 @@ template to use any features available in Azure Container Instances.</p>
 
           <details class="quote">
             <summary>Source code in <code>prefect_azure/workers/container_instance.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">622</span>
-<span class="normal">623</span>
-<span class="normal">624</span>
-<span class="normal">625</span>
-<span class="normal">626</span>
-<span class="normal">627</span>
-<span class="normal">628</span>
-<span class="normal">629</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">629</span>
 <span class="normal">630</span>
 <span class="normal">631</span>
 <span class="normal">632</span>
@@ -2852,7 +2852,14 @@ template to use any features available in Azure Container Instances.</p>
 <span class="normal">667</span>
 <span class="normal">668</span>
 <span class="normal">669</span>
-<span class="normal">670</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">async</span> <span class="k">def</span> <span class="nf">kill_infrastructure</span><span class="p">(</span>
+<span class="normal">670</span>
+<span class="normal">671</span>
+<span class="normal">672</span>
+<span class="normal">673</span>
+<span class="normal">674</span>
+<span class="normal">675</span>
+<span class="normal">676</span>
+<span class="normal">677</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">async</span> <span class="k">def</span> <span class="nf">kill_infrastructure</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">infrastructure_pid</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">configuration</span><span class="p">:</span> <span class="n">AzureContainerJobConfiguration</span><span class="p">,</span>
@@ -2912,7 +2919,6 @@ template to use any features available in Azure Container Instances.</p>
 
 
 
-
 <h3 id="prefect_azure.workers.container_instance.AzureContainerWorker.run" class="doc doc-heading">
           <code class="highlight language-python"><span class="n">run</span><span class="p">(</span><span class="n">flow_run</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">task_status</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
   
@@ -2957,7 +2963,10 @@ Args:
 
           <details class="quote">
             <summary>Source code in <code>prefect_azure/workers/container_instance.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">544</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
 <span class="normal">545</span>
 <span class="normal">546</span>
 <span class="normal">547</span>
@@ -3033,7 +3042,14 @@ Args:
 <span class="normal">617</span>
 <span class="normal">618</span>
 <span class="normal">619</span>
-<span class="normal">620</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">async</span> <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">async</span> <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">flow_run</span><span class="p">:</span> <span class="n">FlowRun</span><span class="p">,</span>
     <span class="n">configuration</span><span class="p">:</span> <span class="n">AzureContainerJobConfiguration</span><span class="p">,</span>
@@ -3057,6 +3073,16 @@ Args:
     <span class="c1"># to make it easier to identify and debug.</span>
     <span class="n">flow</span> <span class="o">=</span> <span class="k">await</span> <span class="n">prefect_client</span><span class="o">.</span><span class="n">read_flow</span><span class="p">(</span><span class="n">flow_run</span><span class="o">.</span><span class="n">flow_id</span><span class="p">)</span>
     <span class="n">container_group_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">flow</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">flow_run</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="c1"># Slugify flow.name if the generated name will be too long for the</span>
+    <span class="c1"># max deployment name length (64) including &quot;prefect-&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">container_group_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">55</span><span class="p">:</span>
+        <span class="n">slugified_flow_name</span> <span class="o">=</span> <span class="n">slugify</span><span class="p">(</span>
+            <span class="n">flow</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">max_length</span><span class="o">=</span><span class="mi">55</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">flow_run</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">regex_pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;[^a-zA-Z0-9-]+&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">container_group_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">slugified_flow_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">flow_run</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_prefix</span><span class="si">}</span><span class="s2">: Preparing to run command </span><span class="si">{</span><span class="n">configuration</span><span class="o">.</span><span class="n">command</span><span class="si">}</span><span class="s2"> &quot;</span>
@@ -3122,10 +3148,10 @@ Args:
 
   </div>
 
+
 </div>
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -3145,18 +3171,18 @@ Args:
 
             <details class="quote">
               <summary>Source code in <code>prefect_azure/workers/container_instance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">517</span>
-<span class="normal">518</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerWorkerResult</span><span class="p">(</span><span class="n">BaseWorkerResult</span><span class="p">):</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">519</span>
+<span class="normal">520</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AzureContainerWorkerResult</span><span class="p">(</span><span class="n">BaseWorkerResult</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Contains information about the final state of a completed process&quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
             </details>
 
   </div>
 
+
 </div>
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -3177,14 +3203,14 @@ the states in this Enum are the only ones that can be relied on as dependencies.
 
             <details class="quote">
               <summary>Source code in <code>prefect_azure/workers/container_instance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">189</span>
 <span class="normal">190</span>
 <span class="normal">191</span>
 <span class="normal">192</span>
 <span class="normal">193</span>
-<span class="normal">194</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ContainerGroupProvisioningState</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ContainerGroupProvisioningState</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Terminal provisioning states for ACI container groups. Per the Azure docs,</span>
 <span class="sd">    the states in this Enum are the only ones that can be relied on as dependencies.</span>
@@ -3213,10 +3239,10 @@ the states in this Enum are the only ones that can be relied on as dependencies.
 
   </div>
 
+
 </div>
 
 <div class="doc doc-object doc-class">
-
 
 
 
@@ -3236,13 +3262,13 @@ the states in this Enum are the only ones that can be relied on as dependencies.
 
             <details class="quote">
               <summary>Source code in <code>prefect_azure/workers/container_instance.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">199</span>
 <span class="normal">200</span>
 <span class="normal">201</span>
 <span class="normal">202</span>
-<span class="normal">203</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ContainerRunState</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ContainerRunState</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Terminal run states for ACI containers.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -3269,6 +3295,7 @@ the states in this Enum are the only ones that can be relied on as dependencies.
   </div>
 
   </div>
+
 
 </div>
 
@@ -3431,10 +3458,10 @@ the states in this Enum are the only ones that can be relied on as dependencies.
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      <script src="../assets/javascripts/bundle.e1c3ead8.min.js"></script>
       
     
   </body>
