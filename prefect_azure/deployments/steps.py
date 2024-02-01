@@ -28,6 +28,9 @@ define the push and pull steps for a specific deployment.
             credentials: "{{ prefect.blocks.azure-blob-storage-credentials.dev-credentials }}"
     ```
 
+!!! note
+    Azure Storage account needs to have Hierarchical Namespace disabled.
+
 For more information about using deployment steps, check out out the Prefect [docs](https://docs.prefect.io/latest/concepts/projects/#the-prefect-yaml-file).
 """  # noqa
 from pathlib import Path, PurePosixPath
@@ -138,6 +141,9 @@ def pull_from_azure_blob_storage(
         credentials: A dictionary of credentials with keys `connection_string` or
             `account_url` and values of the corresponding connection string or
             account url. If both are provided, `connection_string` will be used.
+
+    Note:
+        Azure Storage account needs to have Hierarchical Namespace disabled.
 
     Example:
         Pull from an Azure Blob Storage container using credentials stored in
