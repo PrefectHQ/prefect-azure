@@ -4,18 +4,16 @@ Visit the full docs [here](https://PrefectHQ.github.io/prefect-azure) to see add
 
 <p align="center">
     <a href="https://pypi.python.org/pypi/prefect-azure/" alt="PyPI version">
-        <img alt="PyPI" src="https://img.shields.io/pypi/v/prefect-azure?color=0052FF&labelColor=090422"></a>
+        <img alt="PyPI" src="https://img.shields.io/pypi/v/prefect-azure?color=26272B&labelColor=090422"></a>
     <a href="https://github.com/PrefectHQ/prefect-azure/" alt="Stars">
-        <img src="https://img.shields.io/github/stars/PrefectHQ/prefect-azure?color=0052FF&labelColor=090422" /></a>
+        <img src="https://img.shields.io/github/stars/PrefectHQ/prefect-azure?ccolor=26272B&labelColor=090422" /></a>
     <a href="https://pepy.tech/badge/prefect-azure/" alt="Downloads">
-        <img src="https://img.shields.io/pypi/dm/prefect-azure?color=0052FF&labelColor=090422" /></a>
+        <img src="https://img.shields.io/pypi/dm/prefect-azure?color=26272B&labelColor=090422" /></a>
     <a href="https://github.com/PrefectHQ/prefect-azure/pulse" alt="Activity">
-        <img src="https://img.shields.io/github/commit-activity/m/PrefectHQ/prefect-azure?color=0052FF&labelColor=090422" /></a>
+        <img src="https://img.shields.io/github/commit-activity/m/PrefectHQ/prefect-azure?color=26272B&labelColor=090422" /></a>
     <br>
     <a href="https://prefect-community.slack.com" alt="Slack">
-        <img src="https://img.shields.io/badge/slack-join_community-red.svg?color=0052FF&labelColor=090422&logo=slack" /></a>
-    <a href="https://discourse.prefect.io/" alt="Discourse">
-        <img src="https://img.shields.io/badge/discourse-browse_forum-red.svg?color=0052FF&labelColor=090422&logo=discourse" /></a>
+        <img src="https://img.shields.io/badge/slack-join_community-red.svg?color=26272B&labelColor=090422&logo=slack" /></a>
 </p>
 
 ## Welcome!
@@ -26,11 +24,11 @@ prefect-azure is a collection of prebuilt Prefect tasks that can be used to quic
 
 ### Python setup
 
-Requires an installation of Python 3.7+
+Requires an installation of Python 3.8+
 
 We recommend using a Python virtual environment manager such as pipenv, conda or virtualenv.
 
-These tasks are designed to work with Prefect 2.0. For more information about how to use Prefect, please refer to the [Prefect documentation](https://orion-docs.prefect.io/).
+These tasks are designed to work with Prefect 2. For more information about how to use Prefect, please refer to the [Prefect documentation](https://docs.prefect.io/).
 
 ### Installation
 
