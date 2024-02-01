@@ -108,6 +108,8 @@ if PYDANTIC_VERSION.startswith("2."):
 else:
     from pydantic import Field, SecretStr
 
+from slugify import slugify
+
 from prefect_azure.container_instance import ACRManagedIdentity
 from prefect_azure.credentials import AzureContainerInstanceCredentials
 
@@ -526,17 +528,12 @@ class AzureContainerWorker(BaseWorker):
     type = "azure-container-instance"
     job_configuration = AzureContainerJobConfiguration
     job_configuration_variables = AzureContainerVariables
-    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
+    _logo_url = "https://cdn.sanity.io/images/3ugk85nk/production/54e3fa7e00197a4fbd1d82ed62494cb58d08c96a-250x250.png"  # noqa
     _display_name = "Azure Container Instances"
     _description = (
         "Execute flow runs within containers on Azure's Container Instances "
         "service. Requires an Azure account."
     )
-    _documentation_url = (
-        "https://prefecthq.github.io/prefect-azure/container_instance_worker/"
-    )
-
-    _logo_url = "https://images.ctfassets.net/gm98wzqotmnx/6AiQ6HRIft8TspZH7AfyZg/39fd82bdbb186db85560f688746c8cdd/azure.png?h=250"  # noqa
     _documentation_url = (
         "https://prefecthq.github.io/prefect-azure/container_instance_worker/"
     )
@@ -565,6 +562,16 @@ class AzureContainerWorker(BaseWorker):
         # to make it easier to identify and debug.
         flow = await prefect_client.read_flow(flow_run.flow_id)
         container_group_name = f"{flow.name}-{flow_run.id}"
+
+        # Slugify flow.name if the generated name will be too long for the
+        # max deployment name length (64) including "prefect-"
+        if len(container_group_name) > 55:
+            slugified_flow_name = slugify(
+                flow.name,
+                max_length=55 - len(flow_run.id),
+                regex_pattern=r"[^a-zA-Z0-9-]+",
+            )
+            container_group_name = f"{slugified_flow_name}-{flow_run.id}"
 
         self._logger.info(
             f"{self._log_prefix}: Preparing to run command {configuration.command} "
