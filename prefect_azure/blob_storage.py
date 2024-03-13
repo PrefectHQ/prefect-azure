@@ -226,8 +226,7 @@ class AzureBlobStorageContainer(
     async def download_folder_to_path(
         self, from_folder: str, to_folder: str | Path, **download_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, Path]:
-        logger = get_run_logger()
-        logger.info(
+        self.logger.info(
             "Downloading folder from container %s to path %s",
             self.container_name,
             to_folder,
@@ -246,7 +245,9 @@ class AzureBlobStorageContainer(
                 local_path.parent.mkdir(parents=True, exist_ok=True)
                 async with container_client.get_blob_client(blob_path) as blob_client:
                     blob_obj = await blob_client.download_blob()
-                    await blob_obj.download_to_path(local_path)
+
+                with local_path.open(mode="wb") as to_file:
+                    await blob_obj.readinto(to_file)
         return Path(to_folder)
 
     @sync_compatible
@@ -256,8 +257,7 @@ class AzureBlobStorageContainer(
         to_file_object: BinaryIO,
         **download_kwargs: Dict[str, Any],
     ) -> Coroutine[Any, Any, BinaryIO]:
-        logger = get_run_logger()
-        logger.info(
+        self.logger.info(
             "Downloading object from container %s to file object", self.container_name
         )
         full_container_path = self._get_path_relative_to_base_folder(from_path)
@@ -272,8 +272,7 @@ class AzureBlobStorageContainer(
     async def download_object_to_path(
         self, from_path: str, to_path: str | Path, **download_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, Path]:
-        logger = get_run_logger()
-        logger.info(
+        self.logger.info(
             "Downloading object from container %s to path %s",
             self.container_name,
             to_path,
@@ -283,15 +282,19 @@ class AzureBlobStorageContainer(
             self.container_name, full_container_path
         ) as blob_client:
             blob_obj = await blob_client.download_blob()
-            await blob_obj.download_to_path(to_path)
+            path = Path(to_path)
+
+            path.parent.mkdir(parents=True, exist_ok=True)
+
+            with path.open(mode="wb") as to_file:
+                await blob_obj.readinto(to_file)
         return Path(to_path)
 
     @sync_compatible
     async def upload_from_file_object(
         self, from_file_object: BinaryIO, to_path: str, **upload_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, str]:
-        logger = get_run_logger()
-        logger.info(
+        self.logger.info(
             "Uploading object to container %s with key %s", self.container_name, to_path
         )
         full_container_path = self._get_path_relative_to_base_folder(to_path)
@@ -305,8 +308,7 @@ class AzureBlobStorageContainer(
     async def upload_from_path(
         self, from_path: str | Path, to_path: str, **upload_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, str]:
-        logger = get_run_logger()
-        logger.info(
+        self.logger.info(
             "Uploading object to container %s with key %s", self.container_name, to_path
         )
         full_container_path = self._get_path_relative_to_base_folder(to_path)
@@ -320,8 +322,7 @@ class AzureBlobStorageContainer(
     async def upload_from_folder(
         self, from_folder: str | Path, to_folder: str, **upload_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, str]:
-        logger = get_run_logger()
-        logger.info(
+        self.logger.info(
             "Uploading folder to container %s with key %s",
             self.container_name,
             to_folder,
@@ -384,7 +385,7 @@ class AzureBlobStorageContainer(
     async def read_path(self, path: str) -> bytes:
         file_obj = BytesIO()
         await self.download_object_to_file_object(path, file_obj)
-        return file_obj.get_value()
+        return file_obj.getvalue()
 
     @sync_compatible
     async def write_path(self, path: str, content: bytes) -> None:
