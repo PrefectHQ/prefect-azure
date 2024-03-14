@@ -1,26 +1,25 @@
 """Integrations for interacting with Azure Blob Storage"""
 
+import uuid
 from io import BytesIO
 from pathlib import Path
-import uuid
 from typing import TYPE_CHECKING, Any, BinaryIO, Coroutine, Dict, List, Optional, Union
 
 if TYPE_CHECKING:
     from azure.storage.blob import BlobProperties
 
 from prefect import task
-from prefect.logging import get_run_logger
 from prefect.blocks.abstract import ObjectStorageBlock
 from prefect.filesystems import WritableDeploymentStorage, WritableFileSystem
+from prefect.logging import get_run_logger
 from prefect.utilities.asyncutils import sync_compatible
-from pydantic import VERSION as PYDANTIC_VERSION
 from prefect.utilities.filesystem import filter_files
+from pydantic import VERSION as PYDANTIC_VERSION
 
 if PYDANTIC_VERSION.startswith("2."):
     from pydantic.v1 import Field
 else:
     from pydantic import Field
-
 
 from prefect_azure.credentials import AzureBlobStorageCredentials
 
@@ -195,8 +194,21 @@ async def blob_storage_list(
 class AzureBlobStorageContainer(
     ObjectStorageBlock, WritableFileSystem, WritableDeploymentStorage
 ):
+    """
+    Represents a container in Azure Blob Storage.
+
+    This class provides methods for downloading and uploading files and folders
+    to and from the Azure Blob Storage container.
+
+    Attributes:
+        container_name: The name of the Azure Blob Storage container.
+        credentials: The credentials to use for authentication with Azure.
+        base_folder: A base path to a folder within the container to use
+            for reading and writing objects.
+    """
+
     _block_type_name = "Azure Blob Storage Container"
-    _logo_url = "https://cdn.sanity.io/images/3ugk85nk/production/54e3fa7e00197a4fbd1d82ed62494cb58d08c96a-250x250.png"
+    _logo_url = "https://cdn.sanity.io/images/3ugk85nk/production/54e3fa7e00197a4fbd1d82ed62494cb58d08c96a-250x250.png"  # noqa
 
     container_name: str = Field(
         default=..., description="The name of a Azure Blob Storage container."
@@ -226,6 +238,38 @@ class AzureBlobStorageContainer(
     async def download_folder_to_path(
         self, from_folder: str, to_folder: str | Path, **download_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, Path]:
+        """Download a folder from the container to a local path.
+
+        Args:
+            from_folder: The folder path in the container to download.
+            to_folder: The local path to download the folder to.
+            **download_kwargs: Additional keyword arguments passed into
+                `BlobClient.download_blob`.
+
+        Returns:
+            The local path where the folder was downloaded.
+
+        Example:
+            Download the contents of container folder `folder` from the container
+                to the local folder `local_folder`:
+
+            ```python
+            from prefect_azure import AzureBlobStorageCredentials
+            from prefect_azure.blob_storage import AzureBlobStorageContainer
+
+            credentials = AzureBlobStorageCredentials(
+                connection_string="connection_string",
+            )
+            block = AzureBlobStorageContainer(
+                container_name="container",
+                credentials=credentials,
+            )
+            block.download_folder_to_path(
+                from_folder="folder",
+                to_folder="local_folder"
+            )
+            ```
+        """
         self.logger.info(
             "Downloading folder from container %s to path %s",
             self.container_name,
@@ -244,7 +288,7 @@ class AzureBlobStorageContainer(
                 )
                 local_path.parent.mkdir(parents=True, exist_ok=True)
                 async with container_client.get_blob_client(blob_path) as blob_client:
-                    blob_obj = await blob_client.download_blob()
+                    blob_obj = await blob_client.download_blob(**download_kwargs)
 
                 with local_path.open(mode="wb") as to_file:
                     await blob_obj.readinto(to_file)
@@ -257,6 +301,39 @@ class AzureBlobStorageContainer(
         to_file_object: BinaryIO,
         **download_kwargs: Dict[str, Any],
     ) -> Coroutine[Any, Any, BinaryIO]:
+        """
+        Downloads an object from the container to a file object.
+
+        Args:
+            from_path : The path of the object to download within the container.
+            to_file_object: The file object to download the object to.
+            **download_kwargs: Additional keyword arguments for the download
+                operation.
+
+        Returns:
+            The file object that the object was downloaded to.
+
+        Example:
+            Download the object `object` from the container to a file object:
+
+            ```python
+            from prefect_azure import AzureBlobStorageCredentials
+            from prefect_azure.blob_storage import AzureBlobStorageContainer
+
+            credentials = AzureBlobStorageCredentials(
+                connection_string="connection_string",
+            )
+            block = AzureBlobStorageContainer(
+                container_name="container",
+                credentials=credentials,
+            )
+            with open("file.txt", "wb") as f:
+                block.download_object_to_file_object(
+                    from_path="object",
+                    to_file_object=f
+                )
+            ```
+        """
         self.logger.info(
             "Downloading object from container %s to file object", self.container_name
         )
@@ -264,7 +341,7 @@ class AzureBlobStorageContainer(
         async with self.credentials.get_blob_client(
             self.container_name, full_container_path
         ) as blob_client:
-            blob_obj = await blob_client.download_blob()
+            blob_obj = await blob_client.download_blob(**download_kwargs)
             await blob_obj.download_to_stream(to_file_object)
         return to_file_object
 
@@ -272,6 +349,38 @@ class AzureBlobStorageContainer(
     async def download_object_to_path(
         self, from_path: str, to_path: str | Path, **download_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, Path]:
+        """
+        Downloads an object from a container to a specified path.
+
+        Args:
+            from_path: The path of the object in the container.
+            to_path: The path where the object will be downloaded to.
+            **download_kwargs (Dict[str, Any]): Additional keyword arguments
+                for the download operation.
+
+        Returns:
+            The path where the object was downloaded to.
+
+        Example:
+            Download the object `object` from the container to the local path `file.txt`:
+
+            ```python
+            from prefect_azure import AzureBlobStorageCredentials
+            from prefect_azure.blob_storage import AzureBlobStorageContainer
+
+            credentials = AzureBlobStorageCredentials(
+                connection_string="connection_string",
+            )
+            block = AzureBlobStorageContainer(
+                container_name="container",
+                credentials=credentials,
+            )
+            block.download_object_to_path(
+                from_path="object",
+                to_path="file.txt"
+            )
+            ```
+        """
         self.logger.info(
             "Downloading object from container %s to path %s",
             self.container_name,
@@ -281,7 +390,7 @@ class AzureBlobStorageContainer(
         async with self.credentials.get_blob_client(
             self.container_name, full_container_path
         ) as blob_client:
-            blob_obj = await blob_client.download_blob()
+            blob_obj = await blob_client.download_blob(**download_kwargs)
             path = Path(to_path)
 
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -294,6 +403,40 @@ class AzureBlobStorageContainer(
     async def upload_from_file_object(
         self, from_file_object: BinaryIO, to_path: str, **upload_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, str]:
+        """
+        Uploads an object from a file object to the specified path in the blob storage container.
+
+        Args:
+            from_file_object: The file object to upload.
+            to_path: The path in the blob storage container to upload the
+                object to.
+            **upload_kwargs: Additional keyword arguments to pass to the
+                upload_blob method.
+
+        Returns:
+            The path where the object was uploaded to.
+
+        Example:
+            Upload a file object to the container at the path `object`:
+
+            ```python
+            from prefect_azure import AzureBlobStorageCredentials
+            from prefect_azure.blob_storage import AzureBlobStorageContainer
+
+            credentials = AzureBlobStorageCredentials(
+                connection_string="connection_string",
+            )
+            block = AzureBlobStorageContainer(
+                container_name="container",
+                credentials=credentials,
+            )
+            with open("file.txt", "rb") as f:
+                block.upload_from_file_object(
+                    from_file_object=f,
+                    to_path="object"
+                )
+            ```
+        """
         self.logger.info(
             "Uploading object to container %s with key %s", self.container_name, to_path
         )
@@ -308,6 +451,38 @@ class AzureBlobStorageContainer(
     async def upload_from_path(
         self, from_path: str | Path, to_path: str, **upload_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, str]:
+        """
+        Uploads an object from a local path to the specified destination path in the blob storage container.
+
+        Args:
+            from_path: The local path of the object to upload.
+            to_path: The destination path in the blob storage container.
+            **upload_kwargs: Additional keyword arguments to pass to the
+                `upload_blob` method.
+
+        Returns:
+            The destination path in the blob storage container.
+
+        Example:
+            Upload a file from the local path `file.txt` to the container at the path `object`:
+
+            ```python
+            from prefect_azure import AzureBlobStorageCredentials
+            from prefect_azure.blob_storage import AzureBlobStorageContainer
+
+            credentials = AzureBlobStorageCredentials(
+                connection_string="connection_string",
+            )
+            block = AzureBlobStorageContainer(
+                container_name="container",
+                credentials=credentials,
+            )
+            block.upload_from_path(
+                from_path="file.txt",
+                to_path="object"
+            )
+            ```
+        """
         self.logger.info(
             "Uploading object to container %s with key %s", self.container_name, to_path
         )
@@ -322,6 +497,38 @@ class AzureBlobStorageContainer(
     async def upload_from_folder(
         self, from_folder: str | Path, to_folder: str, **upload_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, str]:
+        """
+        Uploads files from a local folder to a specified folder in the Azure Blob Storage container.
+
+        Args:
+            from_folder: The path to the local folder containing the files to upload.
+            to_folder: The destination folder in the Azure Blob Storage container.
+            **upload_kwargs: Additional keyword arguments to pass to the
+                `upload_blob` method.
+
+        Returns:
+            The full path of the destination folder in the container.
+
+        Example:
+            Upload the contents of the local folder `local_folder` to the container folder `folder`:
+
+            ```python
+            from prefect_azure import AzureBlobStorageCredentials
+            from prefect_azure.blob_storage import AzureBlobStorageContainer
+
+            credentials = AzureBlobStorageCredentials(
+                connection_string="connection_string",
+            )
+            block = AzureBlobStorageContainer(
+                container_name="container",
+                credentials=credentials,
+            )
+            block.upload_from_folder(
+                from_folder="local_folder",
+                to_folder="folder"
+            )
+            ```
+        """
         self.logger.info(
             "Uploading folder to container %s with key %s",
             self.container_name,
@@ -339,19 +546,38 @@ class AzureBlobStorageContainer(
                     async with container_client.get_blob_client(
                         blob_path.as_posix()
                     ) as blob_client:
-                        await blob_client.upload_blob(path, **upload_kwargs)
+                        await blob_client.upload_blob(path.as_posix(), **upload_kwargs)
         return full_container_path
 
     @sync_compatible
     async def get_directory(
         self, from_path: str = None, local_path: str = None
     ) -> None:
+        """
+        Downloads the contents of a directory from the blob storage to a local path.
+
+        Used to enable flow code storage for deployments.
+
+        Args:
+            from_path: The path of the directory in the blob storage.
+            local_path: The local path where the directory will be downloaded.
+        """
         await self.download_folder_to_path(from_path, local_path)
 
     @sync_compatible
     async def put_directory(
         self, local_path: str = None, to_path: str = None, ignore_file: str = None
     ) -> None:
+        """
+        Uploads a directory to the blob storage.
+
+        Used to enable flow code storage for deployments.
+
+        Args:
+            local_path: The local path of the directory to upload. Defaults to current directory.
+            to_path: The destination path in the blob storage. Defaults to root directory.
+            ignore_file: The path to a file containing patterns to ignore during upload.
+        """
         to_path = "" if to_path is None else to_path
 
         if local_path is None:
@@ -383,10 +609,30 @@ class AzureBlobStorageContainer(
 
     @sync_compatible
     async def read_path(self, path: str) -> bytes:
+        """
+        Reads the contents of a file at the specified path and returns it as bytes.
+
+        Used to enable results storage.
+
+        Args:
+            path: The path of the file to read.
+
+        Returns:
+            The contents of the file as bytes.
+        """
         file_obj = BytesIO()
         await self.download_object_to_file_object(path, file_obj)
         return file_obj.getvalue()
 
     @sync_compatible
     async def write_path(self, path: str, content: bytes) -> None:
+        """
+        Writes the content to the specified path in the blob storage.
+
+        Used to enable results storage.
+
+        Args:
+            path: The path where the content will be written.
+            content: The content to be written.
+        """
         await self.upload_from_file_object(BytesIO(content), path)
