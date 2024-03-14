@@ -418,18 +418,18 @@ class AzureBlobStorageContainer(
         ) as blob_client:
             try:
                 blob_obj = await blob_client.download_blob(**download_kwargs)
+
+                path = Path(to_path)
+
+                path.parent.mkdir(parents=True, exist_ok=True)
+
+                with path.open(mode="wb") as to_file:
+                    await blob_obj.readinto(to_file)
             except ResourceNotFoundError as exc:
                 raise RuntimeError(
                     "An error occurred when attempting to download from container"
                     f" {self.container_name}: {exc.reason}"
                 ) from exc
-
-            path = Path(to_path)
-
-            path.parent.mkdir(parents=True, exist_ok=True)
-
-            with path.open(mode="wb") as to_file:
-                await blob_obj.readinto(to_file)
         return Path(to_path)
 
     @sync_compatible
