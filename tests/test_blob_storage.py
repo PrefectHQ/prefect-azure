@@ -1,19 +1,17 @@
-from io import BytesIO
-from unittest.mock import AsyncMock, MagicMock, patch
 import uuid
+from io import BytesIO
+from pathlib import Path
 
 import pytest
 from azure.core.exceptions import ResourceExistsError
 from prefect import flow
-from pathlib import Path
 
 from prefect_azure.blob_storage import (
+    AzureBlobStorageContainer,
     blob_storage_download,
     blob_storage_list,
     blob_storage_upload,
-    AzureBlobStorageContainer,
 )
-from prefect_azure.credentials import AzureBlobStorageCredentials
 
 
 async def test_blob_storage_download_flow(blob_storage_credentials):

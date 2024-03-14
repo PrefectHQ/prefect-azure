@@ -211,7 +211,6 @@ class AzureBlobStorageContainer(
     _logo_url = "https://cdn.sanity.io/images/3ugk85nk/production/54e3fa7e00197a4fbd1d82ed62494cb58d08c96a-250x250.png"  # noqa
     _documentation_url = "https://prefecthq.github.io/prefect-azure/blob_storage/#prefect_azure.blob_storabe.AzureBlobStorageContainer"  # noqa
 
-
     container_name: str = Field(
         default=..., description="The name of a Azure Blob Storage container."
     )
@@ -352,7 +351,10 @@ class AzureBlobStorageContainer(
 
     @sync_compatible
     async def download_object_to_path(
-        self, from_path: str, to_path: Union[str, Path], **download_kwargs: Dict[str, Any]
+        self,
+        from_path: str,
+        to_path: Union[str, Path],
+        **download_kwargs: Dict[str, Any],
     ) -> Coroutine[Any, Any, Path]:
         """
         Downloads an object from a container to a specified path.
@@ -505,7 +507,10 @@ class AzureBlobStorageContainer(
 
     @sync_compatible
     async def upload_from_folder(
-        self, from_folder: Union[str, Path], to_folder: str, **upload_kwargs: Dict[str, Any]
+        self,
+        from_folder: Union[str, Path],
+        to_folder: str,
+        **upload_kwargs: Dict[str, Any],
     ) -> Coroutine[Any, Any, str]:
         """
         Uploads files from a local folder to a specified folder in the Azure
@@ -558,7 +563,9 @@ class AzureBlobStorageContainer(
                     async with container_client.get_blob_client(
                         blob_path.as_posix()
                     ) as blob_client:
-                        await blob_client.upload_blob(path.read_bytes(), **upload_kwargs)
+                        await blob_client.upload_blob(
+                            path.read_bytes(), **upload_kwargs
+                        )
         return full_container_path
 
     @sync_compatible

@@ -2,10 +2,10 @@ from unittest.mock import MagicMock
 
 import pytest
 from azure.core.exceptions import ResourceExistsError
+from azure.storage.blob.aio import ContainerClient
 from prefect.testing.utilities import AsyncMock, prefect_test_harness
 
 from prefect_azure.credentials import AzureBlobStorageCredentials
-from azure.storage.blob.aio import BlobClient, BlobServiceClient, ContainerClient
 
 
 @pytest.fixture(scope="session", autouse=True)
