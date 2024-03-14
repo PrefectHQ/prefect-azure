@@ -303,7 +303,8 @@ class AzureBlobStorageContainer(
                         await blob_obj.readinto(to_file)
             except ResourceNotFoundError as exc:
                 raise RuntimeError(
-                    f"An error occurred when atempting to download from container {self.container_name}: {exc.reason}"
+                    "An error occurred when attempting to download from container"
+                    f" {self.container_name}: {exc.reason}"
                 ) from exc
 
         return Path(to_folder)
@@ -360,7 +361,8 @@ class AzureBlobStorageContainer(
                 await blob_obj.download_to_stream(to_file_object)
             except ResourceNotFoundError as exc:
                 raise RuntimeError(
-                    f"An error occurred when atempting to download from container {self.container_name}: {exc.reason}"
+                    "An error occurred when attempting to download from container"
+                    f" {self.container_name}: {exc.reason}"
                 ) from exc
 
         return to_file_object
@@ -418,7 +420,8 @@ class AzureBlobStorageContainer(
                 blob_obj = await blob_client.download_blob(**download_kwargs)
             except ResourceNotFoundError as exc:
                 raise RuntimeError(
-                    f"An error occurred when atempting to download from container {self.container_name}: {exc.reason}"
+                    "An error occurred when attempting to download from container"
+                    f" {self.container_name}: {exc.reason}"
                 ) from exc
 
             path = Path(to_path)
@@ -479,7 +482,8 @@ class AzureBlobStorageContainer(
                 await blob_client.upload_blob(from_file_object, **upload_kwargs)
             except ResourceNotFoundError as exc:
                 raise RuntimeError(
-                    f"An error occurred when atempting to download from container {self.container_name}: {exc.reason}"
+                    "An error occurred when attempting to download from container"
+                    f" {self.container_name}: {exc.reason}"
                 ) from exc
 
         return to_path
@@ -534,7 +538,8 @@ class AzureBlobStorageContainer(
                     await blob_client.upload_blob(f, **upload_kwargs)
             except ResourceNotFoundError as exc:
                 raise RuntimeError(
-                    f"An error occurred when atempting to download from container {self.container_name}: {exc.reason}"
+                    "An error occurred when attempting to download from container"
+                    f" {self.container_name}: {exc.reason}"
                 ) from exc
 
         return to_path
@@ -603,7 +608,8 @@ class AzureBlobStorageContainer(
                             )
                         except ResourceNotFoundError as exc:
                             raise RuntimeError(
-                                f"An error occurred when atempting to download from container {self.container_name}: {exc.reason}"
+                                "An error occurred when attempting to download from "
+                                f"container {self.container_name}: {exc.reason}"
                             ) from exc
         return full_container_path
 
