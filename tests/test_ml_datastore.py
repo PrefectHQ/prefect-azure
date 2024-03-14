@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from prefect import flow
 
 from prefect_azure.ml_datastore import (
