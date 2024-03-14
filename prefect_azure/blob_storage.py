@@ -362,7 +362,8 @@ class AzureBlobStorageContainer(
             The path where the object was downloaded to.
 
         Example:
-            Download the object `object` from the container to the local path `file.txt`:
+            Download the object `object` from the container to the local path
+                `file.txt`:
 
             ```python
             from prefect_azure import AzureBlobStorageCredentials
@@ -404,7 +405,8 @@ class AzureBlobStorageContainer(
         self, from_file_object: BinaryIO, to_path: str, **upload_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, str]:
         """
-        Uploads an object from a file object to the specified path in the blob storage container.
+        Uploads an object from a file object to the specified path in the blob
+            storage container.
 
         Args:
             from_file_object: The file object to upload.
@@ -452,7 +454,8 @@ class AzureBlobStorageContainer(
         self, from_path: str | Path, to_path: str, **upload_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, str]:
         """
-        Uploads an object from a local path to the specified destination path in the blob storage container.
+        Uploads an object from a local path to the specified destination path in the
+            blob storage container.
 
         Args:
             from_path: The local path of the object to upload.
@@ -464,7 +467,8 @@ class AzureBlobStorageContainer(
             The destination path in the blob storage container.
 
         Example:
-            Upload a file from the local path `file.txt` to the container at the path `object`:
+            Upload a file from the local path `file.txt` to the container
+                at the path `object`:
 
             ```python
             from prefect_azure import AzureBlobStorageCredentials
@@ -498,7 +502,8 @@ class AzureBlobStorageContainer(
         self, from_folder: str | Path, to_folder: str, **upload_kwargs: Dict[str, Any]
     ) -> Coroutine[Any, Any, str]:
         """
-        Uploads files from a local folder to a specified folder in the Azure Blob Storage container.
+        Uploads files from a local folder to a specified folder in the Azure
+            Blob Storage container.
 
         Args:
             from_folder: The path to the local folder containing the files to upload.
@@ -510,7 +515,8 @@ class AzureBlobStorageContainer(
             The full path of the destination folder in the container.
 
         Example:
-            Upload the contents of the local folder `local_folder` to the container folder `folder`:
+            Upload the contents of the local folder `local_folder` to the container
+                folder `folder`:
 
             ```python
             from prefect_azure import AzureBlobStorageCredentials
@@ -574,9 +580,12 @@ class AzureBlobStorageContainer(
         Used to enable flow code storage for deployments.
 
         Args:
-            local_path: The local path of the directory to upload. Defaults to current directory.
-            to_path: The destination path in the blob storage. Defaults to root directory.
-            ignore_file: The path to a file containing patterns to ignore during upload.
+            local_path: The local path of the directory to upload. Defaults to
+                current directory.
+            to_path: The destination path in the blob storage. Defaults to
+                root directory.
+            ignore_file: The path to a file containing patterns to ignore
+                during upload.
         """
         to_path = "" if to_path is None else to_path
 
