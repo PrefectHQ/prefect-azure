@@ -40,11 +40,11 @@ async def test_ml_get_datastore_flow_default(ml_credentials, datastore):
     assert result.datastore_name == "default"
 
 
-async def test_ml_upload_datastore_flow(ml_credentials, datastore):
+async def test_ml_upload_datastore_flow(ml_credentials, datastore, tmp_path):
     @flow
     async def ml_upload_datastore_flow():
         result = await ml_upload_datastore(
-            "tests/",
+            str(tmp_path),
             ml_credentials,
             target_path="target_path",
             overwrite=True,
@@ -52,25 +52,25 @@ async def test_ml_upload_datastore_flow(ml_credentials, datastore):
         return result
 
     result = await ml_upload_datastore_flow()
-    assert result["src_dir"] == "tests/"
+    assert result["src_dir"] == str(tmp_path)
     assert result["target_path"] == "target_path"
     assert result["overwrite"]
 
 
-async def test_ml_upload_datastore_flow_pathlib(ml_credentials, datastore):
+async def test_ml_upload_datastore_flow_pathlib(ml_credentials, datastore, tmp_path):
     @flow
     async def ml_upload_datastore_flow():
         result = await ml_upload_datastore(
-            Path("tests/"),
+            tmp_path,
             ml_credentials,
-            target_path=Path("target/path"),
+            target_path="target_path",
             overwrite=True,
         )
         return result
 
     result = await ml_upload_datastore_flow()
-    assert result["src_dir"] == "tests"
-    assert result["target_path"] == "target/path"
+    assert result["src_dir"] == str(tmp_path)
+    assert result["target_path"] == "target_path"
     assert result["overwrite"]
 
 
