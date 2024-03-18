@@ -2,42 +2,42 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://PrefectHQ.github.io/prefect-azure/</loc>
-         <lastmod>2024-03-14</lastmod>
+         <lastmod>2024-03-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://PrefectHQ.github.io/prefect-azure/blob_storage/</loc>
-         <lastmod>2024-03-14</lastmod>
+         <lastmod>2024-03-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://PrefectHQ.github.io/prefect-azure/container_instance/</loc>
-         <lastmod>2024-03-14</lastmod>
+         <lastmod>2024-03-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://PrefectHQ.github.io/prefect-azure/container_instance_worker/</loc>
-         <lastmod>2024-03-14</lastmod>
+         <lastmod>2024-03-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://PrefectHQ.github.io/prefect-azure/cosmos_db/</loc>
-         <lastmod>2024-03-14</lastmod>
+         <lastmod>2024-03-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://PrefectHQ.github.io/prefect-azure/credentials/</loc>
-         <lastmod>2024-03-14</lastmod>
+         <lastmod>2024-03-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://PrefectHQ.github.io/prefect-azure/ml_datastore/</loc>
-         <lastmod>2024-03-14</lastmod>
+         <lastmod>2024-03-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://PrefectHQ.github.io/prefect-azure/deployments/steps/</loc>
-         <lastmod>2024-03-14</lastmod>
+         <lastmod>2024-03-18</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
