@@ -2,7 +2,10 @@ from unittest.mock import MagicMock
 
 import pytest
 from azure.core.exceptions import ResourceExistsError
+from azure.storage.blob.aio import ContainerClient
 from prefect.testing.utilities import AsyncMock, prefect_test_harness
+
+from prefect_azure.credentials import AzureBlobStorageCredentials
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -34,7 +37,10 @@ class AsyncIter:
             yield item
 
 
-mock_container = {"prefect.txt": b"prefect_works"}
+mock_container = {
+    "prefect.txt": b"prefect_works",
+    "folder/prefect.txt": b"prefect_works",
+}
 
 
 class BlobStorageClientMethodsMock:
@@ -53,13 +59,23 @@ class BlobStorageClientMethodsMock:
 
     async def download_blob(self):
         return AsyncMock(
-            content_as_bytes=AsyncMock(return_value=mock_container.get(self.blob))
+            name="blob_obj",
+            content_as_bytes=AsyncMock(return_value=mock_container.get(self.blob)),
+            download_to_stream=AsyncMock(
+                side_effect=lambda f: f.write(mock_container.get(self.blob))
+            ),
+            readinto=AsyncMock(
+                side_effect=lambda f: f.write(mock_container.get(self.blob))
+            ),
         )
 
-    async def upload_blob(self, data, overwrite):
+    async def upload_blob(self, data, overwrite=False):
         if not overwrite and self.blob in mock_container:
             raise ResourceExistsError("Cannot overwrite existing blob")
-        mock_container[self.blob] = data
+        if isinstance(data, (str, bytes)):
+            mock_container[self.blob] = data
+        else:
+            mock_container[self.blob] = data.read()
         return self.blob
 
     def list_blobs(self, name_starts_with=None, include=None, **kwargs):
@@ -94,6 +110,30 @@ def blob_storage_credentials():
     blob_storage_credentials.get_container_client.side_effect = (
         lambda container: BlobStorageClientMethodsMock()
     )
+    return blob_storage_credentials
+
+
+@pytest.fixture
+def mock_blob_storage_credentials():
+    blob_storage_credentials = AzureBlobStorageCredentials(connection_string="mock")
+    mock_get_blob_client_with_container = MagicMock(
+        side_effect=lambda container, blob: BlobStorageClientMethodsMock(blob)
+    )
+
+    blob_storage_credentials.get_blob_client = mock_get_blob_client_with_container
+
+    mock_get_blob_client_without_container = MagicMock(
+        side_effect=lambda blob: BlobStorageClientMethodsMock(blob)
+    )
+
+    blob_storage_credentials.get_container_client = MagicMock(spec=ContainerClient)
+    block_mock = MagicMock()
+    block_mock.name = "folder/prefect.txt"
+    blob_storage_credentials.get_container_client().__aenter__.return_value = AsyncMock(
+        list_blobs=MagicMock(return_value=AsyncIter([block_mock])),
+        get_blob_client=mock_get_blob_client_without_container,
+    )
+
     return blob_storage_credentials
 
 
