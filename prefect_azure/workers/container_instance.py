@@ -568,7 +568,7 @@ class AzureContainerWorker(BaseWorker):
         if len(container_group_name) > 55:
             slugified_flow_name = slugify(
                 flow.name,
-                max_length=55 - len(flow_run.id),
+                max_length=55 - len(str(flow_run.id)),
                 regex_pattern=r"[^a-zA-Z0-9-]+",
             )
             container_group_name = f"{slugified_flow_name}-{flow_run.id}"
