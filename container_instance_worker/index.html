@@ -2245,7 +2245,7 @@ template to use any features available in Azure Container Instances.</p>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">container_group_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">55</span><span class="p">:</span>
             <span class="n">slugified_flow_name</span> <span class="o">=</span> <span class="n">slugify</span><span class="p">(</span>
                 <span class="n">flow</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="n">max_length</span><span class="o">=</span><span class="mi">55</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">flow_run</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                <span class="n">max_length</span><span class="o">=</span><span class="mi">55</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">flow_run</span><span class="o">.</span><span class="n">id</span><span class="p">)),</span>
                 <span class="n">regex_pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;[^a-zA-Z0-9-]+&quot;</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">container_group_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">slugified_flow_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">flow_run</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -3077,7 +3077,7 @@ Args:
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">container_group_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">55</span><span class="p">:</span>
         <span class="n">slugified_flow_name</span> <span class="o">=</span> <span class="n">slugify</span><span class="p">(</span>
             <span class="n">flow</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="n">max_length</span><span class="o">=</span><span class="mi">55</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">flow_run</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">max_length</span><span class="o">=</span><span class="mi">55</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">flow_run</span><span class="o">.</span><span class="n">id</span><span class="p">)),</span>
             <span class="n">regex_pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;[^a-zA-Z0-9-]+&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">container_group_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">slugified_flow_name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">flow_run</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span>
