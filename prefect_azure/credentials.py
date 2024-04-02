@@ -128,7 +128,11 @@ class AzureBlobStorageCredentials(Block):
         """
         has_account_url = values.get("account_url") is not None
         has_conn_str = values.get("connection_string") is not None
-        if not bool(has_account_url ^ has_conn_str):
+        if not has_account_url and not has_conn_str:
+            raise ValueError(
+                "Must provide either a connection string or an account URL."
+            )
+        if has_account_url and has_conn_str:
             raise ValueError(
                 "Must provide either a connection string or account URL, but not both."
             )
